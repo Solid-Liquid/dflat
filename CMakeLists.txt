@@ -5,9 +5,11 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(dflat CXX)
 
-add_executable(dflat 
-    src/main.cpp
+set(DFLAT_FILES
     )
+
+add_executable(dflat src/main.cpp ${DFLAT_FILES})
+add_executable(tests test/main.cpp ${DFLAT_FILES})
     
 target_link_libraries(dflat 
     )
