@@ -1,5 +1,6 @@
-#include <iostream>
+//"Main" for the Catch unit test library
 
-int main() {
-    std::cout << "test\n";
-}
+#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
+#include "catch2/catch.hpp"
+
+//All tests are done in external .cpp files

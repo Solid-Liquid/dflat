@@ -8,8 +8,14 @@ project(dflat CXX)
 set(DFLAT_FILES
     )
 
+project(tests CXX)
+
+set(TESTS_FILES
+    test/lexertests.cpp
+    )
+
 add_executable(dflat src/main.cpp ${DFLAT_FILES})
-add_executable(tests test/main.cpp ${DFLAT_FILES})
+add_executable(tests test/main.cpp ${TESTS_FILES})
     
 target_link_libraries(dflat 
     )
@@ -18,6 +24,15 @@ target_include_directories(dflat
     PRIVATE 
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/util
+    SYSTEM
+        ${CMAKE_CURRENT_SOURCE_DIR}/external
+    )
+
+target_include_directories(tests
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/util
+        ${CMAKE_CURRENT_SOURCE_DIR}/test
     SYSTEM
         ${CMAKE_CURRENT_SOURCE_DIR}/external
     )
