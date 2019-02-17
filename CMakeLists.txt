@@ -6,6 +6,10 @@ set(CMAKE_CXX_STANDARD 17)
 project(dflat CXX)
 
 set(DFLAT_FILES
+    src/lexer.cpp
+    src/lexer.hpp
+    src/token.cpp
+    src/token.hpp
     )
 
 project(tests CXX)
