@@ -6,139 +6,219 @@ namespace dflat
 
     class Token
     {
-        public:
-            Token();
+    public:
+        Token();
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
 
     class NumberToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class VariableToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class FunctionToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class IfToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class ThenToken
     {
-        public:
-    };
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();    };
 
     class ElseToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class PlusToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class MinusToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class MultiplyToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class DivisionToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class LogicalAndToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class LogicalOrToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class BangToken //!
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class LeftParenToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class RightParenToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class LeftBracketToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class RightBracketToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class LeftBraceToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class RightBraceToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class EqualToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class PointToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class ForToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class WhileToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class NewlineToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class NewToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
     class PrintlineToken
     {
-        public:
+    public:
+        TokType hashCode();
+        bool equals(const Token other);
+        string toString();
     };
 
 } //namespace dflat
