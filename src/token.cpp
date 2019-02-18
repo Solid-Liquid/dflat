@@ -6,6 +6,7 @@ namespace dflat
 Token::Token()
 {
 
+
 }
 
 } //namespace dflat
