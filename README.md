@@ -1,17 +1,25 @@
 # 430-dflat
 
+## Members
+- Joshua Arco
+- Avo Hagopian
+- Ian Hinze
+- Brian McClelland
+
 ## Dependencies
 - CMake
 - C++17 or later compiler
 
-<h1>Language Design Proposal:</h1>
-Db
- 
-<h5>Student Name(s):</h5>
-Joshua Arco, Brian McClelland, Ian Hinze, Avo Hagopian
+## Running
+This produces two executable files: dflat and tests.
 
-<h5>Language Name:</h5>
-Db (D flat)
+To tokenize a file: `dflat <input filename>`
+
+To run tests: `tests`
+
+
+<h1>Language Design Proposal:</h1>
+<h3>Name: Db (D flat)</h3>
  
 <h5>Compiler Implementation Language and Reasoning:</h5>
 C++ because the team is already familiar with it. It also has a lot of options for optimization, and is very similar to the target language. 
