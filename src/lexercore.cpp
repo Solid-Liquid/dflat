@@ -5,6 +5,7 @@ namespace dflat
 
 LexerCore::LexerCore(String const& input)
     : _input(input)
+    , _pos(0)
 {
 }
     
