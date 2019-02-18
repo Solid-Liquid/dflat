@@ -21,4 +21,4 @@ struct LexerCore
 
 } //namespace dlfat
 
-#endif // LEXER_HPP
+#endif // LEXERCORE_HPP
