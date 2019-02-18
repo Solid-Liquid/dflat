@@ -5,21 +5,22 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(dflat CXX)
 
-set(DFLAT_FILES
-    src/lexer.cpp
-    src/lexer.hpp
-    src/token.cpp
-    src/token.hpp
+set(DFLAT_COMMON_FILES
+    src/lexer.cpp src/lexer.hpp
+    src/lexercore.cpp src/lexercore.hpp
+    src/token.cpp src/token.hpp
     )
 
 project(tests CXX)
 
-set(TESTS_FILES
-    test/lexertests.cpp
+add_executable(dflat ${DFLAT_COMMON_FILES}
+    src/main.cpp
     )
 
-add_executable(dflat src/main.cpp ${DFLAT_FILES})
-add_executable(tests test/main.cpp ${TESTS_FILES})
+add_executable(tests ${DFLAT_COMMON_FILES}
+    test/main.cpp
+    test/lexertests.cpp
+    )
     
 target_link_libraries(dflat 
     )

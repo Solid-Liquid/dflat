@@ -3,9 +3,9 @@
 namespace dflat
 {
 
-Lexer::Lexer()
+Lexer::Lexer(String const& input)
+    : LexerCore(input)
 {
-
 }
 
 } //namespace dflat

@@ -1,15 +1,17 @@
 #ifndef LEXER_HPP
 #define LEXER_HPP
 
+#include "lexercore.hpp"
+
 namespace dflat
 {
-class Lexer
+
+class Lexer : private LexerCore
 {
     public:
-        Lexer();
-
+        Lexer(String const&);
 };
 
-} //namespace dlfat
+} //namespace dflat
 
 #endif // LEXER_HPP
