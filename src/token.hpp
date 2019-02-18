@@ -1,9 +1,7 @@
 #ifndef TOKEN_HPP
 #define TOKEN_HPP
 
-#include <string>
-
-using namespace std;
+#include "string.hpp"
 
 namespace dflat
 {
@@ -21,15 +19,17 @@ namespace dflat
     class NumberToken : public Token
     {
     public:
-        NumberToken();
-        int num;
+        NumberToken(int);
         TokType getType();
+        int num;
     };
 
     class VariableToken : public Token
     {
     public:
+        VariableToken(String const&);
         TokType getType();
+        String name;
     };
 
     class FunctionToken : public Token

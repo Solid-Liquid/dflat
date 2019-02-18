@@ -11,7 +11,7 @@ using namespace dflat;
 int main(int argc, char* argv[])
 {
     //TOKEN USE EXAMPLE
-    Token* tk = new NumberToken(); //store a number token in a base class token pointer
+    Token* tk = new NumberToken(3); //store a number token in a base class token pointer
     if(tk->getType() == tokNum) //check what type the token is (compare to tokNum enumeration for token number)
     {
         dynamic_cast<NumberToken*>(tk)->num = 5;  //use dynamic cast to change the NumberToken stored number

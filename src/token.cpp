@@ -9,10 +9,9 @@ Token::~Token()
 }
 
 //NumberToken:
-NumberToken::NumberToken()
-{
-    num = 0;
-}
+NumberToken::NumberToken(int num_)
+    : num(num_)
+{}
 
 TokType NumberToken::getType()
 {
@@ -20,6 +19,10 @@ TokType NumberToken::getType()
 }
 
 //VariableToken:
+VariableToken::VariableToken(String const& name_)
+    : name(name_)
+{}
+
 TokType VariableToken::getType()
 {
     return tokVar;
