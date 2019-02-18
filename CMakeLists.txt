@@ -19,7 +19,8 @@ add_executable(dflat ${DFLAT_COMMON_FILES}
 
 add_executable(tests ${DFLAT_COMMON_FILES}
     test/main.cpp
-    test/lexertests.cpp
+    test/lexercore_tests.cpp
+    test/lexer_tests.cpp
     )
     
 target_link_libraries(dflat 
