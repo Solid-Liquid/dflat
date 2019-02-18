@@ -49,7 +49,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
             -Werror=return-type
             -Werror=switch
         
-            -Werror
             -Wshadow
     )
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -61,7 +60,6 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
             -Werror=switch
             -Wfatal-errors
         
-            -Werror
             -Wshadow
             -Wnon-virtual-dtor
             -Wold-style-cast

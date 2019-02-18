@@ -1,225 +1,162 @@
 #ifndef TOKEN_HPP
 #define TOKEN_HPP
 
+#include <string>
+
+using namespace std;
+
 namespace dflat
 {
+    enum TokType { tokNum, tokVar, tokFunc, tokIf, tokElse, tokPlus, tokMinus, tokDiv, tokMult, tokRBrace, tokLBrace,
+                 tokLParen, tokRParen };
 
     class Token
     {
     public:
-        Token();
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
+        virtual ~Token();
+        virtual TokType getType() = 0;
     };
 
 
-    class NumberToken
+    class NumberToken : public virtual Token
     {
     public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
+        NumberToken();
+        int num;
+        TokType getType();
     };
 
-    class VariableToken
+    class VariableToken : public virtual Token
     {
     public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
+        TokType getType();
     };
 
-    class FunctionToken
+    class FunctionToken : public virtual Token
     {
     public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
+        TokType getType();
     };
 
-    class IfToken
+    class IfToken : public virtual Token
     {
     public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
+        TokType getType();
     };
 
-    class ThenToken
+    class ElseToken : public virtual Token
     {
     public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();    };
-
-    class ElseToken
-    {
-    public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
+        TokType getType();
     };
 
-    class PlusToken
+    class PlusToken : public virtual Token
     {
     public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
+        TokType getType();
     };
 
-    class MinusToken
+    class MinusToken : public virtual Token
     {
     public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
+        TokType getType();
     };
 
-    class MultiplyToken
+    class MultiplyToken : public virtual Token
     {
     public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
+        TokType getType();
     };
 
-    class DivisionToken
+    class DivisionToken : public virtual Token
     {
     public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
+        TokType getType();
     };
 
-    class LogicalAndToken
+    class LeftBraceToken : public virtual Token
     {
     public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
+        TokType getType();
     };
 
-    class LogicalOrToken
+    class RightBraceToken : public virtual Token
     {
     public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
+        TokType getType();
     };
 
-    class BangToken //!
+    class LeftParenToken : public virtual Token
     {
     public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
+        TokType getType();
     };
 
-    class LeftParenToken
+    class RightParenToken : public virtual Token
     {
     public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
+        TokType getType();
     };
 
-    class RightParenToken
-    {
-    public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
-    };
+//    class LogicalAndToken : public virtual Token
+//    {
+//    public:
+//        TokType getType();
+//    };
 
-    class LeftBracketToken
-    {
-    public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
-    };
+//    class LogicalOrToken : public virtual Token
+//    {
+//    public:
+//        TokType getType();
+//    };
 
-    class RightBracketToken
-    {
-    public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
-    };
+//    class BangToken : public virtual Token//!
+//    {
+//    public:
+//        TokType getType();
+//    };
 
-    class LeftBraceToken
-    {
-    public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
-    };
+//    class LeftBracketToken : public virtual Token
+//    {
+//    public:
+//        TokType getType();
+//    };
 
-    class RightBraceToken
-    {
-    public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
-    };
+//    class RightBracketToken : public virtual Token
+//    {
+//    public:
+//        TokType getType();
+//    };
 
-    class EqualToken
-    {
-    public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
-    };
+//    class EqualToken : public virtual Token
+//    {
+//    public:
+//        TokType getType();
+//    };
 
-    class PointToken
-    {
-    public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
-    };
+//    class PointToken : public virtual Token
+//    {
+//    public:
+//        TokType getType();
+//    };
 
-    class ForToken
-    {
-    public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
-    };
+//    class ForToken : public virtual Token
+//    {
+//    public:
+//        TokType getType();
+//    };
 
-    class WhileToken
-    {
-    public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
-    };
+//    class WhileToken : public virtual Token
+//    {
+//    public:
+//        TokType getType();
+//    };
 
-    class NewlineToken
-    {
-    public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
-    };
-
-    class NewToken
-    {
-    public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
-    };
-
-    class PrintlineToken
-    {
-    public:
-        TokType hashCode();
-        bool equals(const Token other);
-        string toString();
-    };
+//    class NewlineToken : public virtual Token
+//    {
+//    public:
+//        TokType getType();
+//    };
 
 } //namespace dflat
 

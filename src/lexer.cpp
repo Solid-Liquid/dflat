@@ -3,11 +3,6 @@
 namespace dflat
 {
 
-/*Lexer::Lexer(std::string input)
-{
-    this->input = input;
-}*/
-
 Lexer::Lexer()
 {
 
