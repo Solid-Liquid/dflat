@@ -10,6 +10,8 @@ using namespace dflat;
 
 int main(int argc, char* argv[])
 {
+	// This is a comment
+
     //TOKEN USE EXAMPLE
     Token* tk = new NumberToken(3); //store a number token in a base class token pointer
 
