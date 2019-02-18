@@ -21,6 +21,11 @@ namespace dflat
         public:
     };
 
+    class FunctionToken
+    {
+        public:
+    };
+
     class IfToken
     {
         public:
@@ -66,7 +71,7 @@ namespace dflat
         public:
     };
 
-    class BangToken
+    class BangToken //!
     {
         public:
     };
