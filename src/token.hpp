@@ -131,6 +131,16 @@ namespace dflat
         public:
     };
 
+    class NewToken
+    {
+        public:
+    };
+
+    class PrintlineToken
+    {
+        public:
+    };
+
 } //namespace dflat
 
 #endif // TOKEN_HPP
