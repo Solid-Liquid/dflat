@@ -16,9 +16,93 @@ Vector<TokenPtr> tokens(Ts&&... in)
 
 TEST_CASE( "Lexer produces correct output", "[lexer]" )
 {
+    //Tests for single tokens getting tokenized properly:
+
     REQUIRE ( tokenize("3") == tokens(
         NumberToken(3)
         ));
+
+    REQUIRE ( tokenize("450") == tokens(
+        NumberToken(450)
+        ));
+
+    REQUIRE ( tokenize("x") == tokens(
+        VariableToken("x")
+        ));
+
+    REQUIRE ( tokenize("func") == tokens(
+        VariableToken("func")
+        ));
+
+    REQUIRE ( tokenize("\n") == tokens(
+        NewlineToken()
+        ));
+
+    REQUIRE ( tokenize("if") == tokens(
+        IfToken()
+        ));
+
+    REQUIRE ( tokenize("else") == tokens(
+        ElseToken()
+        ));
+
+    REQUIRE ( tokenize("+") == tokens(
+        PlusToken()
+        ));
+
+    REQUIRE ( tokenize("-") == tokens(
+        MinusToken()
+        ));
+
+    REQUIRE ( tokenize("/") == tokens(
+        DivisionToken()
+        ));
+
+    REQUIRE ( tokenize("*") == tokens(
+        MultiplyToken()
+        ));
+
+    REQUIRE ( tokenize("=") == tokens(
+        EqualToken()
+        ));
+
+    REQUIRE ( tokenize("{") == tokens(
+        LeftBraceToken()
+        ));
+
+    REQUIRE ( tokenize("}") == tokens(
+        RightBraceToken()
+        ));
+
+    REQUIRE ( tokenize("(") == tokens(
+        LeftParenToken()
+        ));
+
+    REQUIRE ( tokenize(")") == tokens(
+        RightParenToken()
+        ));
+
+    REQUIRE ( tokenize("for") == tokens(
+        ForToken()
+        ));
+
+    REQUIRE ( tokenize("while") == tokens(
+        WhileToken()
+        ));
+
+    REQUIRE ( tokenize("!") == tokens(
+        NotToken()
+        ));
+
+    REQUIRE ( tokenize("||") == tokens(
+        LogicalToken()
+        ));
+
+    REQUIRE ( tokenize("&&") == tokens(
+        LogicalToken()
+        ));
+
+    //Tests for multiple tokens and special cases being tokenized:
     
     REQUIRE ( tokenize("3    ") == tokens(
         NumberToken(3)
