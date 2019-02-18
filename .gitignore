@@ -1,3 +1,4 @@
 build
 local
 CMakeLists.txt.user
+.vs
