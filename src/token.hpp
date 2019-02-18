@@ -5,8 +5,9 @@
 
 namespace dflat
 {
-    enum TokType { tokNum, tokVar, tokFunc, tokIf, tokElse, tokPlus, tokMinus, tokDiv, tokMult, tokRBrace, tokLBrace,
-                 tokLParen, tokRParen };
+    enum TokType { tokNum, tokVar, tokIf, tokElse, tokPlus, tokMinus, tokDiv,
+                   tokEqual, tokMult, tokRBrace, tokLBrace, tokLParen, tokRParen,
+                   tokNewLine, tokFor, tokWhile, tokLogic, tokNot };
 
     class Token
     {
@@ -36,12 +37,6 @@ namespace dflat
         VariableToken(String const&);
         TokType getType() const { return tokVar; }
         String name;
-    };
-
-    class FunctionToken : public Token
-    {
-    public:
-        TokType getType() const { return tokFunc; }
     };
 
     class IfToken : public Token
@@ -80,6 +75,12 @@ namespace dflat
         TokType getType() const { return tokDiv; }
     };
 
+    class EqualToken : public Token
+    {
+    public:
+        TokType getType() const { return tokEqual; }
+    };
+
     class LeftBraceToken : public Token
     {
     public:
@@ -104,65 +105,35 @@ namespace dflat
         TokType getType() const { return tokRParen; }
     };
 
-//    class LogicalAndToken : public Token
-//    {
-//    public:
-//        TokType getType() const { return tok; }
-//    };
+    class NewlineToken : public Token
+    {
+    public:
+        TokType getType() const { return tokNewLine; }
+    };
 
-//    class LogicalOrToken : public Token
-//    {
-//    public:
-//        TokType getType() const { return tok; }
-//    };
+    class ForToken : public Token
+    {
+    public:
+        TokType getType() const { return tokFor; }
+    };
 
-//    class BangToken : public Token//!
-//    {
-//    public:
-//        TokType getType() const { return tok; }
-//    };
+    class WhileToken : public Token
+    {
+    public:
+        TokType getType() const { return tokWhile; }
+    };
 
-//    class LeftBracketToken : public Token
-//    {
-//    public:
-//        TokType getType() const { return tok; }
-//    };
+    class LogicalToken : public Token
+    {
+    public:
+        TokType getType() const { return tokLogic; }
+    };
 
-//    class RightBracketToken : public Token
-//    {
-//    public:
-//        TokType getType() const { return tok; }
-//    };
-
-//    class EqualToken : public Token
-//    {
-//    public:
-//        TokType getType() const { return tok; }
-//    };
-
-//    class PointToken : public Token
-//    {
-//    public:
-//        TokType getType() const { return tok; }
-//    };
-
-//    class ForToken : public Token
-//    {
-//    public:
-//        TokType getType() const { return tok; }
-//    };
-
-//    class WhileToken : public Token
-//    {
-//    public:
-//        TokType getType() const { return tok; }
-//    };
-
-//    class NewlineToken : public Token
-//    {
-//    public:
-//        TokType getType() const { return tok; }
-//    };
+    class NotToken : public Token //!
+    {
+    public:
+        TokType getType() const { return tokNot; }
+    };
 
 } //namespace dflat
 
