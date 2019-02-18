@@ -13,23 +13,28 @@ TEST_CASE( "LexerCore handles input correctly", "[lexercore]" )
     REQUIRE ( lc._input == "ab" );
     REQUIRE ( lc._pos   == 0 );
     REQUIRE ( lc.peek() == 'a' );
+    REQUIRE ( lc.at_end() == false );
 
     // Advance 1 and check.
     REQUIRE ( lc.get()  == 'a' );
     REQUIRE ( lc.peek() == 'b' );
     REQUIRE ( lc._pos   == 1 );
+    REQUIRE ( lc.at_end() == false );
 
     // Advance 1 and check.
     REQUIRE ( lc.get()  == 'b' );
     REQUIRE ( lc.peek() == '\0' );
-    REQUIRE ( lc._pos   == 2);
+    REQUIRE ( lc._pos   == 2 );
+    REQUIRE ( lc.at_end() == true );
 
     // Advancing when at end should be idempotent.
     REQUIRE ( lc.get()  == '\0' );
     REQUIRE ( lc.peek() == '\0' );
     REQUIRE ( lc._pos   == 2);
+    REQUIRE ( lc.at_end() == true );
     
     REQUIRE ( lc.get()  == '\0' );
     REQUIRE ( lc.peek() == '\0' );
     REQUIRE ( lc._pos   == 2);
+    REQUIRE ( lc.at_end() == true );
 }
