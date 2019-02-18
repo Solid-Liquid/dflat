@@ -12,10 +12,12 @@ int main(int argc, char* argv[])
 {
     //TOKEN USE EXAMPLE
     Token* tk = new NumberToken(3); //store a number token in a base class token pointer
-    if(tk->getType() == tokNum) //check what type the token is (compare to tokNum enumeration for token number)
+
+    //try to get as desired type
+    if (auto tkNum = tk->as<NumberToken>())
     {
-        dynamic_cast<NumberToken*>(tk)->num = 5;  //use dynamic cast to change the NumberToken stored number
-        cout << dynamic_cast<NumberToken*>(tk)->num << endl; //use dynamic cast to print the stored number
+        tkNum->num = 5;
+        cout << tkNum->num << endl;
     }
     //END TOKEN USE EXAMPLE
 

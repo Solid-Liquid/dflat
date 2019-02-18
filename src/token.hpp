@@ -13,6 +13,12 @@ namespace dflat
     public:
         virtual ~Token();
         virtual TokType getType() const = 0;
+
+        template <typename T>
+        T* as()
+        {
+            return dynamic_cast<T*>(this);
+        }
     };
 
 
