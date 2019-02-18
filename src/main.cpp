@@ -5,6 +5,7 @@
 
 int main(int argc, char* argv[])
 {
+    //simple
     std::string fileName;
 
     if(argc == 2)
