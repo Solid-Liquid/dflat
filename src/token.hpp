@@ -18,7 +18,7 @@ namespace dflat
     };
 
 
-    class NumberToken : public virtual Token
+    class NumberToken : public Token
     {
     public:
         NumberToken();
@@ -26,133 +26,133 @@ namespace dflat
         TokType getType();
     };
 
-    class VariableToken : public virtual Token
+    class VariableToken : public Token
     {
     public:
         TokType getType();
     };
 
-    class FunctionToken : public virtual Token
+    class FunctionToken : public Token
     {
     public:
         TokType getType();
     };
 
-    class IfToken : public virtual Token
+    class IfToken : public Token
     {
     public:
         TokType getType();
     };
 
-    class ElseToken : public virtual Token
+    class ElseToken : public Token
     {
     public:
         TokType getType();
     };
 
-    class PlusToken : public virtual Token
+    class PlusToken : public Token
     {
     public:
         TokType getType();
     };
 
-    class MinusToken : public virtual Token
+    class MinusToken : public Token
     {
     public:
         TokType getType();
     };
 
-    class MultiplyToken : public virtual Token
+    class MultiplyToken : public Token
     {
     public:
         TokType getType();
     };
 
-    class DivisionToken : public virtual Token
+    class DivisionToken : public Token
     {
     public:
         TokType getType();
     };
 
-    class LeftBraceToken : public virtual Token
+    class LeftBraceToken : public Token
     {
     public:
         TokType getType();
     };
 
-    class RightBraceToken : public virtual Token
+    class RightBraceToken : public Token
     {
     public:
         TokType getType();
     };
 
-    class LeftParenToken : public virtual Token
+    class LeftParenToken : public Token
     {
     public:
         TokType getType();
     };
 
-    class RightParenToken : public virtual Token
+    class RightParenToken : public Token
     {
     public:
         TokType getType();
     };
 
-//    class LogicalAndToken : public virtual Token
+//    class LogicalAndToken : public Token
 //    {
 //    public:
 //        TokType getType();
 //    };
 
-//    class LogicalOrToken : public virtual Token
+//    class LogicalOrToken : public Token
 //    {
 //    public:
 //        TokType getType();
 //    };
 
-//    class BangToken : public virtual Token//!
+//    class BangToken : public Token//!
 //    {
 //    public:
 //        TokType getType();
 //    };
 
-//    class LeftBracketToken : public virtual Token
+//    class LeftBracketToken : public Token
 //    {
 //    public:
 //        TokType getType();
 //    };
 
-//    class RightBracketToken : public virtual Token
+//    class RightBracketToken : public Token
 //    {
 //    public:
 //        TokType getType();
 //    };
 
-//    class EqualToken : public virtual Token
+//    class EqualToken : public Token
 //    {
 //    public:
 //        TokType getType();
 //    };
 
-//    class PointToken : public virtual Token
+//    class PointToken : public Token
 //    {
 //    public:
 //        TokType getType();
 //    };
 
-//    class ForToken : public virtual Token
+//    class ForToken : public Token
 //    {
 //    public:
 //        TokType getType();
 //    };
 
-//    class WhileToken : public virtual Token
+//    class WhileToken : public Token
 //    {
 //    public:
 //        TokType getType();
 //    };
 
-//    class NewlineToken : public virtual Token
+//    class NewlineToken : public Token
 //    {
 //    public:
 //        TokType getType();
