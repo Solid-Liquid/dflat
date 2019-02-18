@@ -2,6 +2,7 @@
 #define TOKEN_HPP
 
 #include "string.hpp"
+#include <memory>
 
 namespace dflat
 {
@@ -21,6 +22,8 @@ namespace dflat
             return dynamic_cast<T*>(this);
         }
     };
+
+    using TokenPtr = std::unique_ptr<Token>;
 
 
     class NumberToken : public Token
