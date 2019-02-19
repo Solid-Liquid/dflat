@@ -103,6 +103,7 @@ TokenPtr Lexer::lookupPunct(char c) const
         case '&': return make_unique<AndToken>();
         case '|': return make_unique<OrToken>();
         case '!': return make_unique<NotToken>();
+        case '\n': return make_unique<NewlineToken>();
         default: return nullptr;
     }
 }
