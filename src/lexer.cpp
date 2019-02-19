@@ -34,11 +34,15 @@ TokenPtr Lexer::tryTokenizeVariable()
         var += get();
         c = peek();
     }
+
+    if(var.length() == 0)
+        return nullptr;
     
     TokenPtr ret = lookupKeyword(var);
 
     if(ret == nullptr)
         return make_unique<VariableToken>(var);
+
     return ret;
 }
 
