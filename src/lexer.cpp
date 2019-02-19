@@ -119,7 +119,8 @@ void Lexer::skipWhitespace()
 
     while (c == ' ' || c == '\t') // no \n
     {
-        c = get();
+        next();
+        c = peek();
     }
 }
 
