@@ -105,6 +105,7 @@ TokenPtr Lexer::lookupPunct(char c) const
         case ')': return make_unique<RightParenToken>();
         case '{': return make_unique<LeftBraceToken>();
         case '}': return make_unique<RightBraceToken>();
+        case '=': return make_unique<EqualToken>();
         case '+': return make_unique<PlusToken>();
         case '-': return make_unique<MinusToken>();
         case '*': return make_unique<MultiplyToken>();

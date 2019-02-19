@@ -23,6 +23,12 @@ namespace dflat
         {
             return dynamic_cast<T*>(this);
         }
+        
+        template <typename T>
+        T const* as() const
+        {
+            return dynamic_cast<T const*>(this);
+        }
     };
 
     using TokenPtr = std::unique_ptr<Token>;

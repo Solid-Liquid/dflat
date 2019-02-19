@@ -14,9 +14,72 @@ Vector<TokenPtr> tokens(Ts&&... in)
     return out;
 }
 
+// TODO This is hardly ideal
+namespace dflat 
+{
+    template <typename T>
+    bool cmp(TokenPtr const&, TokenPtr const&) = delete;
+
+    template <>
+    bool cmp<NumberToken>(TokenPtr const& a, TokenPtr const& b)
+    {
+        return a->as<NumberToken>()->num
+            == b->as<NumberToken>()->num;
+    }
+
+    template <>
+    bool cmp<VariableToken>(TokenPtr const& a, TokenPtr const& b)
+    {
+        return a->as<VariableToken>()->name
+            == b->as<VariableToken>()->name;
+    }
+
+    bool operator==(TokenPtr const& a, TokenPtr const& b)
+    {
+        if (a->getType() != b->getType())
+        {
+            return false;
+        }
+
+        switch (a->getType())
+        {
+            case tokNum: 
+                return cmp<NumberToken>(a, b);
+            
+            case tokVar: 
+                return cmp<VariableToken>(a, b);
+            
+            case tokIf:
+            case tokElse:
+            case tokPlus:
+            case tokMinus:
+            case tokDiv:
+            case tokEqual:
+            case tokMult:
+            case tokRBrace:
+            case tokLBrace:
+            case tokLParen:
+            case tokRParen:
+            case tokNewLine:
+            case tokFor:
+            case tokWhile:
+            case tokAnd:
+            case tokNot:
+            case tokOr:
+                 return true;
+     
+            default: 
+                std::abort(); 
+                return false;
+        }
+    }
+}
+
 TEST_CASE( "Lexer produces correct output", "[lexer]" )
 {
     //Tests for single tokens getting tokenized properly:
+    
+    REQUIRE ( tokens(NumberToken(1)) == tokens(NumberToken(1)) );
 
     REQUIRE ( tokenize("3") == tokens(
         NumberToken(3)
@@ -94,11 +157,11 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         NotToken()
         ));
 
-    REQUIRE ( tokenize("||") == tokens(
-        AndToken()
+    REQUIRE ( tokenize("|") == tokens(
+        OrToken()
         ));
 
-    REQUIRE ( tokenize("&&") == tokens(
+    REQUIRE ( tokenize("&") == tokens(
         AndToken()
         ));
 
