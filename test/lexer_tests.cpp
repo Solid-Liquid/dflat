@@ -95,11 +95,11 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         ));
 
     REQUIRE ( tokenize("||") == tokens(
-        LogicalToken()
+        AndToken()
         ));
 
     REQUIRE ( tokenize("&&") == tokens(
-        LogicalToken()
+        AndToken()
         ));
 
     //Tests for multiple tokens and special cases being tokenized:
