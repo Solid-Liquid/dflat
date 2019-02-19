@@ -5,21 +5,23 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(dflat CXX)
 
-set(DFLAT_FILES
-    src/lexer.cpp
-    src/lexer.hpp
-    src/token.cpp
-    src/token.hpp
+set(DFLAT_COMMON_FILES
+    src/lexer.cpp src/lexer.hpp
+    src/lexercore.cpp src/lexercore.hpp
+    src/token.cpp src/token.hpp
     )
 
 project(tests CXX)
 
-set(TESTS_FILES
-    test/lexertests.cpp
+add_executable(dflat ${DFLAT_COMMON_FILES}
+    src/main.cpp
     )
 
-add_executable(dflat src/main.cpp ${DFLAT_FILES})
-add_executable(tests test/main.cpp ${TESTS_FILES})
+add_executable(tests ${DFLAT_COMMON_FILES}
+    test/main.cpp
+    test/lexercore_tests.cpp
+    test/lexer_tests.cpp
+    )
     
 target_link_libraries(dflat 
     )
@@ -49,7 +51,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
             -Werror=return-type
             -Werror=switch
         
-            -Werror
             -Wshadow
     )
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -61,7 +62,6 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
             -Werror=switch
             -Wfatal-errors
         
-            -Werror
             -Wshadow
             -Wnon-virtual-dtor
             -Wold-style-cast

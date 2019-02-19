@@ -3,9 +3,14 @@
 #include <fstream>
 #include <sstream>
 
+#include <lexer.hpp>
+
+using namespace std;
+using namespace dflat;
+
 int main(int argc, char* argv[])
 {
-    std::string fileName;
+    string fileName;
 
     if(argc == 2)
     {
@@ -15,13 +20,13 @@ int main(int argc, char* argv[])
     else
     {
         //prompt user for filename in terminal:
-        std::cout << "Enter the name of a file: ";
-        std::getline(std::cin,fileName);
+        cout << "Enter the name of a file: ";
+        getline(cin,fileName);
     }
 
-    std::ifstream file(fileName);
-    std::stringstream buffer;
-    std::string fileContents;
+    ifstream file(fileName);
+    stringstream buffer;
+    string fileContents;
 
     if(file.is_open())
     {
@@ -30,12 +35,16 @@ int main(int argc, char* argv[])
     }
     else
     {
-        std::cout << "Error: File not found!\n";
+        cout << "Error: File not found!\n";
         return 0;
     }
 
     ///DO STUFF WITH FILE CONTENTS
-    std::cout << fileContents << std::endl;
+    Vector<TokenPtr> tokens = tokenize(fileContents); //run lexer
+    for(unsigned long long i=0; i<tokens.size(); ++i)
+    {
+        cout << tokens[i]->toString() << endl;
+    }
 
     return 0;
 }

@@ -1,15 +1,15 @@
 #ifndef LEXER_HPP
 #define LEXER_HPP
 
+#include "lexercore.hpp"
+#include "vector.hpp"
+#include "token.hpp"
+
 namespace dflat
 {
 
-class Lexer
-{
-    public:
-        Lexer();
-};
+Vector<TokenPtr> tokenize(String const&);
 
-} //namespace dlfat
+} //namespace dflat
 
 #endif // LEXER_HPP
