@@ -3,14 +3,14 @@
 #include <fstream>
 #include <sstream>
 
-#include <token.hpp>
+#include <lexer.hpp>
 
 using namespace std;
 using namespace dflat;
 
 int main(int argc, char* argv[])
 {
-	// This is a comment
+	//tokenize("bunch o shit");
 
     //TOKEN USE EXAMPLE
     Token* tk = new NumberToken(3); //store a number token in a base class token pointer

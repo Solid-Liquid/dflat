@@ -3,12 +3,13 @@
 namespace dflat
 {
 
+
 class Lexer : private LexerCore
 {
     public:
         Lexer(String const&);
         Vector<TokenPtr> tokenize();
-
+        //TokenPtr singleToken();
 };
 
 Lexer::Lexer(String const& input)
@@ -16,10 +17,27 @@ Lexer::Lexer(String const& input)
 {
 }
 
+// TokenPtr Lexer::singleToken(){
+//     TokenPtr tok = nullptr;
+
+//     // if(){
+        
+//     // }
+
+//     return nullptr;
+// }
+
 Vector<TokenPtr> Lexer::tokenize()
 {
     Vector<TokenPtr> tokens;
     // TODO everything
+    TokenPtr current = nullptr;
+
+    // while( (current = singleToken()) !=  nullptr) {
+    //     tokens.push_back(current);
+    // }
+    
+
     return tokens;
 }
 

@@ -7,8 +7,8 @@
 namespace dflat
 {
     enum TokType { tokNum, tokVar, tokIf, tokElse, tokPlus, tokMinus, tokDiv,
-                   tokEqual, tokMult, tokRBrace, tokLBrace, tokLParen, tokRParen,
-                   tokNewLine, tokFor, tokWhile, tokAnd, tokNot, tokOr };
+                    tokEqual, tokMult, tokRBrace, tokLBrace, tokLParen, tokRParen,
+                    tokNewLine, tokFor, tokWhile, tokAnd, tokNot, tokOr };
 
     class Token
     {
