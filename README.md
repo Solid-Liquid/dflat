@@ -10,13 +10,16 @@
 - CMake
 - C++17 or later compiler
 
-## Running
-This produces two executable files: dflat and tests.
-
-To tokenize a file: `dflat <input filename>`
-
-To run tests: `tests`
-
+## Build/Run
+In project directory:
+```
+mkdir build
+cd build
+cmake ..
+make
+./dflat <input filename>
+./tests
+```
 
 <h1>Language Design Proposal:</h1>
 <h3>Name: Db (D flat)</h3>
