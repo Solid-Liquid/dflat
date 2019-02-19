@@ -19,8 +19,13 @@ int main(int argc, char* argv[])
     if (auto tkNum = tk->as<NumberToken>())
     {
         tkNum->num = 5;
-        cout << tkNum->num << endl;
+        String test = tkNum->toString();
+        cout << "Quick test (delete later): " << test << " ";
     }
+    Token* point = new LeftBraceToken();
+    cout << point->toString() << endl;
+    delete tk;
+    delete point;
     //END TOKEN USE EXAMPLE
 
     string fileName;
