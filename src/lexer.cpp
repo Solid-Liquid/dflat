@@ -43,18 +43,22 @@ TokenPtr Lexer::tryTokenizeVariable()
 
 TokenPtr Lexer::tryTokenizeNumber()
 {
-    const int initialInputPos = _pos;
+    const size_t initialInputPos = _pos;
     String digits = "";
 
-        while (char index = peek() && isdigit(index) ) { 
+    char index = peek();
+    while ( index && isdigit(index) )
+    {
         digits += index;
         next();
+        index = peek();
     }
 
-    if ( digits.length > 0)
+    if ( digits.length() > 0)
     {
         return std::make_unique<NumberToken>(std::stoi(digits));
-    } else 
+    }
+    else
     {
         _pos = initialInputPos;
         return nullptr;
@@ -125,10 +129,10 @@ void Lexer::skipWhitespace()
 TokenPtr Lexer::singleToken(){
     TokenPtr tok = nullptr;
 
-    if (tok = tryTokenizeVariable())
+    if ((tok = tryTokenizeVariable()))
     {
         return tok;
-    } else if (tok = tryTokenizeNumber())
+    } else if ((tok = tryTokenizeNumber()))
     {
         return tok;
     }
