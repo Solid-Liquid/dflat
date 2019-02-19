@@ -130,11 +130,17 @@ void Lexer::skipWhitespace()
 TokenPtr Lexer::singleToken(){
     TokenPtr tok = nullptr;
 
-    if ((tok = tryTokenizeVariable()))
+    if (tok = tryTokenizeVariable())
     {
         return tok;
-    } else if ((tok = tryTokenizeNumber()))
+    } 
+    else if (tok = tryTokenizeNumber())
     {
+        return tok;
+    }
+    else if (tok = lookupPunct(peek()))
+    {
+        next();
         return tok;
     }
 
