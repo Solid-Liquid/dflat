@@ -26,7 +26,19 @@ Lexer::Lexer(String const& input)
 
 TokenPtr Lexer::tryTokenizeVariable()
 {
+    char c = peek();
+    String var = "";
 
+    while((c >= 'A' && c <= 'Z') || (c >= 'a' && c < 'z' ))
+    {
+        var += get();
+        c = peek();
+    }
+
+    // see if var is contained in enum
+    // if in enum, return that specific token
+    // else return variable token
+    return std::make_unique<VariableToken>(var);
 }
 
 TokenPtr Lexer::tryTokenizeNumber()
