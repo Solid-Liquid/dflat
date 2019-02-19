@@ -3,7 +3,7 @@
 
 namespace dflat
 {
-    using std::make_unique;
+    using namespace std;
 
 class Lexer : private LexerCore
 {
@@ -38,7 +38,7 @@ TokenPtr Lexer::tryTokenizeVariable()
     // see if var is contained in enum
     // if in enum, return that specific token
     // else return variable token
-    return std::make_unique<VariableToken>(var);
+    return make_unique<VariableToken>(var);
 }
 
 TokenPtr Lexer::tryTokenizeNumber()
@@ -56,7 +56,7 @@ TokenPtr Lexer::tryTokenizeNumber()
 
     if ( digits.length() > 0)
     {
-        return std::make_unique<NumberToken>(std::stoi(digits));
+        return make_unique<NumberToken>(stoi(digits));
     }
     else
     {
@@ -145,10 +145,10 @@ Vector<TokenPtr> Lexer::tokenize()
     Vector<TokenPtr> tokens;
     TokenPtr current = nullptr;
 
-    while( (current = singleToken()) !=  nullptr) {
-        tokens.push_back(current);
+    while(current = singleToken()) 
+    {
+        tokens.push_back(move(current));
     }
-    
 
     return tokens;
 }
