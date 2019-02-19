@@ -12,7 +12,8 @@ class Lexer : private LexerCore
         Vector<TokenPtr> tokenize();
         //TokenPtr singleToken();
         void skipWhitespace();
-        TokenPtr lookupKeyword(String const&);
+        TokenPtr lookupKeyword(String const&) const;
+        TokenPtr lookupPunct(char c) const;
 };
 
 Lexer::Lexer(String const& input)
@@ -20,7 +21,7 @@ Lexer::Lexer(String const& input)
 {
 }
 
-TokenPtr Lexer::lookupKeyword(String const& name)
+TokenPtr Lexer::lookupKeyword(String const& name) const
 {
     static Map<String, TokType> const kws
     {
@@ -43,6 +44,25 @@ TokenPtr Lexer::lookupKeyword(String const& name)
         case tokElse: return make_unique<ElseToken>();
         case tokFor: return make_unique<ForToken>();
         case tokWhile: return make_unique<WhileToken>();
+        default: return nullptr;
+    }
+}
+
+TokenPtr Lexer::lookupPunct(char c) const
+{
+    switch (c)
+    {
+        case '(': return make_unique<LeftParenToken>();
+        case ')': return make_unique<RightParenToken>();
+        case '{': return make_unique<LeftBraceToken>();
+        case '}': return make_unique<RightBraceToken>();
+        case '+': return make_unique<PlusToken>();
+        case '-': return make_unique<MinusToken>();
+        case '*': return make_unique<MultiplyToken>();
+        case '/': return make_unique<DivisionToken>();
+        case '&': return make_unique<AndToken>();
+        case '|': return make_unique<OrToken>();
+        case '!': return make_unique<NotToken>();
         default: return nullptr;
     }
 }
