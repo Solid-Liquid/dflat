@@ -29,7 +29,12 @@ TokenPtr Lexer::tryTokenizeVariable()
     char c = peek();
     String var = "";
 
-    while((c >= 'A' && c <= 'Z') || (c >= 'a' && c < 'z' ))
+    if (!isalpha(c))
+    {
+        return nullptr;
+    }
+
+    while (isalpha(c) || isdigit(c))
     {
         var += get();
         c = peek();
@@ -157,10 +162,12 @@ Vector<TokenPtr> Lexer::tokenize()
 {
     Vector<TokenPtr> tokens;
     TokenPtr current = nullptr;
+    skipWhitespace();
 
     while(current = singleToken()) 
     {
         tokens.push_back(move(current));
+        skipWhitespace();
     }
 
     return tokens;
