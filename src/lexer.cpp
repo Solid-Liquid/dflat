@@ -34,11 +34,12 @@ TokenPtr Lexer::tryTokenizeVariable()
         var += get();
         c = peek();
     }
+    
+    TokenPtr ret = lookupKeyword(var);
 
-    // see if var is contained in enum
-    // if in enum, return that specific token
-    // else return variable token
-    return make_unique<VariableToken>(var);
+    if(ret == nullptr)
+        return make_unique<VariableToken>(var);
+    return ret;
 }
 
 TokenPtr Lexer::tryTokenizeNumber()
