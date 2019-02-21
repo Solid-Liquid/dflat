@@ -3,7 +3,7 @@
 #include <fstream>
 #include <sstream>
 
-#include <lexer.hpp>
+#include "lexer.hpp"
 
 using namespace std;
 using namespace dflat;
