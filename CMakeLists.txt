@@ -9,6 +9,7 @@ set(DFLAT_COMMON_FILES
     src/lexer.cpp src/lexer.hpp
     src/lexercore.cpp src/lexercore.hpp
     src/token.cpp src/token.hpp
+    src/parser.cpp src/parser.hpp
     )
 
 project(tests CXX)
@@ -21,6 +22,7 @@ add_executable(tests ${DFLAT_COMMON_FILES}
     test/main.cpp
     test/lexercore_tests.cpp
     test/lexer_tests.cpp
+    test/parser_tests.cpp
     )
     
 target_link_libraries(dflat 

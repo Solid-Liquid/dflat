@@ -141,15 +141,15 @@ void Lexer::skipWhitespace()
 TokenPtr Lexer::singleToken(){
     TokenPtr tok = nullptr;
 
-    if (tok = tryTokenizeVariable())
+    if ((tok = tryTokenizeVariable()))
     {
         return tok;
     } 
-    else if (tok = tryTokenizeNumber())
+    else if ((tok = tryTokenizeNumber()))
     {
         return tok;
     }
-    else if (tok = lookupPunct(peek()))
+    else if ((tok = lookupPunct(peek())))
     {
         next();
         return tok;
@@ -164,7 +164,7 @@ Vector<TokenPtr> Lexer::tokenize()
     TokenPtr current = nullptr;
     skipWhitespace();
 
-    while(current = singleToken()) 
+    while((current = singleToken()))
     {
         tokens.push_back(move(current));
         skipWhitespace();
