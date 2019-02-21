@@ -10,6 +10,7 @@ set(DFLAT_COMMON_FILES
     src/lexercore.cpp src/lexercore.hpp
     src/token.cpp src/token.hpp
     src/parser.cpp src/parser.hpp
+    src/op.cpp src/op.hpp
     )
 
 project(tests CXX)

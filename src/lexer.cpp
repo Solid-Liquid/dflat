@@ -77,7 +77,7 @@ TokenPtr Lexer::tryTokenizeNumber()
 
 TokenPtr Lexer::lookupKeyword(String const& name) const
 {
-    static Map<String, TokType> const kws
+    static Map<String, TokType> const KWS
     {
         { "if", tokIf },
         { "else", tokElse },
@@ -85,9 +85,9 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
         { "while", tokWhile },
     };
 
-    auto it = kws.find(name);
+    auto it = KWS.find(name);
 
-    if (it == kws.end())
+    if (it == KWS.end())
     {
         return nullptr;
     }
