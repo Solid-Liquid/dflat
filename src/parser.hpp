@@ -9,21 +9,13 @@
 namespace dflat
 {
 
-class parser
+class Parser
 {
 public:
-    parser();
+    Parser();
 private:
-    // static Map<TokenPtr, OpPtr> const ADDITIVE_OP_MAP {
-    //     { PlusToken(), PlusOp() },
-    //     { MinusToken(), MinusOp() },
-    // };
 
-    // static Map<TokenPtr, OpPtr> const MULTIPLICATIVE_OP_MAP
-    // {
-    //     { MultiplyToken(), MultOp() },
-    //     { DivisionToken(), DivisionToken() },
-    // };
+    OpPtr getOp(TokenPtr const&) const;
 };
 
 } //namespace dflat
