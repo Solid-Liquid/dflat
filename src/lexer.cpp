@@ -19,6 +19,16 @@ class Lexer : private LexerCore
         TokenPtr lookupPunct(char c) const;
 };
 
+LexerException::LexerException(String msg) noexcept
+{
+    message = msg;
+}
+
+const char* LexerException::what() const noexcept
+{
+    return message.c_str();
+}
+
 Lexer::Lexer(String const& input)
     : LexerCore(input)
 {
@@ -29,12 +39,12 @@ TokenPtr Lexer::tryTokenizeVariable()
     char c = peek();
     String var = "";
 
-    if (!isalpha(c))
+    if (!isalpha(c) && (c!='_'))
     {
         return nullptr;
     }
 
-    while (isalpha(c) || isdigit(c))
+    while (isalpha(c) || isdigit(c) || (c=='_'))
     {
         var += get();
         c = peek();
@@ -168,6 +178,13 @@ Vector<TokenPtr> Lexer::tokenize()
     {
         tokens.push_back(move(current));
         skipWhitespace();
+    }
+
+    if(!at_end()) //If not end, but no valid token was returned above, error.
+    {
+        String msg = "Lexer Error: Illegal character: ";
+        msg.push_back(peek());
+        throw LexerException(msg);
     }
 
     return tokens;

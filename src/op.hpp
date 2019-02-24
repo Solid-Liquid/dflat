@@ -2,6 +2,7 @@
 #define OP_HPP
 
 #include "string.hpp"
+#include <memory>
 
 namespace dflat
 {
@@ -48,5 +49,5 @@ class DivOp : public Op
 };
 
 
-}
+} //namespace dflat
 #endif // OP_HPP

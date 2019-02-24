@@ -18,6 +18,15 @@ private:
     OpPtr getOp(TokenPtr const&) const;
 };
 
+class ParserException: public std::exception
+{
+public:
+    ParserException(String msg) noexcept;
+    const char* what() const noexcept;
+private:
+    String message;
+};
+
 } //namespace dflat
 
 #endif // PARSER_HPP
