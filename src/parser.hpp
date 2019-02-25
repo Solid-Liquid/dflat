@@ -4,7 +4,7 @@
 #include "map.hpp"
 #include "string.hpp"
 #include "token.hpp"
-#include "ast.hpp"
+#include "asn.hpp"
 
 namespace dflat
 {
@@ -24,22 +24,20 @@ public:
     ParserException(String msg) noexcept;
     const char* what() const noexcept;
 
-    Node parseExp();
+    ASNPtr parseExp();
 private:
     String message;
 
-    ParseResult<Node> parseExp(const int startPos);
+    ParseResult parseExp(const int startPos);
 };
 
-class ParseResult<A> {
-    public:
-        const A result;
-        const int tokenPos;
-        ParseResult(const A result, const int tokenPos);
-}; // ParseResult
-
-
-    using TokenPtr = std::unique_ptr<Token>;
+template <typename T>
+class ParseResult {
+public:
+    T _result;
+    std::size_t _tokenPos;
+    ParseResult(T&& result, std::size_t tokenPos);
+};
 
 } //namespace dflat
 

@@ -6,6 +6,12 @@
 
 #include "string.hpp"
 
+
+// #define DECL(name) struct name; using name##Ptr = unique_ptr<name>
+// DECL(ASN);
+// #undef DECL
+
+
 namespace dflat
 {
 
@@ -19,6 +25,8 @@ public:
     virtual ~ASN();
     virtual String toString() = 0;
 };
+
+    using ASNPtr = std::unique_ptr<ASN>;
 
 } //namespace dflat
 

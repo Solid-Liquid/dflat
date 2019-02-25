@@ -31,10 +31,8 @@ Exp Parser::parseExp()
     }
 }
 
-ParseResult::ParseResult(const A result, const int tokenPos) 
-{
-    this->result = result;
-    this->tokenPos = tokenPos;
-}
+ParseResult(T&& result, std::size_t tokenPos)
+    : _result(std::move(result)), _tokenPos(tokenPos)
+{}
 
 } //namespace dflat
