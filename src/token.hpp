@@ -7,16 +7,15 @@
 namespace dflat
 {
     enum TokType { tokNum, tokVar, tokIf, tokElse, tokPlus, tokMinus,
-                    tokDiv, tokEqual, tokMult, tokRBrace, tokLBrace,
+                    tokDiv, tokAssign, tokMult, tokRBrace, tokLBrace,
                     tokLParen, tokRParen, tokNewLine, tokFor, tokWhile,
-                    tokAnd, tokNot, tokOr };
+                    tokAnd, tokOr, tokEq, tokNotEq, tokNot };
 
     class Token
     {
     public:
         virtual ~Token();
         virtual TokType getType() const = 0;
-        virtual operator String() const = 0;
         virtual String toString() const = 0;
 
         template <typename T>
@@ -41,7 +40,6 @@ namespace dflat
         int num;
         NumberToken(int);
         TokType getType() const { return tokNum; }
-        operator String() const { return to_string(num); }
         String toString() const { return to_string(num); }
     };
 
@@ -51,7 +49,6 @@ namespace dflat
         String name;
         VariableToken(String const&);
         TokType getType() const { return tokVar; }
-        operator String() const { return name; }
         String toString() const { return name; }
     };
 
@@ -59,7 +56,6 @@ namespace dflat
     {
     public:
         TokType getType() const { return tokIf; }
-        operator String() const { return "if"; }
         String toString() const { return "if"; }
     };
 
@@ -67,7 +63,6 @@ namespace dflat
     {
     public:
         TokType getType() const { return tokElse; }
-        operator String() const { return "else"; }
         String toString() const { return "else"; }
     };
 
@@ -75,7 +70,6 @@ namespace dflat
     {
     public:
         TokType getType() const { return tokPlus; }
-        operator String() const { return "+"; }
         String toString() const { return "+"; }
     };
 
@@ -83,7 +77,6 @@ namespace dflat
     {
     public:
         TokType getType() const { return tokMinus; }
-        operator String() const { return "-"; }
         String toString() const { return "-"; }
     };
 
@@ -91,7 +84,6 @@ namespace dflat
     {
     public:
         TokType getType() const { return tokMult; }
-        operator String() const { return "*"; }
         String toString() const { return "*"; }
     };
 
@@ -99,15 +91,13 @@ namespace dflat
     {
     public:
         TokType getType() const { return tokDiv; }
-        operator String() const { return "/"; }
         String toString() const { return "/"; }
     };
 
-    class EqualToken : public Token
+    class AssignToken : public Token
     {
     public:
-        TokType getType() const { return tokEqual; }
-        operator String() const { return "="; }
+        TokType getType() const { return tokAssign; }
         String toString() const { return "="; }
     };
 
@@ -115,7 +105,6 @@ namespace dflat
     {
     public:
         TokType getType() const { return tokLBrace; }
-        operator String() const { return "{"; }
         String toString() const { return "{"; }
     };
 
@@ -123,7 +112,6 @@ namespace dflat
     {
     public:
         TokType getType() const { return tokRBrace; }
-        operator String() const { return "}"; }
         String toString() const { return "}"; }
     };
 
@@ -131,7 +119,6 @@ namespace dflat
     {
     public:
         TokType getType() const { return tokLParen; }
-        operator String() const { return "("; }
         String toString() const { return "("; }
     };
 
@@ -139,7 +126,6 @@ namespace dflat
     {
     public:
         TokType getType() const { return tokRParen; }
-        operator String() const { return ")"; }
         String toString() const { return ")"; }
     };
 
@@ -147,7 +133,6 @@ namespace dflat
     {
     public:
         TokType getType() const { return tokNewLine; }
-        operator String() const { return "\\n"; }
         String toString() const { return "\\n"; }
     };
 
@@ -155,7 +140,6 @@ namespace dflat
     {
     public:
         TokType getType() const { return tokFor; }
-        operator String() const { return "for"; }
         String toString() const { return "for"; }
     };
 
@@ -163,7 +147,6 @@ namespace dflat
     {
     public:
         TokType getType() const { return tokWhile; }
-        operator String() const { return "while"; }
         String toString() const { return "while"; }
     };
 
@@ -171,7 +154,6 @@ namespace dflat
     {
     public:
         TokType getType() const { return tokAnd; }
-        operator String() const { return "&&"; }
         String toString() const { return "&&"; }
     };
 
@@ -179,15 +161,27 @@ namespace dflat
 	{
 	public:
         TokType getType() const { return tokOr; }
-        operator String() const { return "||"; }
         String toString() const { return "||"; }
+	};
+	
+    class EqToken : public Token
+	{
+	public:
+        TokType getType() const { return tokEq; }
+        String toString() const { return "=="; }
+	};
+	
+    class NotEqToken : public Token
+	{
+	public:
+        TokType getType() const { return tokNotEq; }
+        String toString() const { return "!="; }
 	};
 
     class NotToken : public Token //!
     {
     public:
         TokType getType() const { return tokNot; }
-        operator String() const { return "!"; }
         String toString() const { return "!"; }
     };
 
