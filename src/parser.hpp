@@ -1,30 +1,20 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
-#include "map.hpp"
-#include "string.hpp"
+#include "asn.hpp"
 #include "token.hpp"
-//#include "op.hpp"
+#include "vector.hpp"
 
 namespace dflat
 {
 
-class Parser
+using ASNPtr = std::unique_ptr<ASN>; // remove me after merge
+ASNPtr parse(Vector<TokenPtr> const&);
+
+class ParserException : public std::exception
 {
 public:
-    Parser();
-private:
-
-//    OpPtr getOp(TokenPtr const&) const;
-};
-
-class ParserException: public std::exception
-{
-public:
-    ParserException(String msg) noexcept;
-    const char* what() const noexcept;
-private:
-    String message;
+    using std::exception::exception;
 };
 
 } //namespace dflat
