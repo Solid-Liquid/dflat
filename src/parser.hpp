@@ -4,7 +4,6 @@
 #include "map.hpp"
 #include "string.hpp"
 #include "token.hpp"
-#include "op.hpp"
 
 namespace dflat
 {
@@ -16,7 +15,11 @@ public:
     Parser();
 private:
 
-    OpPtr getOp(TokenPtr const&) const;
+};
+
+class Node {
+public:
+    Node();
 };
 
 class ParserException: public std::exception
@@ -25,11 +28,11 @@ public:
     ParserException(String msg) noexcept;
     const char* what() const noexcept;
 
-    Exp parseExp() throws ParserException;
+    Node parseExp();
 private:
     String message;
 
-    ParseResult<Exp> parseExp(const int startPos) throws ParserException;
+    ParseResult<Node> parseExp(const int startPos);
 };
 
 class ParseResult<A> {

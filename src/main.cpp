@@ -4,7 +4,7 @@
 #include <sstream>
 
 #include <lexer.hpp>
-#include <parser.hpp>
+#include "parser.hpp"
 
 using namespace std;
 using namespace dflat;
