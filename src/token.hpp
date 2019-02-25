@@ -9,7 +9,7 @@ namespace dflat
     enum TokType { tokNum, tokVar, tokIf, tokElse, tokPlus, tokMinus,
                     tokDiv, tokAssign, tokMult, tokRBrace, tokLBrace,
                     tokLParen, tokRParen, tokNewLine, tokFor, tokWhile,
-                    tokAnd, tokOr, tokEq, tokNotEq, tokNot };
+                    tokAnd, tokOr, tokEq, tokNotEq, tokNot, tokMember };
 
     class Token
     {
@@ -183,6 +183,13 @@ namespace dflat
     public:
         TokType getType() const { return tokNot; }
         String toString() const { return "!"; }
+    };
+    
+    class MemberToken : public Token //!
+    {
+    public:
+        TokType getType() const { return tokMember; }
+        String toString() const { return "."; }
     };
 
 } //namespace dflat

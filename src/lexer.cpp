@@ -128,6 +128,7 @@ TokenPtr Lexer::lookupPunct1(char c) const
         case '*': return make_unique<MultiplyToken>();
         case '/': return make_unique<DivisionToken>();
         case '!': return make_unique<NotToken>();
+        case '.': return make_unique<MemberToken>();
         case '\n': return make_unique<NewlineToken>();
         default: return nullptr;
     }

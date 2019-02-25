@@ -1,18 +1,10 @@
 //Unit tests for the lexer
 
 #include "catch2/catch.hpp"
+#include "token_helpers.hpp"
 #include "lexer.hpp"
 
 using namespace dflat;
-
-// Convenience function for making Token vectors to test against.
-template <typename... Ts>
-Vector<TokenPtr> tokens(Ts&&... in)
-{
-    Vector<TokenPtr> out;
-    (out.push_back(std::make_unique<Ts>(in)), ...);
-    return out;
-}
 
 // TODO This is hardly ideal
 namespace dflat 
@@ -68,6 +60,7 @@ namespace dflat
             case tokEq:
             case tokNotEq:
             case tokNot:
+            case tokMember:
                  return true;
      
             default: 
@@ -175,6 +168,10 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
     
     REQUIRE ( tokenize("!=") == tokens(
         NotEqToken()
+        ));
+
+    REQUIRE ( tokenize(".") == tokens(
+        MemberToken()
         ));
     
     //Tests for multiple tokens and special cases being tokenized:
