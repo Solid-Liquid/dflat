@@ -5,7 +5,7 @@ namespace dflat
 
 using namespace std;
 
-class Parser
+struct Parser
 {
     Vector<TokenPtr> const& _tokens;
     size_t _tokenPos;
@@ -31,83 +31,76 @@ class Parser
         ++_tokenPos;
     }
 
-    public:
-        Parser(Vector<TokenPtr> const& tokens)
-            : _tokens(tokens)
-            , _tokenPos(0)
-            , _end(make_unique<EndToken>())
-        {}
+    Parser(Vector<TokenPtr> const& tokens)
+        : _tokens(tokens)
+        , _tokenPos(0)
+        , _end(make_unique<EndToken>())
+    {}
 
-        template <typename T>
-        T const* match()
+    template <typename T>
+    T const* match()
+    {
+        T const* t = cur()->as<T>();
+
+        if (t)
         {
-            T const* t = cur()->as<T>();
-
-            if (t)
-            {
-                next();
-            }
-
-            return t;
+            next();
         }
 
-        ASNPtr parseVariable();
-        ASNPtr parseNumber();
-        ASNPtr parseExp();
+        return t;
+    }
+
+// Matches the current token against a given token type.
+//  On success, var is a reference to the current token,
+//              and the current token advances.
+//  On failure, the present function returns early with nullptr.
+#define MATCH(var, type) \
+    type const* var##__ = match<type>(); \
+    if (!var##__) { return nullptr; } \
+    type const& var = *var##__ \
+    /*end MATCH*/
+
+    ASNPtr parseVariable()
+    {
+        MATCH(var, VariableToken);
+        return make_unique<VariableExp>(var.name);
+    }
+    
+    ASNPtr parseNumber()
+    {
+        MATCH(num, NumberToken);
+        return make_unique<NumberExp>(num.num);
+    }
+    
+    ASNPtr parseExp()
+    {
+        ASNPtr result;
+
+        if (result = parseVariable())
+        {
+            return result;
+        }
+        else if (result = parseNumber())
+        {
+            return result;
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+
+    ASNPtr parseProgram()
+    {
+        return nullptr; // TODO
+    }
 };
 
-//////// DELETE THESE ON MERGE
-class VarExp : public ASN
+ASNPtr parse(Vector<TokenPtr> const& tokens)
 {
-    public:
-        String name;
-        VarExp(String const& name_)
-            : name(name_)
-        {}
-        String toString() { return "(Var " + name + ")"; }
-};
-
-class NumExp : public ASN
-{
-    public:
-        int value;
-        NumExp(int value_)
-            : value(value_)
-        {}
-        String toString() { return "(Num " + to_string(value) + ")"; }
-};
-////////
-
-#define MATCH(var, Tok) auto const* var = match<Tok>(); if (!var) { return nullptr; }
-
-ASNPtr Parser::parseVariable()
-{
-    MATCH(var, VariableToken);
-    return make_unique<VarExp>(var->name);
+    Parser parser(tokens);
+    return parser.parseProgram();
 }
 
-ASNPtr Parser::parseNumber()
-{
-    MATCH(num, NumberToken);
-    return make_unique<NumExp>(num->num);
-}
-
-ASNPtr Parser::parseExp()
-{
-    ASNPtr result;
-
-    if (result = parseVariable())
-    {
-        return result;
-    }
-    else if (result = parseNumber())
-    {
-        return result;
-    }
-    else
-    {
-        return nullptr;
-    }
-}
 
 } //namespace dflat

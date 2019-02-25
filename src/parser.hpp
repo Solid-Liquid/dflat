@@ -8,7 +8,6 @@
 namespace dflat
 {
 
-using ASNPtr = std::unique_ptr<ASN>; // remove me after merge
 ASNPtr parse(Vector<TokenPtr> const&);
 
 class ParserException : public std::exception

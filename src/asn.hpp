@@ -10,7 +10,7 @@
 namespace dflat
 {
 
-enum ASN_Type { expBinop, expIf, expNumber, expUnaryMinus, expUnaryNot };
+enum ASNType { expBinop, expIf, expNumber, expVariable, expUnaryMinus, expUnaryNot };
 
 enum OpType { opPlus, opMinus, opMult, opDiv, opAnd, opOr, opLogEqual, opLogNotEq };
 
@@ -18,21 +18,41 @@ class ASN
 {
 public: 
     virtual ~ASN();
-    virtual String toString() = 0;
-    virtual ASN_Type getType() = 0;
+    virtual String toString() const = 0;
+    virtual ASNType getType() const = 0;
 };
 
-using ASN_Ptr = std::unique_ptr<ASN>;
+using ASNPtr = std::unique_ptr<ASN>;
 
 class BinopExp: public ASN
 {
 public:
-    ASN_Ptr left, right;
+    ASNPtr left, right;
     OpType op;
 
-    BinopExp(ASN_Ptr&& _left, OpType _op, ASN_Ptr&& _right);
-    ASN_Type getType() { return expBinop; }
-    String toString();
+    BinopExp(ASNPtr&& _left, OpType _op, ASNPtr&& _right);
+    ASNType getType() const { return expBinop; }
+    String toString() const;
+};
+
+class VariableExp : public ASN
+{
+    public:
+        String name;
+
+        VariableExp(String const&);
+        ASNType getType() const { return expVariable; }
+        String toString() const;
+};
+
+class NumberExp : public ASN
+{
+    public:
+        int value;
+       
+        NumberExp(int);
+        ASNType getType() const { return expNumber; }
+        String toString() const;
 };
 
 } //namespace dflat
