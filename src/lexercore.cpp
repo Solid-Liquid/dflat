@@ -43,6 +43,21 @@ char LexerCore::peek() const
     }
 }
 
+// Returns the char at _pos + i, or \0 if it's past end.
+char LexerCore::peek_ahead(size_t i) const
+{
+    size_t ahead_pos = _pos + i;
+
+    if (ahead_pos >= _input.size())
+    {
+        return 0;
+    }
+    else
+    {
+        return _input[ahead_pos];
+    }
+}
+
 // Advances unless no input left.
 void LexerCore::next()
 {

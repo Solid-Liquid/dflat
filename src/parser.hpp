@@ -4,7 +4,7 @@
 #include "map.hpp"
 #include "string.hpp"
 #include "token.hpp"
-#include "op.hpp"
+//#include "op.hpp"
 
 namespace dflat
 {
@@ -15,7 +15,7 @@ public:
     Parser();
 private:
 
-    OpPtr getOp(TokenPtr const&) const;
+//    OpPtr getOp(TokenPtr const&) const;
 };
 
 class ParserException: public std::exception

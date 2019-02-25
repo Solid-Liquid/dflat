@@ -13,10 +13,12 @@ class Lexer : private LexerCore
         TokenPtr singleToken();
         TokenPtr tryTokenizeVariable();
         TokenPtr tryTokenizeNumber();
+        TokenPtr tryTokenizePunct();
         //TokenPtr singleToken();
         void skipWhitespace();
         TokenPtr lookupKeyword(String const&) const;
-        TokenPtr lookupPunct(char c) const;
+        TokenPtr lookupPunct1(char c) const;
+        TokenPtr lookupPunct2(char c1, char c2) const;
 };
 
 LexerException::LexerException(String msg) noexcept
@@ -112,7 +114,7 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
     }
 }
 
-TokenPtr Lexer::lookupPunct(char c) const
+TokenPtr Lexer::lookupPunct1(char c) const
 {
     switch (c)
     {
@@ -120,16 +122,60 @@ TokenPtr Lexer::lookupPunct(char c) const
         case ')': return make_unique<RightParenToken>();
         case '{': return make_unique<LeftBraceToken>();
         case '}': return make_unique<RightBraceToken>();
-        case '=': return make_unique<EqualToken>();
+        case '=': return make_unique<AssignToken>();
         case '+': return make_unique<PlusToken>();
         case '-': return make_unique<MinusToken>();
         case '*': return make_unique<MultiplyToken>();
         case '/': return make_unique<DivisionToken>();
-        case '&': return make_unique<AndToken>();
-        case '|': return make_unique<OrToken>();
         case '!': return make_unique<NotToken>();
         case '\n': return make_unique<NewlineToken>();
         default: return nullptr;
+    }
+}
+
+TokenPtr Lexer::lookupPunct2(char c1, char c2) const
+{
+    switch (c2)
+    {
+        case '=':
+            switch (c1)
+            {
+                case '=': return make_unique<EqToken>();
+                case '!': return make_unique<NotEqToken>();
+                default: return nullptr;
+            }
+
+        case '&':
+            if (c1 == '&') return make_unique<AndToken>();
+            else return nullptr;
+
+        case '|':
+            if (c1 == '|') return make_unique<OrToken>();
+            else return nullptr;
+
+        default:
+            return nullptr;
+    }
+}
+
+TokenPtr Lexer::tryTokenizePunct()
+{
+    TokenPtr tok = nullptr;
+
+    if (tok = lookupPunct2(peek(), peek_ahead(1)))
+    {
+        next();
+        next();
+        return tok;
+    }
+    else if (tok = lookupPunct1(peek()))
+    {
+        next();
+        return tok;
+    }
+    else
+    {
+        return nullptr;
     }
 }
 
@@ -159,12 +205,11 @@ TokenPtr Lexer::singleToken(){
     {
         return tok;
     }
-    else if ((tok = lookupPunct(peek())))
+    else if ((tok = tryTokenizePunct()))
     {
-        next();
         return tok;
     }
-
+    
     return nullptr;
 }
 
