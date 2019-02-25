@@ -4,6 +4,7 @@
 #include "map.hpp"
 #include "string.hpp"
 #include "token.hpp"
+#include "ast.hpp"
 
 namespace dflat
 {
@@ -35,7 +36,10 @@ class ParseResult<A> {
         const A result;
         const int tokenPos;
         ParseResult(const A result, const int tokenPos);
-} // ParseResult
+}; // ParseResult
+
+
+    using TokenPtr = std::unique_ptr<Token>;
 
 } //namespace dflat
 
