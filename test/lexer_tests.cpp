@@ -54,7 +54,7 @@ namespace dflat
             case tokPlus:
             case tokMinus:
             case tokDiv:
-            case tokEqual:
+            case tokAssign:
             case tokMult:
             case tokRBrace:
             case tokLBrace:
@@ -64,8 +64,10 @@ namespace dflat
             case tokFor:
             case tokWhile:
             case tokAnd:
-            case tokNot:
             case tokOr:
+            case tokEq:
+            case tokNotEq:
+            case tokNot:
                  return true;
      
             default: 
@@ -79,7 +81,9 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
 {
     //Tests for single tokens getting tokenized properly:
     
-    REQUIRE ( tokens(NumberToken(1)) == tokens(NumberToken(1)) );
+    REQUIRE ( tokens(NumberToken(1)) == tokens(
+        NumberToken(1)
+        ));
 
     REQUIRE ( tokenize("3") == tokens(
         NumberToken(3)
@@ -126,7 +130,7 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         ));
 
     REQUIRE ( tokenize("=") == tokens(
-        EqualToken()
+        AssignToken()
         ));
 
     REQUIRE ( tokenize("{") == tokens(
@@ -157,14 +161,22 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         NotToken()
         ));
 
-    REQUIRE ( tokenize("|") == tokens(
+    REQUIRE ( tokenize("||") == tokens(
         OrToken()
         ));
 
-    REQUIRE ( tokenize("&") == tokens(
+    REQUIRE ( tokenize("&&") == tokens(
         AndToken()
         ));
-
+    
+    REQUIRE ( tokenize("==") == tokens(
+        EqToken()
+        ));
+    
+    REQUIRE ( tokenize("!=") == tokens(
+        NotEqToken()
+        ));
+    
     //Tests for multiple tokens and special cases being tokenized:
     
     REQUIRE ( tokenize("3    ") == tokens(
@@ -198,6 +210,11 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         LeftBraceToken(),
         RightBraceToken(),
         RightParenToken()
+        ));
+    
+    REQUIRE ( tokenize("===") == tokens(
+        EqToken(), 
+        AssignToken()
         ));
     
     REQUIRE ( tokenize("*if+else-for/while") == tokens(

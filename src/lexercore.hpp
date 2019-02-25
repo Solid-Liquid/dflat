@@ -13,6 +13,7 @@ struct LexerCore
     bool at_end() const;
     char get();
     char peek() const;
+    char peek_ahead(size_t) const;
     void next();    
 
     String _input;

@@ -17,11 +17,6 @@ private:
 
 };
 
-class Node {
-public:
-    Node();
-};
-
 class ParserException: public std::exception
 {
 public:
