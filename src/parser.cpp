@@ -5,6 +5,16 @@ namespace dflat
 
 using namespace std;
 
+ParserException::ParserException(String msg) noexcept
+{
+    message = msg;
+}
+
+const char* ParserException::what() const noexcept
+{
+    return message.c_str();
+}
+
 Parser::Parser()
 {
     

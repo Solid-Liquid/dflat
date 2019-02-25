@@ -147,8 +147,8 @@ namespace dflat
     {
     public:
         TokType getType() const { return tokNewLine; }
-        operator String() const { return "\n"; }
-        String toString() const { return "\n"; }
+        operator String() const { return "\\n"; }
+        String toString() const { return "\\n"; }
     };
 
     class ForToken : public Token

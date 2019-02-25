@@ -4,6 +4,7 @@
 #include <sstream>
 
 #include <lexer.hpp>
+#include <parser.hpp>
 
 using namespace std;
 using namespace dflat;
@@ -39,12 +40,15 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    ///DO STUFF WITH FILE CONTENTS
-    Vector<TokenPtr> tokens = tokenize(fileContents); //run lexer
-    for(unsigned long long i=0; i<tokens.size(); ++i)
+    try
     {
-        cout << tokens[i]->toString() << endl;
+        //Take file contents and run compiler:
+        Vector<TokenPtr> tokens = tokenize(fileContents); //run lexer
+        for(unsigned long long i=0; i<tokens.size(); ++i)
+            cout << tokens[i]->toString() << endl;
     }
+    catch(LexerException& e) { cout << e.what() << endl; }
+    catch(ParserException& e) { cout << e.what() << endl; }
 
     return 0;
 }
