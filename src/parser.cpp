@@ -20,22 +20,21 @@ Parser::Parser()
     
 }
 
-OpPtr Parser::getOp(TokenPtr const& tok) const
+Exp Parser::parseExp() throws ParserException 
 {
-
-    switch (tok->getType())
-    {
-        case tokPlus:
-            return make_unique<PlusOp>();
-        case tokMinus:
-            return make_unique<MinusOp>();
-        case tokMult:
-            return make_unique<MultOp>();
-        case tokDiv:
-            return make_unique<DivOp>();
-        default:
-            return nullptr;
+    const ParseResult<Exp> result = parseExp(0);
+    // TODO: Why does result->tokenPos not work?
+    if (result->tokenPos == tokens->size()) {
+        return result->result;
+    } else {
+        throw new ParserException("Extra tokens starting at " + result->tokenPos);
     }
+}
+
+ParseResult::ParseResult(const A result, const int tokenPos) 
+{
+    this->result = result;
+    this->tokenPos = tokenPos;
 }
 
 } //namespace dflat
