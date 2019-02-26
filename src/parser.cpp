@@ -1,4 +1,5 @@
 #include "parser.hpp"
+#include "result.hpp"
 
 namespace dflat
 {
@@ -65,6 +66,57 @@ class Parser
         MATCH(num, NumberToken);
         return make_unique<NumberExp>(num.num);
     }
+
+    ASNPtr parseAdditive()
+    {
+        return nullptr; //TODO
+    }
+
+    Optional<OpType> parseLogicalOp()
+    {
+        switch (cur()->getType())
+        {
+            case tokAnd:    return opAnd;
+            case tokOr:     return opOr;
+            case tokEq:     return opLogEq;
+            case tokNotEq:  return opLogNotEq;
+            default:        return failure;
+        }
+    }
+
+    ASNPtr parseLogical()
+    {
+        //TODO rollback
+        ASNPtr left = parseAdditive();
+
+        if (!left) 
+        {
+            return nullptr;
+        }
+
+        Optional<OpType> op = parseLogicalOp();
+
+        if (!op) 
+        {
+            return nullptr;
+        }
+
+        ASNPtr right = parseLogical();
+
+        if (!right)
+        {
+            return nullptr;
+        }
+        
+        return make_unique<BinopExp>(move(left), *op, move(right));
+    }
+
+//    ASNPtr parseUnary()
+//    {
+//        PARSE(op, parseUnaryOp());
+//        PARSE(primary, parsePrimary());
+//        return make_unique<UnaryExp>(op, primray);
+//    }
     
     ASNPtr parseExp()
     {

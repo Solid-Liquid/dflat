@@ -13,7 +13,7 @@ String opString(OpType op)
         case opMult: return "*";
         case opAnd: return "&&";
         case opOr: return "||";
-        case opLogEqual: return "==";
+        case opLogEq: return "==";
         case opLogNotEq: return "!=";
     }
 
