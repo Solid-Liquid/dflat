@@ -8,6 +8,36 @@ using namespace std;
 
 class Parser
 {
+    class Rollbacker
+    {
+        Parser& _parser;
+        size_t _oldPos;
+        bool   _rollback;
+
+    public:
+        Rollbacker(Parser& parser, size_t oldPos)
+            : _parser(parser)
+            , _oldPos(oldPos)
+            , _rollback(true)
+        {}
+
+        ~Rollbacker()
+        {
+            if (_rollback)
+            {
+                _parser._tokenPos = _oldPos;
+            }
+        }
+
+        void disable()
+        {
+            _rollback = false;
+        }
+    };
+
+    #define ENABLE_ROLLBACK auto rollbacker = Rollbacker(*this, _tokenPos)
+    #define CANCEL_ROLLBACK rollbacker.disable()
+
     Vector<TokenPtr> const& _tokens;
     size_t _tokenPos;
     TokenPtr const _end;
@@ -147,7 +177,7 @@ class Parser
 
     ASNPtr parseParensExp()
     {
-        //TODO rollback
+        ENABLE_ROLLBACK;
         MATCH_(LeftParenToken);
         
         ASNPtr exp = parseExp();
@@ -158,6 +188,7 @@ class Parser
         }
 
         MATCH_(RightParenToken);
+        CANCEL_ROLLBACK;
         return exp;
     }
 
@@ -197,7 +228,7 @@ class Parser
 
     ASNPtr parseMultive()
     {
-        //TODO rollback
+        ENABLE_ROLLBACK;
         ASNPtr left = parsePrimary();
 
         if (!left)
@@ -219,12 +250,13 @@ class Parser
             return nullptr;
         }
 
+        CANCEL_ROLLBACK;
         return make_unique<BinopExp>(move(left), *op, move(right));
     }
     
     ASNPtr parseAdditive()
     {
-        //TODO rollback
+        ENABLE_ROLLBACK;
         ASNPtr left = parseMultive();
 
         if (!left)
@@ -246,12 +278,13 @@ class Parser
             return nullptr;
         }
 
+        CANCEL_ROLLBACK;
         return make_unique<BinopExp>(move(left), *op, move(right));
     }
 
     ASNPtr parseLogical()
     {
-        //TODO rollback
+        ENABLE_ROLLBACK;
         ASNPtr left = parseAdditive();
 
         if (!left) 
@@ -273,6 +306,7 @@ class Parser
             return nullptr;
         }
         
+        CANCEL_ROLLBACK;
         return make_unique<BinopExp>(move(left), *op, move(right));
     }
 
