@@ -1,4 +1,5 @@
 #include "parser.hpp"
+#include "config.hpp"
 #include <iostream>
 
 namespace dflat
@@ -6,11 +7,25 @@ namespace dflat
 
 using namespace std;
 
-#define TRACE //std::cout << __func__ << "\n";
-#define SUCCESS //std::cout << "SUCCESS: " << __func__ << "\n";
-#define FAILURE //std::cout << "FAILURE: " << __func__ << "\n";
+#define COUT_TRACE std::cout << String(_traceDepth * 4, ' ')
+#define TRACE if (config::trace) { COUT_TRACE << __func__ << " " << cur()->toString() << " (" << _tokenPos << ")\n"; incTrace(); }
+#define SUCCESS if (config::trace) { decTrace(); COUT_TRACE << "SUCCESS: " << __func__ << "\n"; }
+#define FAILURE if (config::trace) { decTrace(); COUT_TRACE << "FAILURE: " << __func__ << "\n"; }
 #define ENABLE_ROLLBACK auto rollbacker = Rollbacker(*this, _tokenPos)
 #define CANCEL_ROLLBACK rollbacker.disable()
+
+void Parser::incTrace()
+{
+    ++_traceDepth;
+}
+
+void Parser::decTrace()
+{
+    if (_traceDepth > 0)
+    {
+        --_traceDepth;
+    }
+}
 
 /**
  * @brief Returns the current token or end of program token.
@@ -500,6 +515,37 @@ Parser::Parser(Vector<TokenPtr> const& tokens)
     : _tokens(tokens)
     , _tokenPos(0)
     , _end(make_unique<EndToken>())
-{}
+    , _traceDepth(0)
+{
+    if (config::trace)
+    {
+        String s;
+        bool first = true;
+        for (TokenPtr const& t : tokens)
+        {
+            if (first)
+            {
+                first = false;
+            }
+            else
+            {
+                s += " ";
+            }
+
+            s += t->toString();
+        }
+
+        std::cout << "\nParser(" << s << "):\n";
+        incTrace();
+    }
+}
+
+Parser::~Parser()
+{
+    if (config::trace)
+    {
+        decTrace();
+    }
+}
 
 } //namespace dflat

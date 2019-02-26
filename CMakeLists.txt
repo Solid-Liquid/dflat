@@ -11,6 +11,7 @@ set(DFLAT_COMMON_FILES
     src/token.cpp src/token.hpp
     src/parser.cpp src/parser.hpp
     src/asn.cpp src/asn.hpp
+    src/config.hpp
     )
 
 project(tests CXX)

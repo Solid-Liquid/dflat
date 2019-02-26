@@ -47,6 +47,9 @@ class Parser
     Vector<TokenPtr> const& _tokens;
     size_t _tokenPos;
     TokenPtr const _end;
+    size_t _traceDepth;
+    void incTrace();
+    void decTrace();
 
     TokenPtr const& cur() const;
     void next();
@@ -108,6 +111,7 @@ public:
     ASNPtr parseBlock();
     ASNPtr parseProgram();
     Parser(Vector<TokenPtr> const&);
+    ~Parser();
 };
 
 } // namespace dflat
