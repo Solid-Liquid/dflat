@@ -19,17 +19,17 @@ ASNPtr operator~(T&& t)
 TEST_CASE( "Parser works correctly", "[parser]" )
 {
     // Please forgive insane formatting.
-    REQUIRE( PT(parseNumber,
-        NumberToken(6)
-        ) ==
-        ~NumberExp(6)
-        );
-    
-    REQUIRE( PT(parseVariable,
-        VariableToken("fun")
-        ) ==
-        ~VariableExp("fun")
-        );
+//    REQUIRE( PT(parseNumber,
+//        NumberToken(6)
+//        ) ==
+//        ~NumberExp(6)
+//        );
+//    
+//    REQUIRE( PT(parseVariable,
+//        VariableToken("fun")
+//        ) ==
+//        ~VariableExp("fun")
+//        );
     
     REQUIRE( PT(parseAdditive,
         NumberToken(1),
