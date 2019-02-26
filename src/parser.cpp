@@ -1,11 +1,12 @@
 #include "parser.hpp"
+#include "result.hpp"
 
 namespace dflat
 {
 
 using namespace std;
 
-struct Parser
+class Parser
 {
     Vector<TokenPtr> const& _tokens;
     size_t _tokenPos;
@@ -30,12 +31,6 @@ struct Parser
 
         ++_tokenPos;
     }
-
-    Parser(Vector<TokenPtr> const& tokens)
-        : _tokens(tokens)
-        , _tokenPos(0)
-        , _end(make_unique<EndToken>())
-    {}
 
     template <typename T>
     T const* match()
@@ -71,6 +66,57 @@ struct Parser
         MATCH(num, NumberToken);
         return make_unique<NumberExp>(num.num);
     }
+
+    ASNPtr parseAdditive()
+    {
+        return nullptr; //TODO
+    }
+
+    Optional<OpType> parseLogicalOp()
+    {
+        switch (cur()->getType())
+        {
+            case tokAnd:    return opAnd;
+            case tokOr:     return opOr;
+            case tokEq:     return opLogEq;
+            case tokNotEq:  return opLogNotEq;
+            default:        return failure;
+        }
+    }
+
+    ASNPtr parseLogical()
+    {
+        //TODO rollback
+        ASNPtr left = parseAdditive();
+
+        if (!left) 
+        {
+            return nullptr;
+        }
+
+        Optional<OpType> op = parseLogicalOp();
+
+        if (!op) 
+        {
+            return nullptr;
+        }
+
+        ASNPtr right = parseLogical();
+
+        if (!right)
+        {
+            return nullptr;
+        }
+        
+        return make_unique<BinopExp>(move(left), *op, move(right));
+    }
+
+//    ASNPtr parseUnary()
+//    {
+//        PARSE(op, parseUnaryOp());
+//        PARSE(primary, parsePrimary());
+//        return make_unique<UnaryExp>(op, primray);
+//    }
     
     ASNPtr parseExp()
     {
@@ -89,6 +135,13 @@ struct Parser
             return nullptr;
         }
     }
+
+public:
+    Parser(Vector<TokenPtr> const& tokens)
+        : _tokens(tokens)
+        , _tokenPos(0)
+        , _end(make_unique<EndToken>())
+    {}
 
     ASNPtr parseProgram()
     {
