@@ -8,6 +8,36 @@ using namespace std;
 
 class Parser
 {
+    class Rollbacker
+    {
+        Parser& _parser;
+        size_t _oldPos;
+        bool   _rollback;
+
+    public:
+        Rollbacker(Parser& parser, size_t oldPos)
+            : _parser(parser)
+            , _oldPos(oldPos)
+            , _rollback(true)
+        {}
+
+        ~Rollbacker()
+        {
+            if (_rollback)
+            {
+                _parser._tokenPos = _oldPos;
+            }
+        }
+
+        void disable()
+        {
+            _rollback = false;
+        }
+    };
+
+    #define ENABLE_ROLLBACK auto rollbacker = Rollbacker(*this, _tokenPos)
+    #define CANCEL_ROLLBACK rollbacker.disable()
+
     Vector<TokenPtr> const& _tokens;
     size_t _tokenPos;
     TokenPtr const _end;
@@ -59,39 +89,73 @@ class Parser
     #define MATCH_(type) \
         if (!match<type>()) { return nullptr; } \
         /*end MATCH_*/
+   
+    // Calls <parser> and stores the result in <var>.
+    //  On success, var holds the result.
+    //  On failure, the present function returns early with nullptr.
+    #define PARSE(var, parser) \
+        auto var = parser; \
+        if (!var) { return nullptr; } \
+        /*end PARSE*/
 
-    Optional<OpType> parseMultiveOp()
+    // Combinator that calls a function and advances the current token
+    //  if it was successful.
+    template <typename T>
+    auto advancing(T const& f)
     {
-        switch (cur()->getType())
+        auto r = f();
+        
+        if (r)
         {
-            case tokMult:   return opMult;
-            case tokDiv:    return opDiv;
-            default:        return failure;
+            next();
         }
-    }
-    
-    Optional<OpType> parseAdditiveOp()
-    {
-        switch (cur()->getType())
-        {
-            case tokPlus:   return opPlus;
-            case tokMinus:  return opMinus;
-            default:        return failure;
-        }
+        
+        return r;
     }
 
-    Optional<OpType> parseLogicalOp()
+    OpType parseMultiveOp()
     {
-        switch (cur()->getType())
+        return advancing([this]()
         {
-            case tokAnd:    return opAnd;
-            case tokOr:     return opOr;
-            case tokEq:     return opLogEq;
-            case tokNotEq:  return opLogNotEq;
-            default:        return failure;
-        }
+            switch (cur()->getType())
+            {
+                case tokMult:   return opMult;
+                case tokDiv:    return opDiv;
+                default:        return opNull;
+            }
+        });
     }
-    
+
+    OpType parseAdditiveOp()
+    {
+        return advancing([this]()
+        {
+            switch (cur()->getType())
+            {
+                case tokPlus:   return opPlus;
+                case tokMinus:  return opMinus;
+                default:        return opNull;
+            }
+        });
+    }
+
+    OpType parseLogicalOp()
+    {
+        return advancing([this]()
+        {
+            switch (cur()->getType())
+            {
+                case tokAnd:    return opAnd;
+                case tokOr:     return opOr;
+                case tokEq:     return opLogEq;
+                case tokNotEq:  return opLogNotEq;
+                default:        return opNull;
+            }
+        });
+    }
+   
+    // EXPRESSION PARSERS
+
     ASNPtr parseVariable()
     {
         MATCH(var, VariableToken);
@@ -121,17 +185,13 @@ class Parser
 
     ASNPtr parseParensExp()
     {
-        //TODO rollback
+        ENABLE_ROLLBACK;
+       
         MATCH_(LeftParenToken);
-        
-        ASNPtr exp = parseExp();
-
-        if (!exp)
-        {
-            return nullptr;
-        }
-
+        PARSE(exp, parseExp());
         MATCH_(RightParenToken);
+        
+        CANCEL_ROLLBACK;
         return exp;
     }
 
@@ -171,83 +231,38 @@ class Parser
 
     ASNPtr parseMultive()
     {
-        //TODO rollback
-        ASNPtr left = parsePrimary();
-
-        if (!left)
-        {
-            return nullptr;
-        }
-
-        Optional<OpType> op = parseMultiveOp();
-
-        if (!op)
-        {
-            return nullptr;
-        }
-
-        ASNPtr right = parseMultive();
-
-        if (!right)
-        {
-            return nullptr;
-        }
-
-        return make_unique<BinopExp>(move(left), *op, move(right));
+        ENABLE_ROLLBACK;
+        
+        PARSE(left, parsePrimary());
+        PARSE(op, parseMultiveOp());
+        PARSE(right, parseMultive());
+        
+        CANCEL_ROLLBACK;
+        return make_unique<BinopExp>(move(left), op, move(right));
     }
     
     ASNPtr parseAdditive()
     {
-        //TODO rollback
-        ASNPtr left = parseMultive();
+        ENABLE_ROLLBACK;
 
-        if (!left)
-        {
-            return nullptr;
-        }
+        PARSE(left, parseMultive());
+        PARSE(op, parseAdditiveOp());
+        PARSE(right, parseAdditive());
 
-        Optional<OpType> op = parseAdditiveOp();
-
-        if (!op)
-        {
-            return nullptr;
-        }
-
-        ASNPtr right = parseAdditive();
-
-        if (!right)
-        {
-            return nullptr;
-        }
-
-        return make_unique<BinopExp>(move(left), *op, move(right));
+        CANCEL_ROLLBACK;
+        return make_unique<BinopExp>(move(left), op, move(right));
     }
 
     ASNPtr parseLogical()
     {
-        //TODO rollback
-        ASNPtr left = parseAdditive();
+        ENABLE_ROLLBACK;
 
-        if (!left) 
-        {
-            return nullptr;
-        }
-
-        Optional<OpType> op = parseLogicalOp();
-
-        if (!op) 
-        {
-            return nullptr;
-        }
-
-        ASNPtr right = parseLogical();
-
-        if (!right)
-        {
-            return nullptr;
-        }
+        PARSE(left, parseAdditive());
+        PARSE(op, parseLogicalOp());
+        PARSE(right, parseLogical());
         
-        return make_unique<BinopExp>(move(left), *op, move(right));
+        CANCEL_ROLLBACK;
+        return make_unique<BinopExp>(move(left), op, move(right));
     }
 
     ASNPtr parseExp()
@@ -289,10 +304,43 @@ class Parser
     {
         return nullptr; //TODO
     }
-    
+   
+    ///// DELETE LATER //////
+    class WhileBlock : public ASN
+    {
+    public:
+        ASNPtr cond;
+        ASNPtr body;
+
+        WhileBlock(ASNPtr&& _cond, ASNPtr&& _body)
+            : cond(move(_cond))
+            , body(move(_body))
+        {}
+
+        String toString() const
+        {
+            return "while something";
+        };
+
+        ASNType getType() const
+        {
+            return {};
+        }
+    };
+    ////////////////////
+
     ASNPtr parseWhileStmt()
     {
-        return nullptr; //TODO
+        ENABLE_ROLLBACK;
+    
+        MATCH_(WhileToken);
+        MATCH_(LeftParenToken);
+        PARSE(cond, parseExp());
+        MATCH_(RightParenToken);
+        PARSE(body, parseBlock());
+        
+        CANCEL_ROLLBACK;
+        return make_unique<WhileBlock>(move(cond), move(body));
     }
     
     ASNPtr parseForStmt()
@@ -336,6 +384,13 @@ class Parser
         {
             return nullptr;
         }
+    }
+
+    // COMPOUND PARSERS
+    
+    ASNPtr parseBlock()
+    {
+        return nullptr; //TODO
     }
 
 public:

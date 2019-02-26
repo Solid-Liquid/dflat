@@ -15,7 +15,7 @@ enum ASNType { expBinop, expNumber, expVariable, expUnaryMinus, expUnaryNot,
              blockIf, blockElse, blockMethod, blockWhile, stmAssignment,
              stmMethod, stmDeclaration};
 
-enum OpType { opPlus, opMinus, opMult, opDiv, opAnd, opOr, opLogEq, opLogNotEq };
+enum OpType { opNull = 0, opPlus, opMinus, opMult, opDiv, opAnd, opOr, opLogEq, opLogNotEq };
 
 class ASN
 {

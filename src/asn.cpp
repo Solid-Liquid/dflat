@@ -7,6 +7,7 @@ String opString(OpType op)
 {
     switch(op)
     {
+        case opNull: std::abort(); // This shall never be printed.
         case opPlus: return "+";
         case opMinus: return "-";
         case opDiv: return "/";
