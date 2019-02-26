@@ -388,20 +388,17 @@ ASNPtr Parser::parseIfStmt()
     MATCH_(LeftBraceToken);
     PARSE(trueStatements, parseBlock());
     MATCH_(RightBraceToken);
-    
+    ASNPtr elseBlock;
     if( match<ElseToken>() )
     {
         MATCH_(LeftBraceToken);
         PARSE(falseStatements, parseBlock());
+        elseBlock = move(falseStatements);
         MATCH_(RightBraceToken);
-
-        CANCEL_ROLLBACK;
-    SUCCESS;
-        return make_unique<IfBlock>(
-            move(logicExp), 
-            move(trueStatements), 
-            move(falseStatements)
-            );
+    }
+    else
+    {
+        elseBlock = make_unique<Block>(Vector<ASNPtr>{});
     }
 
     CANCEL_ROLLBACK;
@@ -409,7 +406,7 @@ ASNPtr Parser::parseIfStmt()
     return make_unique<IfBlock>(
         move(logicExp), 
         move(trueStatements), 
-        make_unique<Block>(Vector<ASNPtr>{})
+        move(elseBlock)
         );
 }
 
