@@ -8,14 +8,15 @@ String opString(OpType op)
     switch(op)
     {
         case opNull: std::abort(); // This shall never be printed.
-        case opPlus: return "+";
-        case opMinus: return "-";
-        case opDiv: return "/";
-        case opMult: return "*";
-        case opAnd: return "&&";
-        case opOr: return "||";
-        case opLogEq: return "==";
-        case opLogNotEq: return "!=";
+        case opPlus:        return "+";
+        case opMinus:       return "-";
+        case opDiv:         return "/";
+        case opMult:        return "*";
+        case opNot:         return "!";
+        case opAnd:         return "&&";
+        case opOr:          return "||";
+        case opLogEq:       return "==";
+        case opLogNotEq:    return "!=";
     }
 
     std::abort(); // Unhandled op.
@@ -63,76 +64,50 @@ String NumberExp::toString() const
     return to_string(value);
 }
 
-//UnaryMinusExp:
-UnaryMinusExp::UnaryMinusExp(ASNPtr&& _nested)
-    : nested(move(_nested))
+//UnopExp:
+UnopExp::UnopExp(ASNPtr&& _nested, OpType _op)
+    : nested(move(_nested)), op(_op)
 {
 }
 
-String UnaryMinusExp::toString() const
+String UnopExp::toString() const
 {
-    return "(-" + nested->toString() + ")";
-}
-
-//UnaryNotExp:
-UnaryNotExp::UnaryNotExp(ASNPtr&& _nested)
-    : nested(move(_nested))
-{
-}
-
-String UnaryNotExp::toString() const
-{
-    return "(!" + nested->toString() + ")";
+    return "(" + opString(op) + nested->toString() + ")";
 }
 
 //IfBlock:
-IfBlock::IfBlock(ASNPtr&& _logicExp,std::vector<ASNPtr>&& _statements)
-    : logicExp(move(_logicExp)), statements(move(_statements))
+IfBlock::IfBlock(ASNPtr&& _logicExp, ASNPtr&& _trueStatements, ASNPtr&& _falseStatements)
+    : logicExp(move(_logicExp))
+    , trueStatements(move(_trueStatements))
+    , falseStatements(move(_falseStatements))
 {
 }
 
 String IfBlock::toString() const
 {
-    String str = "\nif(" + logicExp->toString() + ")\n{\n";
-    for(auto&& stm : statements)
-        str += stm->toString() + "\n";
-    str += "}\n";
-    return str;
-}
-
-//ElseBlock:
-ElseBlock::ElseBlock(std::vector<ASNPtr>&& _statements)
-    : statements(move(_statements))
-{
-}
-
-String ElseBlock::toString() const
-{
-    String str = "\nelse\n{\n";
-    for(auto&& stm : statements)
-        str += stm->toString() + "\n";
-    str += "}\n";
+    String str = "\nif(" + logicExp->toString() + ")\n";
+    str += trueStatements->toString() + "\n";
+    str += "else";
+    str += falseStatements->toString() + "\n";
     return str;
 }
 
 //WhileBlock:
-WhileBlock::WhileBlock(ASNPtr&& _logicExp,std::vector<ASNPtr>&& _statements)
+WhileBlock::WhileBlock(ASNPtr&& _logicExp, ASNPtr&& _statements)
     : logicExp(move(_logicExp)), statements(move(_statements))
 {
 }
 
 String WhileBlock::toString() const
 {
-    String str = "\nif(" + logicExp->toString() + ")\n{\n";
-    for(auto&& stm : statements)
-        str += stm->toString() + "\n";
-    str += "}\n";
+    String str = "\nif(" + logicExp->toString() + ")\n";
+    str += statements->toString() + "\n";
     return str;
 }
 
 //MethodBlock:
 MethodBlock::MethodBlock(String _type, String _name,
-             std::vector<ASNPtr>&& _args,std::vector<ASNPtr>&& _statements)
+             Vector<ASNPtr>&& _args, ASNPtr&& _statements)
     : type(_type),name(_name),args(move(_args)), statements(move(_statements))
 {
 }
@@ -148,15 +123,13 @@ String MethodBlock::toString() const
             str += ", ";
         ++track;
     }
-    str += ")\n{\n";
-    for(auto&& stm : statements)
-        str += stm->toString() + "\n";
-    str += "}\n";
+    str += ")\n";
+    str += statements->toString() + "\n";
     return str;
 }
 
 //MethodStm:
-MethodStm::MethodStm(String _name,std::vector<ASNPtr>&& _args)
+MethodStm::MethodStm(String _name, Vector<ASNPtr>&& _args)
   : name(_name), args(move(_args))
 {
 }
@@ -177,7 +150,7 @@ String MethodStm::toString() const
 }
 
 //AssignmentStm:
-AssignmentStm::AssignmentStm(String _variable,ASNPtr&& _expression)
+AssignmentStm::AssignmentStm(String _variable, ASNPtr&& _expression)
   : variable(_variable), expression(move(_expression))
 {
 }

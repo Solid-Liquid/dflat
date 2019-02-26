@@ -11,11 +11,12 @@
 namespace dflat
 {
 
-enum ASNType { expBinop, expNumber, expVariable, expUnaryMinus, expUnaryNot,
-             blockIf, blockElse, blockMethod, blockWhile, stmAssignment,
-             stmMethod, stmDeclaration};
+enum ASNType { expBinop, expNumber, expVariable, expUnop,
+               block, blockIf, blockMethod, blockWhile, stmAssignment,
+               stmMethod, stmDeclaration};
 
-enum OpType { opNull = 0, opPlus, opMinus, opMult, opDiv, opAnd, opOr, opLogEq, opLogNotEq };
+enum OpType { opNull = 0, opPlus, opMinus, opMult, opDiv, opNot, opAnd, opOr,
+              opLogEq, opLogNotEq };
 
 class ASN
 {
@@ -119,80 +120,63 @@ class NumberExp : public ASN
         DECLARE_CMP(NumberExp)
 };
 
-class UnaryMinusExp : public ASN
-{
-    //Example Input: -6
-    //Example Input: -(5 + 6)
-    public:
-        ASNPtr nested;
-
-        UnaryMinusExp(ASNPtr&&);
-        ASNType getType() const { return expUnaryMinus; }
-        String toString() const;
-        
-        bool operator==(UnaryMinusExp const& other) const
-        {
-            return nested == other.nested;
-        }
-        
-        DECLARE_CMP(UnaryMinusExp)
-};
-
-class UnaryNotExp : public ASN
+class UnopExp : public ASN
 {
     //Example Input: !var
     //Example Input: !(x == y)
     public:
         ASNPtr nested;
+        OpType op;
 
-        UnaryNotExp(ASNPtr&&);
-        ASNType getType() const { return expUnaryNot; }
+        UnopExp(ASNPtr&&, OpType);
+        ASNType getType() const { return expUnop; }
         String toString() const;
         
-        bool operator==(UnaryNotExp const& other) const
+        bool operator==(UnopExp const& other) const
         {
-            return nested == other.nested;
+            return nested == other.nested && op == other.op;
         }
         
-        DECLARE_CMP(UnaryNotExp)
+        DECLARE_CMP(UnopExp)
+};
+
+class Block : public ASN
+{
+    public:
+        Vector<ASNPtr> statements;
+
+        Block(Vector<ASNPtr>&&);
+        ASNType getType() const { return block; }
+        String toString() const;
+        
+        bool operator==(Block const& other) const
+        {
+            return statements == other.statements;
+        }
+        
+        DECLARE_CMP(Block)
 };
 
 class IfBlock : public ASN
 {
-    //Example Input: if(x == y) { statement }
+    //Example Input: if(x == y) { statement } else { statement }
     public:
         ASNPtr logicExp;
-        std::vector<ASNPtr> statements;
+        ASNPtr trueStatements;
+        ASNPtr falseStatements;
 
-        IfBlock(ASNPtr&&,std::vector<ASNPtr>&&);
+        IfBlock(ASNPtr&&, ASNPtr&&, ASNPtr&&);
         ASNType getType() const { return blockIf; }
         String toString() const;
         
         bool operator==(IfBlock const& other) const
         {
-            return logicExp   == other.logicExp
-                && statements == other.statements;
+            return logicExp        == other.logicExp
+                && trueStatements  == other.trueStatements
+                && falseStatements == other.falseStatements;
         }
         
         DECLARE_CMP(IfBlock)
-};
-
-class ElseBlock : public ASN
-{
-    //Example Input: else { statement }
-    public:
-        std::vector<ASNPtr> statements;
-
-        ElseBlock(std::vector<ASNPtr>&&);
-        ASNType getType() const { return blockElse; }
-        String toString() const;
-        
-        bool operator==(ElseBlock const& other) const
-        {
-            return statements == other.statements;
-        }
-        
-        DECLARE_CMP(ElseBlock)
 };
 
 class WhileBlock : public ASN
@@ -200,9 +184,9 @@ class WhileBlock : public ASN
     //Example Input: while(x == y) { statement }
     public:
         ASNPtr logicExp;
-        std::vector<ASNPtr> statements;
+        ASNPtr statements;
 
-        WhileBlock(ASNPtr&&,std::vector<ASNPtr>&&);
+        WhileBlock(ASNPtr&&, ASNPtr&&);
         ASNType getType() const { return blockWhile; }
         String toString() const;
         
@@ -221,10 +205,10 @@ class MethodBlock : public ASN
     public:
         String type;
         String name;
-        std::vector<ASNPtr> args;
-        std::vector<ASNPtr> statements;
+        Vector<ASNPtr> args;
+        ASNPtr statements;
 
-        MethodBlock(String,String,std::vector<ASNPtr>&&,std::vector<ASNPtr>&&);
+        MethodBlock(String, String, Vector<ASNPtr>&&, ASNPtr&&);
         ASNType getType() const { return blockMethod; }
         String toString() const;
         
@@ -244,9 +228,9 @@ class MethodStm : public ASN
     //Example Input: func(int x, int y)
     public:
         String name;
-        std::vector<ASNPtr> args;
+        Vector<ASNPtr> args;
 
-        MethodStm(String,std::vector<ASNPtr>&&);
+        MethodStm(String, Vector<ASNPtr>&&);
         ASNType getType() const { return stmMethod; }
         String toString() const;
         
@@ -266,7 +250,7 @@ class AssignmentStm : public ASN
         String variable;
         ASNPtr expression;
 
-        AssignmentStm(String,ASNPtr&&);
+        AssignmentStm(String, ASNPtr&&);
         ASNType getType() const { return stmAssignment; }
         String toString() const;
         
@@ -286,7 +270,7 @@ class DeclarationStm : public ASN
         String type;
         String name;
 
-        DeclarationStm(String,String);
+        DeclarationStm(String, String);
         ASNType getType() const { return stmDeclaration; }
         String toString() const;
         
