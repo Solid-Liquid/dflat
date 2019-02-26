@@ -338,8 +338,6 @@ class Parser
     
     ASNPtr parseIfStmt()
     {
-        //  incomplete
-        //  only one statement accepted in each brace
         /*
         if(exp)
         {
