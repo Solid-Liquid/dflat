@@ -8,14 +8,15 @@ String opString(OpType op)
     switch(op)
     {
         case opNull: std::abort(); // This shall never be printed.
-        case opPlus: return "+";
-        case opMinus: return "-";
-        case opDiv: return "/";
-        case opMult: return "*";
-        case opAnd: return "&&";
-        case opOr: return "||";
-        case opLogEq: return "==";
-        case opLogNotEq: return "!=";
+        case opPlus:        return "+";
+        case opMinus:       return "-";
+        case opDiv:         return "/";
+        case opMult:        return "*";
+        case opNot:         return "!";
+        case opAnd:         return "&&";
+        case opOr:          return "||";
+        case opLogEq:       return "==";
+        case opLogNotEq:    return "!=";
     }
 
     std::abort(); // Unhandled op.
@@ -63,26 +64,16 @@ String NumberExp::toString() const
     return to_string(value);
 }
 
-//UnaryMinusExp:
-UnaryMinusExp::UnaryMinusExp(ASNPtr&& _nested)
-    : nested(move(_nested))
+//UnopExp:
+UnopExp::UnopExp(ASNPtr&& _nested, OpType _op)
+    : nested(move(_nested)),
+    op(_op)
 {
 }
 
-String UnaryMinusExp::toString() const
+String UnopExp::toString() const
 {
-    return "(-" + nested->toString() + ")";
-}
-
-//UnaryNotExp:
-UnaryNotExp::UnaryNotExp(ASNPtr&& _nested)
-    : nested(move(_nested))
-{
-}
-
-String UnaryNotExp::toString() const
-{
-    return "(!" + nested->toString() + ")";
+    return "(" + opString(op) + nested->toString() + ")";
 }
 
 //IfBlock:

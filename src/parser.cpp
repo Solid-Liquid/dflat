@@ -112,6 +112,19 @@ class Parser
         
         return r;
     }
+    
+    OpType parseUnaryOp()
+    {
+        return advancing([this]()
+        {
+            switch (cur()->getType())
+            {
+                case tokNot:    return opNot;
+                case tokMinus:  return opMinus;
+                default:        return opNull;
+            }
+        });
+    }
 
     OpType parseMultiveOp()
     {
@@ -170,7 +183,13 @@ class Parser
 
     ASNPtr parseUnary()
     {
-        return nullptr; //TODO
+        ENABLE_ROLLBACK;
+
+        PARSE(op, parseUnaryOp());
+        PARSE(prim, parsePrimary());
+
+        CANCEL_ROLLBACK;
+        return make_unique<UnopExp>(op, move(prim));
     }
     
     ASNPtr parseMethodCall()
@@ -180,6 +199,7 @@ class Parser
     
     ASNPtr parseNew()
     {
+        // new + type + ( + exp + exp* + )
         return nullptr; //TODO
     }
 

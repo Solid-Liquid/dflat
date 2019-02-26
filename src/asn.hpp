@@ -11,11 +11,11 @@
 namespace dflat
 {
 
-enum ASNType { expBinop, expNumber, expVariable, expUnaryMinus, expUnaryNot,
+enum ASNType { expBinop, expNumber, expVariable, expUnop,
              blockIf, blockElse, blockMethod, blockWhile, stmAssignment,
              stmMethod, stmDeclaration};
 
-enum OpType { opNull = 0, opPlus, opMinus, opMult, opDiv, opAnd, opOr, opLogEq, opLogNotEq };
+enum OpType { opNull = 0, opPlus, opMinus, opMult, opDiv, opNot, opAnd, opOr, opLogEq, opLogNotEq };
 
 class ASN
 {
@@ -61,27 +61,18 @@ class NumberExp : public ASN
         String toString() const;
 };
 
-class UnaryMinusExp : public ASN
+class UnopExp : public ASN
 {
     //Example Input: -6
     //Example Input: -(5 + 6)
-    public:
-        ASNPtr nested;
-
-        UnaryMinusExp(ASNPtr&&);
-        ASNType getType() const { return expUnaryMinus; }
-        String toString() const;
-};
-
-class UnaryNotExp : public ASN
-{
     //Example Input: !var
     //Example Input: !(x == y)
     public:
         ASNPtr nested;
+        OpType op;
 
-        UnaryNotExp(ASNPtr&&);
-        ASNType getType() const { return expUnaryNot; }
+        UnopExp(ASNPtr&&, OpType _op);
+        ASNType getType() const { return expUnop; }
         String toString() const;
 };
 
