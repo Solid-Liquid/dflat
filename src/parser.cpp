@@ -5,7 +5,7 @@ namespace dflat
 
 using namespace std;
 
-struct Parser
+class Parser
 {
     Vector<TokenPtr> const& _tokens;
     size_t _tokenPos;
@@ -30,12 +30,6 @@ struct Parser
 
         ++_tokenPos;
     }
-
-    Parser(Vector<TokenPtr> const& tokens)
-        : _tokens(tokens)
-        , _tokenPos(0)
-        , _end(make_unique<EndToken>())
-    {}
 
     template <typename T>
     T const* match()
@@ -89,6 +83,13 @@ struct Parser
             return nullptr;
         }
     }
+
+public:
+    Parser(Vector<TokenPtr> const& tokens)
+        : _tokens(tokens)
+        , _tokenPos(0)
+        , _end(make_unique<EndToken>())
+    {}
 
     ASNPtr parseProgram()
     {
