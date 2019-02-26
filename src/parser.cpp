@@ -50,11 +50,11 @@ struct Parser
         return t;
     }
 
-// Matches the current token against a given token type.
-//  On success, var is a reference to the current token,
-//              and the current token advances.
-//  On failure, the present function returns early with nullptr.
-#define MATCH(var, type) \
+    // Matches the current token against a given token type.
+    //  On success, var is a reference to the current token,
+    //              and the current token advances.
+    //  On failure, the present function returns early with nullptr.
+    #define MATCH(var, type) \
     type const* var##__ = match<type>(); \
     if (!var##__) { return nullptr; } \
     type const& var = *var##__ \
@@ -113,7 +113,7 @@ Exp Parser::parseExp()
     }
 }
 
-ParseResult(T&& result, std::size_t tokenPos)
+ParseResult::ParseResult(T&& result, std::size_t tokenPos)
     : _result(std::move(result)), _tokenPos(tokenPos)
 {}
 
