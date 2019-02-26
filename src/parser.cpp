@@ -155,18 +155,19 @@ ASNPtr parse(Vector<TokenPtr> const& tokens)
     return parser.parseProgram();
 }
 
-Exp Parser::parseExp()
-{
-    const ParseResult<Exp> result = parseExp(0);
-    // TODO: Why does result->tokenPos not work?
-    if (result->tokenPos == tokens->size()) {
-        return result->result;
-    } else {
-        throw new ParserException("Extra tokens starting at " + result->tokenPos);
-    }
-}
+// Exp Parser::parseExp()
+// {
+//     const ParseResult<Exp> result = parseExp(0);
+//     // TODO: Why does result->tokenPos not work?
+//     if (result->tokenPos == tokens->size()) {
+//         return result->result;
+//     } else {
+//         throw new ParserException("Extra tokens starting at " + result->tokenPos);
+//     }
+// }
 
-ParseResult::ParseResult(T&& result, std::size_t tokenPos)
+template<typename T>
+ParseResult<T>::ParseResult(T&& result, std::size_t tokenPos)
     : _result(std::move(result)), _tokenPos(tokenPos)
 {}
 
