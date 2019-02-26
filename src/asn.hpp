@@ -153,24 +153,6 @@ class IfBlock : public ASN
         
         DECLARE_CMP(IfBlock)
 };
-/*
-class ElseBlock : public ASN
-{
-    //Example Input: else { statement }
-    public:
-        std::vector<ASNPtr> statements;
-
-        ElseBlock(std::vector<ASNPtr>&&);
-        ASNType getType() const { return blockElse; }
-        String toString() const;
-        
-        bool operator==(ElseBlock const& other) const
-        {
-            return statements == other.statements;
-        }
-        
-        DECLARE_CMP(ElseBlock)
-};*/
 
 class WhileBlock : public ASN
 {
