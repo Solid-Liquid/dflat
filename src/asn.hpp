@@ -6,17 +6,14 @@
 
 #include "string.hpp"
 #include <memory>
-
-
-// #define DECL(name) struct name; using name##Ptr = unique_ptr<name>
-// DECL(ASN);
-// #undef DECL
-
+#include <vector>
 
 namespace dflat
 {
 
-enum ASNType { expBinop, expIf, expNumber, expVariable, expUnaryMinus, expUnaryNot };
+enum ASNType { expBinop, expNumber, expVariable, expUnaryMinus, expUnaryNot,
+             blockIf, blockElse, blockMethod, blockWhile, stmAssignment,
+             stmMethod, stmDeclaration};
 
 enum OpType { opPlus, opMinus, opMult, opDiv, opAnd, opOr, opLogEq, opLogNotEq };
 
@@ -32,17 +29,19 @@ using ASNPtr = std::unique_ptr<ASN>;
 
 class BinopExp: public ASN
 {
-public:
-    ASNPtr left, right;
-    OpType op;
+    //Example Input: 5 + 6
+    public:
+        ASNPtr left, right;
+        OpType op;
 
-    BinopExp(ASNPtr&& _left, OpType _op, ASNPtr&& _right);
-    ASNType getType() const { return expBinop; }
-    String toString() const;
+        BinopExp(ASNPtr&& _left, OpType _op, ASNPtr&& _right);
+        ASNType getType() const { return expBinop; }
+        String toString() const;
 };
 
 class VariableExp : public ASN
 {
+    //Example Input: var
     public:
         String name;
 
@@ -53,6 +52,7 @@ class VariableExp : public ASN
 
 class NumberExp : public ASN
 {
+    //Example Input: 12
     public:
         int value;
        
@@ -61,7 +61,114 @@ class NumberExp : public ASN
         String toString() const;
 };
 
-    using ASNPtr = std::unique_ptr<ASN>;
+class UnaryMinusExp : public ASN
+{
+    //Example Input: -6
+    //Example Input: -(5 + 6)
+    public:
+        ASNPtr nested;
+
+        UnaryMinusExp(ASNPtr&&);
+        ASNType getType() const { return expUnaryMinus; }
+        String toString() const;
+};
+
+class UnaryNotExp : public ASN
+{
+    //Example Input: !var
+    //Example Input: !(x == y)
+    public:
+        ASNPtr nested;
+
+        UnaryNotExp(ASNPtr&&);
+        ASNType getType() const { return expUnaryNot; }
+        String toString() const;
+};
+
+class IfBlock : public ASN
+{
+    //Example Input: if(x == y) { statement }
+    public:
+        ASNPtr logicExp;
+        std::vector<ASNPtr> statements;
+
+        IfBlock(ASNPtr&&,std::vector<ASNPtr>&&);
+        ASNType getType() const { return blockIf; }
+        String toString() const;
+};
+
+class ElseBlock : public ASN
+{
+    //Example Input: else { statement }
+    public:
+        std::vector<ASNPtr> statements;
+
+        ElseBlock(std::vector<ASNPtr>&&);
+        ASNType getType() const { return blockElse; }
+        String toString() const;
+};
+
+class WhileBlock : public ASN
+{
+    //Example Input: while(x == y) { statement }
+    public:
+        ASNPtr logicExp;
+        std::vector<ASNPtr> statements;
+
+        WhileBlock(ASNPtr&&,std::vector<ASNPtr>&&);
+        ASNType getType() const { return blockWhile; }
+        String toString() const;
+};
+
+class MethodBlock : public ASN
+{
+    //Example Input: int func(int x, int y) { statement }
+    public:
+        String type;
+        String name;
+        std::vector<ASNPtr> args;
+        std::vector<ASNPtr> statements;
+
+        MethodBlock(String,String,std::vector<ASNPtr>&&,std::vector<ASNPtr>&&);
+        ASNType getType() const { return blockMethod; }
+        String toString() const;
+};
+
+class MethodStm : public ASN
+{
+    //Example Input: func(int x, int y)
+    public:
+        String name;
+        std::vector<ASNPtr> args;
+
+        MethodStm(String,std::vector<ASNPtr>&&);
+        ASNType getType() const { return stmMethod; }
+        String toString() const;
+};
+
+class AssignmentStm : public ASN
+{
+    //Example Input: x = 1 + y
+    public:
+        String variable;
+        ASNPtr expression;
+
+        AssignmentStm(String,ASNPtr&&);
+        ASNType getType() const { return stmAssignment; }
+        String toString() const;
+};
+
+class DeclarationStm : public ASN
+{
+    //Example Input: int x
+    public:
+        String type;
+        String name;
+
+        DeclarationStm(String,String);
+        ASNType getType() const { return stmDeclaration; }
+        String toString() const;
+};
 
 } //namespace dflat
 
