@@ -18,7 +18,7 @@ namespace dflat
 
 enum ASNType { expBinop, expIf, expNumber, expVariable, expUnaryMinus, expUnaryNot };
 
-enum OpType { opPlus, opMinus, opMult, opDiv, opAnd, opOr, opLogEq, opLogNotEq };
+enum OpType { opNull = 0, opPlus, opMinus, opMult, opDiv, opAnd, opOr, opLogEq, opLogNotEq };
 
 class ASN
 {

@@ -89,7 +89,15 @@ class Parser
     #define MATCH_(type) \
         if (!match<type>()) { return nullptr; } \
         /*end MATCH_*/
-    
+   
+    // Calls <parser> and stores the result in <var>.
+    //  On success, var holds the result.
+    //  On failure, the present function returns early with nullptr.
+    #define PARSE(var, parser) \
+        auto var = parser; \
+        if (!var) { return nullptr; } \
+        /*end PARSE*/
+
     // Combinator that calls a function and advances the current token
     //  if it was successful.
     template <typename T>
@@ -105,35 +113,35 @@ class Parser
         return r;
     }
 
-    Optional<OpType> parseMultiveOp()
+    OpType parseMultiveOp()
     {
-        return advancing([this]() -> Optional<OpType>
+        return advancing([this]()
         {
             switch (cur()->getType())
             {
                 case tokMult:   return opMult;
                 case tokDiv:    return opDiv;
-                default:        return failure;
+                default:        return opNull;
             }
         });
     }
 
-    Optional<OpType> parseAdditiveOp()
+    OpType parseAdditiveOp()
     {
-        return advancing([this]() -> Optional<OpType>
+        return advancing([this]()
         {
             switch (cur()->getType())
             {
                 case tokPlus:   return opPlus;
                 case tokMinus:  return opMinus;
-                default:        return failure;
+                default:        return opNull;
             }
         });
     }
 
-    Optional<OpType> parseLogicalOp()
+    OpType parseLogicalOp()
     {
-        return advancing([this]() -> Optional<OpType>
+        return advancing([this]()
         {
             switch (cur()->getType())
             {
@@ -141,7 +149,7 @@ class Parser
                 case tokOr:     return opOr;
                 case tokEq:     return opLogEq;
                 case tokNotEq:  return opLogNotEq;
-                default:        return failure;
+                default:        return opNull;
             }
         });
     }
@@ -178,16 +186,11 @@ class Parser
     ASNPtr parseParensExp()
     {
         ENABLE_ROLLBACK;
+       
         MATCH_(LeftParenToken);
-        
-        ASNPtr exp = parseExp();
-
-        if (!exp)
-        {
-            return nullptr;
-        }
-
+        PARSE(exp, parseExp());
         MATCH_(RightParenToken);
+        
         CANCEL_ROLLBACK;
         return exp;
     }
@@ -229,85 +232,37 @@ class Parser
     ASNPtr parseMultive()
     {
         ENABLE_ROLLBACK;
-        ASNPtr left = parsePrimary();
-
-        if (!left)
-        {
-            return nullptr;
-        }
-
-        Optional<OpType> op = parseMultiveOp();
-
-        if (!op)
-        {
-            return nullptr;
-        }
-
-        ASNPtr right = parseMultive();
-
-        if (!right)
-        {
-            return nullptr;
-        }
-
+        
+        PARSE(left, parsePrimary());
+        PARSE(op, parseMultiveOp());
+        PARSE(right, parseMultive());
+        
         CANCEL_ROLLBACK;
-        return make_unique<BinopExp>(move(left), *op, move(right));
+        return make_unique<BinopExp>(move(left), op, move(right));
     }
     
     ASNPtr parseAdditive()
     {
         ENABLE_ROLLBACK;
-        ASNPtr left = parseMultive();
 
-        if (!left)
-        {
-            return nullptr;
-        }
-
-        Optional<OpType> op = parseAdditiveOp();
-
-        if (!op)
-        {
-            return nullptr;
-        }
-
-        ASNPtr right = parseAdditive();
-
-        if (!right)
-        {
-            return nullptr;
-        }
+        PARSE(left, parseMultive());
+        PARSE(op, parseAdditiveOp());
+        PARSE(right, parseAdditive());
 
         CANCEL_ROLLBACK;
-        return make_unique<BinopExp>(move(left), *op, move(right));
+        return make_unique<BinopExp>(move(left), op, move(right));
     }
 
     ASNPtr parseLogical()
     {
         ENABLE_ROLLBACK;
-        ASNPtr left = parseAdditive();
 
-        if (!left) 
-        {
-            return nullptr;
-        }
-
-        Optional<OpType> op = parseLogicalOp();
-
-        if (!op) 
-        {
-            return nullptr;
-        }
-
-        ASNPtr right = parseLogical();
-
-        if (!right)
-        {
-            return nullptr;
-        }
+        PARSE(left, parseAdditive());
+        PARSE(op, parseLogicalOp());
+        PARSE(right, parseLogical());
         
         CANCEL_ROLLBACK;
-        return make_unique<BinopExp>(move(left), *op, move(right));
+        return make_unique<BinopExp>(move(left), op, move(right));
     }
 
     ASNPtr parseExp()
@@ -349,10 +304,43 @@ class Parser
     {
         return nullptr; //TODO
     }
-    
+   
+    ///// DELETE LATER //////
+    class WhileBlock : public ASN
+    {
+    public:
+        ASNPtr cond;
+        ASNPtr body;
+
+        WhileBlock(ASNPtr&& _cond, ASNPtr&& _body)
+            : cond(move(_cond))
+            , body(move(_body))
+        {}
+
+        String toString() const
+        {
+            return "while something";
+        };
+
+        ASNType getType() const
+        {
+            return {};
+        }
+    };
+    ////////////////////
+
     ASNPtr parseWhileStmt()
     {
-        return nullptr; //TODO
+        ENABLE_ROLLBACK;
+    
+        MATCH_(WhileToken);
+        MATCH_(LeftParenToken);
+        PARSE(cond, parseExp());
+        MATCH_(RightParenToken);
+        PARSE(body, parseBlock());
+        
+        CANCEL_ROLLBACK;
+        return make_unique<WhileBlock>(move(cond), move(body));
     }
     
     ASNPtr parseForStmt()
@@ -396,6 +384,13 @@ class Parser
         {
             return nullptr;
         }
+    }
+
+    // COMPOUND PARSERS
+    
+    ASNPtr parseBlock()
+    {
+        return nullptr; //TODO
     }
 
 public:
