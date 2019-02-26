@@ -416,8 +416,7 @@ public:
 
 ASNPtr parse(Vector<TokenPtr> const& tokens)
 {
-    Parser parser(tokens);
-    return parser.parseProgram();
+    return Parser(tokens).parseProgram();
 }
 
 // Exp Parser::parseExp()

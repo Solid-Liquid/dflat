@@ -6,7 +6,22 @@
 
 using namespace dflat;
 
+// Convenience function for making ASN trees to test against.
+template <typename T>
+ASNPtr operator~(T&& t)
+{
+    return std::make_unique<T>(std::move(t));
+}
+
+#define PT(...) parse(tokens(__VA_ARGS__))
+
 TEST_CASE( "Parser works correctly", "[parser]" )
 {
-    REQUIRE ( true == true );
+    // Please forgive insane formatting.
+    REQUIRE (PT(
+        NumberToken(6)
+        ) 
+        ==
+        ~NumberExp(6)
+        );
 }

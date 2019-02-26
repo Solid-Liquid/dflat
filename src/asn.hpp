@@ -38,7 +38,7 @@ public:
 
 // Do this once per ASN subclass.
 #define DECLARE_CMP(Type) \
-    bool cmp(ASN const& other) const override \
+    bool cmp(ASN const& other) const \
     { \
         return *this == static_cast<Type const&>(other); \
     } \
@@ -49,6 +49,16 @@ using ASNPtr = std::unique_ptr<ASN>;
 inline
 bool operator==(ASNPtr const& a, ASNPtr const& b)
 {
+    if (!a && !b)
+    {
+        return true;
+    }
+
+    if (!a || !b)
+    {
+        return false;
+    }
+
     return *a == *b;
 }
 
@@ -70,7 +80,7 @@ class BinopExp: public ASN
                 && right == other.right;
         }
         
-        DECLARE_CMP(BinopExp);
+        DECLARE_CMP(BinopExp)
 };
 
 class VariableExp : public ASN
@@ -88,7 +98,7 @@ class VariableExp : public ASN
             return name == other.name;
         }
         
-        DECLARE_CMP(VariableExp);
+        DECLARE_CMP(VariableExp)
 };
 
 class NumberExp : public ASN
@@ -106,7 +116,7 @@ class NumberExp : public ASN
             return value == other.value;
         }
         
-        DECLARE_CMP(NumberExp);
+        DECLARE_CMP(NumberExp)
 };
 
 class UnaryMinusExp : public ASN
@@ -125,7 +135,7 @@ class UnaryMinusExp : public ASN
             return nested == other.nested;
         }
         
-        DECLARE_CMP(UnaryMinusExp);
+        DECLARE_CMP(UnaryMinusExp)
 };
 
 class UnaryNotExp : public ASN
@@ -144,7 +154,7 @@ class UnaryNotExp : public ASN
             return nested == other.nested;
         }
         
-        DECLARE_CMP(UnaryNotExp);
+        DECLARE_CMP(UnaryNotExp)
 };
 
 class IfBlock : public ASN
@@ -164,7 +174,7 @@ class IfBlock : public ASN
                 && statements == other.statements;
         }
         
-        DECLARE_CMP(IfBlock);
+        DECLARE_CMP(IfBlock)
 };
 
 class ElseBlock : public ASN
@@ -182,7 +192,7 @@ class ElseBlock : public ASN
             return statements == other.statements;
         }
         
-        DECLARE_CMP(ElseBlock);
+        DECLARE_CMP(ElseBlock)
 };
 
 class WhileBlock : public ASN
@@ -202,7 +212,7 @@ class WhileBlock : public ASN
                 && statements == other.statements;
         }
         
-        DECLARE_CMP(WhileBlock);
+        DECLARE_CMP(WhileBlock)
 };
 
 class MethodBlock : public ASN
@@ -226,7 +236,7 @@ class MethodBlock : public ASN
                 && statements == other.statements;
         }
         
-        DECLARE_CMP(MethodBlock);
+        DECLARE_CMP(MethodBlock)
 };
 
 class MethodStm : public ASN
@@ -246,7 +256,7 @@ class MethodStm : public ASN
                 && args == other.args;
         }
         
-        DECLARE_CMP(MethodStm);
+        DECLARE_CMP(MethodStm)
 };
 
 class AssignmentStm : public ASN
@@ -266,7 +276,7 @@ class AssignmentStm : public ASN
                 && expression == other.expression;
         }
         
-        DECLARE_CMP(AssignmentStm);
+        DECLARE_CMP(AssignmentStm)
 };
 
 class DeclarationStm : public ASN
@@ -286,7 +296,7 @@ class DeclarationStm : public ASN
                 && name == other.name;
         }
         
-        DECLARE_CMP(DeclarationStm);
+        DECLARE_CMP(DeclarationStm)
 };
 
 } //namespace dflat
