@@ -144,7 +144,7 @@ class Block : public ASN
 {
     public:
         Vector<ASNPtr> statements;
-
+        Block() = default;
         Block(Vector<ASNPtr>&&);
         ASNType getType() const { return block; }
         String toString() const;

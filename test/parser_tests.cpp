@@ -21,18 +21,34 @@ ASNPtr operator~(T&& t)
 
 TEST_CASE( "Parser works correctly", "[parser]" )
 {
+//    REQUIRE( PT(parseIfStmt,
+//                IfToken(),
+//                LeftParenToken(),
+//                NumberToken(1),
+//                RightParenToken(),
+//                LeftBraceToken(),
+//                RightBraceToken(),
+//                ElseToken(),
+//                LeftBraceToken(),
+//                RightBraceToken()
+//                ) ==
+//             ~IfBlock(~NumberExp(1),
+//                      ~Block(),
+//                      ~Block())
+//             );
+
     // Please forgive insane formatting.
-//    REQUIRE( PT(parseNumber,
-//        NumberToken(6)
-//        ) ==
-//        ~NumberExp(6)
-//        );
-//    
-//    REQUIRE( PT(parseVariable,
-//        VariableToken("fun")
-//        ) ==
-//        ~VariableExp("fun")
-//        );
+    REQUIRE( PT(parseNumber,
+        NumberToken(6)
+        ) ==
+        ~NumberExp(6)
+        );
+
+    REQUIRE( PT(parseVariable,
+        VariableToken("fun")
+        ) ==
+        ~VariableExp("fun")
+        );
     
     REQUIRE( PT(parseAdditive,
         NumberToken(1),
@@ -64,4 +80,6 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 ~NumberExp(3)
                  )
              );
+
+
 }

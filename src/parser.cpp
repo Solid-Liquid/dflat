@@ -190,11 +190,11 @@ ASNPtr Parser::parseParensExp()
 {
     TRACE;
     ENABLE_ROLLBACK;
-   
+
     MATCH_(LeftParenToken);
     PARSE(exp, parseExp());
     MATCH_(RightParenToken);
-    
+
     CANCEL_ROLLBACK;
     SUCCESS;
     return exp;
@@ -204,7 +204,7 @@ ASNPtr Parser::parsePrimary()
 {
     TRACE;
     ASNPtr result;
-    
+
     if (result = parseNumber())
     {
         SUCCESS;
@@ -246,11 +246,11 @@ ASNPtr Parser::parseMultive()
 {
     TRACE;
     ENABLE_ROLLBACK;
-    
+
     PARSE(left, parsePrimary());
     PARSE(op, parseMultiveOp());
     PARSE(right, parseMultiveOrPrimary());
-    
+
     CANCEL_ROLLBACK;
     SUCCESS;
     return make_unique<BinopExp>(move(left), op, move(right));
@@ -322,7 +322,7 @@ ASNPtr Parser::parseLogical()
     PARSE(left, parseAdditiveOrPrimary());
     PARSE(op, parseLogicalOp());
     PARSE(right, parseLogicalOrPrimary());
-    
+
     CANCEL_ROLLBACK;
     SUCCESS;
     return make_unique<BinopExp>(move(left), op, move(right));
@@ -394,7 +394,7 @@ ASNPtr Parser::parseIfStmt()
         exp
     }
     */
-    
+
     ENABLE_ROLLBACK;
     MATCH_(IfToken);
     MATCH_(LeftParenToken);
@@ -419,8 +419,8 @@ ASNPtr Parser::parseIfStmt()
     CANCEL_ROLLBACK;
     SUCCESS;
     return make_unique<IfBlock>(
-        move(logicExp), 
-        move(trueStatements), 
+        move(logicExp),
+        move(trueStatements),
         move(elseBlock)
         );
 }
@@ -435,7 +435,7 @@ ASNPtr Parser::parseWhileStmt()
     PARSE(cond, parseExp());
     MATCH_(RightParenToken);
     PARSE(body, parseBlock());
-    
+
     CANCEL_ROLLBACK;
     SUCCESS;
     return make_unique<WhileBlock>(move(cond), move(body));
