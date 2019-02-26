@@ -8,14 +8,15 @@ String opString(OpType op)
     switch(op)
     {
         case opNull: std::abort(); // This shall never be printed.
-        case opPlus: return "+";
-        case opMinus: return "-";
-        case opDiv: return "/";
-        case opMult: return "*";
-        case opAnd: return "&&";
-        case opOr: return "||";
-        case opLogEq: return "==";
-        case opLogNotEq: return "!=";
+        case opPlus:        return "+";
+        case opMinus:       return "-";
+        case opDiv:         return "/";
+        case opMult:        return "*";
+        case opNot:         return "!";
+        case opAnd:         return "&&";
+        case opOr:          return "||";
+        case opLogEq:       return "==";
+        case opLogNotEq:    return "!=";
     }
 
     std::abort(); // Unhandled op.
@@ -63,53 +64,30 @@ String NumberExp::toString() const
     return to_string(value);
 }
 
-//UnaryMinusExp:
-UnaryMinusExp::UnaryMinusExp(ASNPtr&& _nested)
-    : nested(move(_nested))
+//UnopExp:
+UnopExp::UnopExp(ASNPtr&& _nested, OpType _op)
+    : nested(move(_nested)), op(_op)
 {
 }
 
-String UnaryMinusExp::toString() const
+String UnopExp::toString() const
 {
-    return "(-" + nested->toString() + ")";
-}
-
-//UnaryNotExp:
-UnaryNotExp::UnaryNotExp(ASNPtr&& _nested)
-    : nested(move(_nested))
-{
-}
-
-String UnaryNotExp::toString() const
-{
-    return "(!" + nested->toString() + ")";
+    return "(" + opString(op) + nested->toString() + ")";
 }
 
 //IfBlock:
-IfBlock::IfBlock(ASNPtr&& _logicExp,std::vector<ASNPtr>&& _statements)
-    : logicExp(move(_logicExp)), statements(move(_statements))
+IfBlock::IfBlock(ASNPtr&& _logicExp,std::vector<ASNPtr>&& _trueStatements, std::vector<ASNPtr>&& _falseStatements)
+    : logicExp(move(_logicExp)), trueStatements(move(_trueStatements)), falseStatements(move(_falseStatements))
 {
 }
 
 String IfBlock::toString() const
 {
     String str = "\nif(" + logicExp->toString() + ")\n{\n";
-    for(auto&& stm : statements)
+    for(auto&& stm : trueStatements)
         str += stm->toString() + "\n";
-    str += "}\n";
-    return str;
-}
-
-//ElseBlock:
-ElseBlock::ElseBlock(std::vector<ASNPtr>&& _statements)
-    : statements(move(_statements))
-{
-}
-
-String ElseBlock::toString() const
-{
-    String str = "\nelse\n{\n";
-    for(auto&& stm : statements)
+    str += "}\nelse\n{";
+    for(auto&& stm : falseStatements)
         str += stm->toString() + "\n";
     str += "}\n";
     return str;

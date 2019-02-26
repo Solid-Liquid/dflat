@@ -119,6 +119,19 @@ class Parser
         
         return r;
     }
+    
+    OpType parseUnaryOp()
+    {
+        return advancing([this]()
+        {
+            switch (cur()->getType())
+            {
+                case tokNot:    return opNot;
+                case tokMinus:  return opMinus;
+                default:        return opNull;
+            }
+        });
+    }
 
     OpType parseMultiveOp()
     {
@@ -177,7 +190,14 @@ class Parser
 
     ASNPtr parseUnary()
     {
-        return nullptr; //TODO
+        // op prim
+        ENABLE_ROLLBACK;
+
+        PARSE(op, parseUnaryOp());
+        PARSE(prim, parsePrimary());
+
+        CANCEL_ROLLBACK;
+        return make_unique<UnopExp>(move(prim), op);
     }
     
     ASNPtr parseMethodCall()
@@ -191,6 +211,7 @@ class Parser
     
     ASNPtr parseNew()
     {
+        // new + type + ( + exp + exp* + )
         return nullptr; //TODO
     }
 
@@ -317,40 +338,35 @@ class Parser
     
     ASNPtr parseIfStmt()
     {
-        return nullptr; //TODO
-    }
-   
-    ///// DELETE LATER //////
-    class WhileBlock : public ASN
-    {
-    public:
-        ASNPtr cond;
-        ASNPtr body;
-
-        WhileBlock(ASNPtr&& _cond, ASNPtr&& _body)
-            : cond(move(_cond))
-            , body(move(_body))
-        {}
-
-        String toString() const
+        //  incomplete
+        //  only one statement accepted in each brace
+        /*
+        if(exp)
         {
-            return "while something";
-        };
-
-        ASNType getType() const
-        {
-            return {};
+            exp
         }
-    
-        bool operator==(WhileBlock const& other) const
+        else
         {
-            return *cond == *other.cond
-                && *body == *other.body;
+            exp
         }
+        */
+       
+        ENABLE_ROLLBACK;
+        MATCH_(IfToken);
+        MATCH_(LeftParenToken);
+        PARSE(logicExp, parseExp());
+        MATCH_(RightParenToken);
+        MATCH_(LeftBraceToken);
+        PARSE(trueStatements, parseBlock());
+        MATCH_(RightBraceToken);
+        MATCH_(ElseToken);
+        MATCH_(LeftBraceToken);
+        PARSE(falseStatements, parseBlock());
+        MATCH_(RightBraceToken);
         
-        DECLARE_CMP(WhileBlock);
-    };
-    ////////////////////
+        CANCEL_ROLLBACK;
+        return make_unique<IfBlock>(move(logicExp), move(trueStatements), move(falseStatements));
+    }
 
 
     ASNPtr parseWhileStmt()

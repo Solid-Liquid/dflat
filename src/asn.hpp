@@ -11,11 +11,12 @@
 namespace dflat
 {
 
-enum ASNType { expBinop, expNumber, expVariable, expUnaryMinus, expUnaryNot,
-             blockIf, blockElse, blockMethod, blockWhile, stmAssignment,
-             stmMethod, stmDeclaration};
+enum ASNType { expBinop, expNumber, expVariable, expUnop,
+               blockIf, blockMethod, blockWhile, stmAssignment,
+               stmMethod, stmDeclaration};
 
-enum OpType { opNull = 0, opPlus, opMinus, opMult, opDiv, opAnd, opOr, opLogEq, opLogNotEq };
+enum OpType { opNull = 0, opPlus, opMinus, opMult, opDiv, opNot, opAnd, opOr,
+              opLogEq, opLogNotEq };
 
 class ASN
 {
@@ -38,7 +39,7 @@ public:
 
 // Do this once per ASN subclass.
 #define DECLARE_CMP(Type) \
-    bool cmp(ASN const& other) const override \
+    bool cmp(ASN const& other) const \
     { \
         return *this == static_cast<Type const&>(other); \
     } \
@@ -70,7 +71,7 @@ class BinopExp: public ASN
                 && right == other.right;
         }
         
-        DECLARE_CMP(BinopExp);
+        DECLARE_CMP(BinopExp)
 };
 
 class VariableExp : public ASN
@@ -88,7 +89,7 @@ class VariableExp : public ASN
             return name == other.name;
         }
         
-        DECLARE_CMP(VariableExp);
+        DECLARE_CMP(VariableExp)
 };
 
 class NumberExp : public ASN
@@ -106,83 +107,51 @@ class NumberExp : public ASN
             return value == other.value;
         }
         
-        DECLARE_CMP(NumberExp);
+        DECLARE_CMP(NumberExp)
 };
 
-class UnaryMinusExp : public ASN
+class UnopExp : public ASN
 {
     //Example Input: -6
     //Example Input: -(5 + 6)
-    public:
-        ASNPtr nested;
-
-        UnaryMinusExp(ASNPtr&&);
-        ASNType getType() const { return expUnaryMinus; }
-        String toString() const;
-        
-        bool operator==(UnaryMinusExp const& other) const
-        {
-            return nested == other.nested;
-        }
-        
-        DECLARE_CMP(UnaryMinusExp);
-};
-
-class UnaryNotExp : public ASN
-{
     //Example Input: !var
     //Example Input: !(x == y)
     public:
         ASNPtr nested;
+        OpType op;
 
-        UnaryNotExp(ASNPtr&&);
-        ASNType getType() const { return expUnaryNot; }
+        UnopExp(ASNPtr&&, OpType);
+        ASNType getType() const { return expUnop; }
         String toString() const;
         
-        bool operator==(UnaryNotExp const& other) const
+        bool operator==(UnopExp const& other) const
         {
-            return nested == other.nested;
+            return nested == other.nested && op == other.op;
         }
         
-        DECLARE_CMP(UnaryNotExp);
+        DECLARE_CMP(UnopExp)
 };
 
 class IfBlock : public ASN
 {
-    //Example Input: if(x == y) { statement }
+    //Example Input: if(x == y) { statement } else { statement }
     public:
         ASNPtr logicExp;
-        std::vector<ASNPtr> statements;
+        std::vector<ASNPtr> trueStatements;
+        std::vector<ASNPtr> falseStatements;
 
-        IfBlock(ASNPtr&&,std::vector<ASNPtr>&&);
+        IfBlock(ASNPtr&&, std::vector<ASNPtr>&&, std::vector<ASNPtr>&&);
         ASNType getType() const { return blockIf; }
         String toString() const;
         
         bool operator==(IfBlock const& other) const
         {
             return logicExp   == other.logicExp
-                && statements == other.statements;
+                && trueStatements == other.trueStatements
+                && falseStatements == other.falseStatements;
         }
         
-        DECLARE_CMP(IfBlock);
-};
-
-class ElseBlock : public ASN
-{
-    //Example Input: else { statement }
-    public:
-        std::vector<ASNPtr> statements;
-
-        ElseBlock(std::vector<ASNPtr>&&);
-        ASNType getType() const { return blockElse; }
-        String toString() const;
-        
-        bool operator==(ElseBlock const& other) const
-        {
-            return statements == other.statements;
-        }
-        
-        DECLARE_CMP(ElseBlock);
+        DECLARE_CMP(IfBlock)
 };
 
 class WhileBlock : public ASN
@@ -202,7 +171,7 @@ class WhileBlock : public ASN
                 && statements == other.statements;
         }
         
-        DECLARE_CMP(WhileBlock);
+        DECLARE_CMP(WhileBlock)
 };
 
 class MethodBlock : public ASN
@@ -226,7 +195,7 @@ class MethodBlock : public ASN
                 && statements == other.statements;
         }
         
-        DECLARE_CMP(MethodBlock);
+        DECLARE_CMP(MethodBlock)
 };
 
 class MethodStm : public ASN
@@ -246,7 +215,7 @@ class MethodStm : public ASN
                 && args == other.args;
         }
         
-        DECLARE_CMP(MethodStm);
+        DECLARE_CMP(MethodStm)
 };
 
 class AssignmentStm : public ASN
@@ -266,7 +235,7 @@ class AssignmentStm : public ASN
                 && expression == other.expression;
         }
         
-        DECLARE_CMP(AssignmentStm);
+        DECLARE_CMP(AssignmentStm)
 };
 
 class DeclarationStm : public ASN
@@ -286,7 +255,7 @@ class DeclarationStm : public ASN
                 && name == other.name;
         }
         
-        DECLARE_CMP(DeclarationStm);
+        DECLARE_CMP(DeclarationStm)
 };
 
 } //namespace dflat
