@@ -6,7 +6,7 @@
 
 #include "string.hpp"
 #include <memory>
-#include <vector>
+#include "vector.hpp"
 
 namespace dflat
 {
@@ -23,9 +23,34 @@ public:
     virtual ~ASN();
     virtual String toString() const = 0;
     virtual ASNType getType() const = 0;
+    virtual bool cmp(ASN const&) const = 0;
+    
+    bool operator==(ASN const& other) const
+    {
+        if (getType() != other.getType())
+        {
+            return false;
+        }
+
+        return cmp(other);
+    }
 };
 
+// Do this once per ASN subclass.
+#define DECLARE_CMP(Type) \
+    bool cmp(ASN const& other) const override \
+    { \
+        return *this == static_cast<Type const&>(other); \
+    } \
+    /*end DECL_CMP*/
+
 using ASNPtr = std::unique_ptr<ASN>;
+
+inline
+bool operator==(ASNPtr const& a, ASNPtr const& b)
+{
+    return *a == *b;
+}
 
 class BinopExp: public ASN
 {
@@ -37,6 +62,15 @@ class BinopExp: public ASN
         BinopExp(ASNPtr&& _left, OpType _op, ASNPtr&& _right);
         ASNType getType() const { return expBinop; }
         String toString() const;
+
+        bool operator==(BinopExp const& other) const
+        {
+            return left  == other.left
+                && op    == other.op
+                && right == other.right;
+        }
+        
+        DECLARE_CMP(BinopExp);
 };
 
 class VariableExp : public ASN
@@ -48,6 +82,13 @@ class VariableExp : public ASN
         VariableExp(String const&);
         ASNType getType() const { return expVariable; }
         String toString() const;
+
+        bool operator==(VariableExp const& other) const
+        {
+            return name == other.name;
+        }
+        
+        DECLARE_CMP(VariableExp);
 };
 
 class NumberExp : public ASN
@@ -59,6 +100,13 @@ class NumberExp : public ASN
         NumberExp(int);
         ASNType getType() const { return expNumber; }
         String toString() const;
+
+        bool operator==(NumberExp const& other) const
+        {
+            return value == other.value;
+        }
+        
+        DECLARE_CMP(NumberExp);
 };
 
 class UnaryMinusExp : public ASN
@@ -71,6 +119,13 @@ class UnaryMinusExp : public ASN
         UnaryMinusExp(ASNPtr&&);
         ASNType getType() const { return expUnaryMinus; }
         String toString() const;
+        
+        bool operator==(UnaryMinusExp const& other) const
+        {
+            return nested == other.nested;
+        }
+        
+        DECLARE_CMP(UnaryMinusExp);
 };
 
 class UnaryNotExp : public ASN
@@ -83,6 +138,13 @@ class UnaryNotExp : public ASN
         UnaryNotExp(ASNPtr&&);
         ASNType getType() const { return expUnaryNot; }
         String toString() const;
+        
+        bool operator==(UnaryNotExp const& other) const
+        {
+            return nested == other.nested;
+        }
+        
+        DECLARE_CMP(UnaryNotExp);
 };
 
 class IfBlock : public ASN
@@ -95,6 +157,14 @@ class IfBlock : public ASN
         IfBlock(ASNPtr&&,std::vector<ASNPtr>&&);
         ASNType getType() const { return blockIf; }
         String toString() const;
+        
+        bool operator==(IfBlock const& other) const
+        {
+            return logicExp   == other.logicExp
+                && statements == other.statements;
+        }
+        
+        DECLARE_CMP(IfBlock);
 };
 
 class ElseBlock : public ASN
@@ -106,6 +176,13 @@ class ElseBlock : public ASN
         ElseBlock(std::vector<ASNPtr>&&);
         ASNType getType() const { return blockElse; }
         String toString() const;
+        
+        bool operator==(ElseBlock const& other) const
+        {
+            return statements == other.statements;
+        }
+        
+        DECLARE_CMP(ElseBlock);
 };
 
 class WhileBlock : public ASN
@@ -118,6 +195,14 @@ class WhileBlock : public ASN
         WhileBlock(ASNPtr&&,std::vector<ASNPtr>&&);
         ASNType getType() const { return blockWhile; }
         String toString() const;
+        
+        bool operator==(WhileBlock const& other) const
+        {
+            return logicExp   == other.logicExp
+                && statements == other.statements;
+        }
+        
+        DECLARE_CMP(WhileBlock);
 };
 
 class MethodBlock : public ASN
@@ -132,6 +217,16 @@ class MethodBlock : public ASN
         MethodBlock(String,String,std::vector<ASNPtr>&&,std::vector<ASNPtr>&&);
         ASNType getType() const { return blockMethod; }
         String toString() const;
+        
+        bool operator==(MethodBlock const& other) const
+        {
+            return type       == other.type
+                && name       == other.name
+                && args       == other.args
+                && statements == other.statements;
+        }
+        
+        DECLARE_CMP(MethodBlock);
 };
 
 class MethodStm : public ASN
@@ -144,6 +239,14 @@ class MethodStm : public ASN
         MethodStm(String,std::vector<ASNPtr>&&);
         ASNType getType() const { return stmMethod; }
         String toString() const;
+        
+        bool operator==(MethodStm const& other) const
+        {
+            return name == other.name
+                && args == other.args;
+        }
+        
+        DECLARE_CMP(MethodStm);
 };
 
 class AssignmentStm : public ASN
@@ -156,6 +259,14 @@ class AssignmentStm : public ASN
         AssignmentStm(String,ASNPtr&&);
         ASNType getType() const { return stmAssignment; }
         String toString() const;
+        
+        bool operator==(AssignmentStm const& other) const
+        {
+            return variable   == other.variable
+                && expression == other.expression;
+        }
+        
+        DECLARE_CMP(AssignmentStm);
 };
 
 class DeclarationStm : public ASN
@@ -168,6 +279,14 @@ class DeclarationStm : public ASN
         DeclarationStm(String,String);
         ASNType getType() const { return stmDeclaration; }
         String toString() const;
+        
+        bool operator==(DeclarationStm const& other) const
+        {
+            return type == other.type
+                && name == other.name;
+        }
+        
+        DECLARE_CMP(DeclarationStm);
 };
 
 } //namespace dflat
