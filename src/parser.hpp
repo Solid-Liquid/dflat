@@ -92,8 +92,11 @@ public:
     ASNPtr parseParensExp();
     ASNPtr parsePrimary();
     ASNPtr parseMultive();
+    ASNPtr parseMultiveOrPrimary();
     ASNPtr parseAdditive();
+    ASNPtr parseAdditiveOrPrimary();
     ASNPtr parseLogical();
+    ASNPtr parseLogicalOrPrimary();
     ASNPtr parseExp();
     ASNPtr parseVarDecl();
     ASNPtr parseAssignStmt();
