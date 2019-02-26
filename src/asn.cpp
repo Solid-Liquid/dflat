@@ -76,30 +76,18 @@ String UnopExp::toString() const
 }
 
 //IfBlock:
-IfBlock::IfBlock(ASNPtr&& _logicExp,std::vector<ASNPtr>&& _statements)
-    : logicExp(move(_logicExp)), statements(move(_statements))
+IfBlock::IfBlock(ASNPtr&& _logicExp,std::vector<ASNPtr>&& _trueStatements, std::vector<ASNPtr>&& _falseStatements)
+    : logicExp(move(_logicExp)), trueStatements(move(_trueStatements)), falseStatements(move(_falseStatements))
 {
 }
 
 String IfBlock::toString() const
 {
     String str = "\nif(" + logicExp->toString() + ")\n{\n";
-    for(auto&& stm : statements)
+    for(auto&& stm : trueStatements)
         str += stm->toString() + "\n";
-    str += "}\n";
-    return str;
-}
-
-//ElseBlock:
-ElseBlock::ElseBlock(std::vector<ASNPtr>&& _statements)
-    : statements(move(_statements))
-{
-}
-
-String ElseBlock::toString() const
-{
-    String str = "\nelse\n{\n";
-    for(auto&& stm : statements)
+    str += "}\nelse\n{";
+    for(auto&& stm : falseStatements)
         str += stm->toString() + "\n";
     str += "}\n";
     return str;

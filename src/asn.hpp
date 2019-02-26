@@ -12,7 +12,7 @@ namespace dflat
 {
 
 enum ASNType { expBinop, expNumber, expVariable, expUnop,
-               blockIf, blockElse, blockMethod, blockWhile, stmAssignment,
+               blockIf, blockMethod, blockWhile, stmAssignment,
                stmMethod, stmDeclaration};
 
 enum OpType { opNull = 0, opPlus, opMinus, opMult, opDiv, opNot, opAnd, opOr,
@@ -134,24 +134,26 @@ class UnopExp : public ASN
 
 class IfBlock : public ASN
 {
-    //Example Input: if(x == y) { statement }
+    //Example Input: if(x == y) { statement } else { statement }
     public:
         ASNPtr logicExp;
-        std::vector<ASNPtr> statements;
+        std::vector<ASNPtr> trueStatements;
+        std::vector<ASNPtr> falseStatements;
 
-        IfBlock(ASNPtr&&,std::vector<ASNPtr>&&);
+        IfBlock(ASNPtr&&, std::vector<ASNPtr>&&, std::vector<ASNPtr>&&);
         ASNType getType() const { return blockIf; }
         String toString() const;
         
         bool operator==(IfBlock const& other) const
         {
             return logicExp   == other.logicExp
-                && statements == other.statements;
+                && trueStatements == other.trueStatements
+                && falseStatements == other.falseStatements;
         }
         
         DECLARE_CMP(IfBlock)
 };
-
+/*
 class ElseBlock : public ASN
 {
     //Example Input: else { statement }
@@ -168,7 +170,7 @@ class ElseBlock : public ASN
         }
         
         DECLARE_CMP(ElseBlock)
-};
+};*/
 
 class WhileBlock : public ASN
 {
