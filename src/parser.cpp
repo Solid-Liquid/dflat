@@ -111,11 +111,11 @@ OpType Parser::parseLogicalOp()
     {
         switch (cur()->getType())
         {
-            case tokAnd:    return opAnd;
-            case tokOr:     return opOr;
-            case tokEq:     return opLogEq;
-            case tokNotEq:  return opLogNotEq;
-            default:        return opNull;
+            case tokAnd:    SUCCESS; return opAnd;
+            case tokOr:     SUCCESS; return opOr;
+            case tokEq:     SUCCESS; return opLogEq;
+            case tokNotEq:  SUCCESS; return opLogNotEq;
+            default:        FAILURE; return opNull;
         }
     });
 }
@@ -192,37 +192,37 @@ ASNPtr Parser::parsePrimary()
     
     if (result = parseNumber())
     {
-    SUCCESS;
+        SUCCESS;
         return result;
     }
     else if (result = parseParensExp())
     {
-    SUCCESS;
+        SUCCESS;
         return result;
     }
     else if (result = parseUnary())
     {
-    SUCCESS;
+        SUCCESS;
         return result;
     }
     else if (result = parseMethodCall())
     {
-    SUCCESS;
+        SUCCESS;
         return result;
     }
     else if (result = parseNew())
     {
-    SUCCESS;
+        SUCCESS;
         return result;
     }
     else if (result = parseVariable())
     {
-    SUCCESS;
+        SUCCESS;
         return result;
     }
     else
     {
-    FAILURE;
+        FAILURE;
         return nullptr;
     }
 }
@@ -440,42 +440,42 @@ ASNPtr Parser::parseStmt()
 
     if (result = parseVarDecl())
     {
-    SUCCESS;
+        SUCCESS;
         return result;
     }
     else if (result = parseAssignStmt())
     {
-    SUCCESS;
+        SUCCESS;
         return result;
     }
     else if (result = parseMemberAssignStmt())
     {
-    SUCCESS;
+        SUCCESS;
         return result;
     }
     else if (result = parseIfStmt())
     {
-    SUCCESS;
+        SUCCESS;
         return result;
     }
     else if (result = parseWhileStmt())
     {
-    SUCCESS;
+        SUCCESS;
         return result;
     }
     else if (result = parseForStmt())
     {
-    SUCCESS;
+        SUCCESS;
         return result;
     }
     else if (result = parseExp())
     {
-    SUCCESS;
+        SUCCESS;
         return result;
     }
     else
     {
-    FAILURE;
+        FAILURE;
         return nullptr;
     }
 }
