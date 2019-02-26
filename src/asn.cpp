@@ -66,8 +66,7 @@ String NumberExp::toString() const
 
 //UnopExp:
 UnopExp::UnopExp(ASNPtr&& _nested, OpType _op)
-    : nested(move(_nested)),
-    op(_op)
+    : nested(move(_nested)), op(_op)
 {
 }
 
