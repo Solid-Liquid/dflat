@@ -346,6 +346,14 @@ class Parser
         {
             return {};
         }
+    
+        bool operator==(WhileBlock const& other) const
+        {
+            return *cond == *other.cond
+                && *body == *other.body;
+        }
+        
+        DECLARE_CMP(WhileBlock);
     };
     ////////////////////
 
