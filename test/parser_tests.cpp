@@ -52,4 +52,16 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 ) ==
              ~UnopExp(~NumberExp(1), opMinus)
             );
+
+    REQUIRE( PT(parseMultive,
+                NumberToken(2),
+                MultiplyToken(),
+                NumberToken(3)
+                ) ==
+             ~BinopExp(
+                ~NumberExp(2),
+                opMult,
+                ~NumberExp(3)
+                 )
+             );
 }
