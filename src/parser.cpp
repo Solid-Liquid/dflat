@@ -194,6 +194,10 @@ class Parser
         return nullptr; //TODO
     }
 
+    /**
+     * @brief parseParensExp | Tries to parse everything inside of parenthesis.
+     * @return ASNPtr
+     */
     ASNPtr parseParensExp()
     {
         ENABLE_ROLLBACK;
@@ -347,6 +351,7 @@ class Parser
         DECLARE_CMP(WhileBlock);
     };
     ////////////////////
+
 
     ASNPtr parseWhileStmt()
     {
