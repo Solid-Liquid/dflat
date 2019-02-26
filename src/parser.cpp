@@ -42,6 +42,10 @@ class Parser
     size_t _tokenPos;
     TokenPtr const _end;
 
+    /**
+     * @brief Returns the current token or end of program token.
+     * @return TokenPtr
+     */
     TokenPtr const& cur() const
     {
         if (_tokenPos >= _tokens.size())
@@ -52,6 +56,9 @@ class Parser
         return _tokens[_tokenPos];
     }
 
+    /**
+     * @brief Advances the reader if not at the end of the program.
+     */
     void next()
     {
         if (_tokenPos >= _tokens.size())
@@ -175,6 +182,10 @@ class Parser
     
     ASNPtr parseMethodCall()
     {
+        MATCH(var, CommaToken);
+//        MATCH(var, )
+        //
+        //
         return nullptr; //TODO
     }
     
