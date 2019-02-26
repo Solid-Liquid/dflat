@@ -8,6 +8,10 @@ using namespace std;
 #define ENABLE_ROLLBACK auto rollbacker = Rollbacker(*this, _tokenPos)
 #define CANCEL_ROLLBACK rollbacker.disable()
 
+/**
+ * @brief Returns the current token or end of program token.
+ * @return TokenPtr
+ */
 TokenPtr const& Parser::cur() const
 {
     if (_tokenPos >= _tokens.size())
@@ -18,6 +22,9 @@ TokenPtr const& Parser::cur() const
     return _tokens[_tokenPos];
 }
 
+/**
+ * @brief Advances the reader if not at the end of the program.
+ */
 void Parser::next()
 {
     if (_tokenPos >= _tokens.size())
@@ -142,6 +149,10 @@ ASNPtr Parser::parseNew()
     return nullptr; //TODO
 }
 
+/**
+ * @brief parseParensExp | Tries to parse everything inside of parenthesis.
+ * @return ASNPtr
+ */
 ASNPtr Parser::parseParensExp()
 {
     ENABLE_ROLLBACK;
@@ -273,7 +284,7 @@ ASNPtr Parser::parseIfStmt()
         exp
     }
     */
-   
+    
     ENABLE_ROLLBACK;
     MATCH_(IfToken);
     MATCH_(LeftParenToken);
@@ -282,17 +293,27 @@ ASNPtr Parser::parseIfStmt()
     MATCH_(LeftBraceToken);
     PARSE(trueStatements, parseBlock());
     MATCH_(RightBraceToken);
-    MATCH_(ElseToken);
-    MATCH_(LeftBraceToken);
-    PARSE(falseStatements, parseBlock());
-    MATCH_(RightBraceToken);
     
+    if( match<ElseToken>() )
+    {
+        MATCH_(LeftBraceToken);
+        PARSE(falseStatements, parseBlock());
+        MATCH_(RightBraceToken);
+
+        CANCEL_ROLLBACK;
+        return make_unique<IfBlock>(
+            move(logicExp), 
+            move(trueStatements), 
+            move(falseStatements)
+            );
+    }
+
     CANCEL_ROLLBACK;
     return make_unique<IfBlock>(
-         move(logicExp), 
-         move(trueStatements), 
-         move(falseStatements)
-         );
+        move(logicExp), 
+        move(trueStatements), 
+        make_unique<Block>(Vector<ASNPtr>{})
+        );
 }
 
 ASNPtr Parser::parseWhileStmt()

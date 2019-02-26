@@ -75,6 +75,23 @@ String UnopExp::toString() const
     return "(" + opString(op) + nested->toString() + ")";
 }
 
+//Block:
+Block::Block(Vector<ASNPtr>&& _statements)
+    : statements(move(_statements))
+{
+}
+
+String Block::toString() const
+{
+    String s = "{";
+    for (ASNPtr const& stmt : statements)
+    {
+        s += stmt->toString() + "\n";
+    }
+    s += "}";
+    return s;
+}
+
 //IfBlock:
 IfBlock::IfBlock(ASNPtr&& _logicExp, ASNPtr&& _trueStatements, ASNPtr&& _falseStatements)
     : logicExp(move(_logicExp))
