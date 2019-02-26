@@ -13,6 +13,10 @@ TEST_CASE( "LexerCore handles input correctly", "[lexercore]" )
     REQUIRE ( lc._input == "ab" );
     REQUIRE ( lc._pos   == 0 );
     REQUIRE ( lc.peek() == 'a' );
+    REQUIRE ( lc.peek_ahead(0) == 'a' );
+    REQUIRE ( lc.peek_ahead(1) == 'b' );
+    REQUIRE ( lc.peek_ahead(2) == '\0' );
+    REQUIRE ( lc.peek_ahead(3) == '\0' );
     REQUIRE ( lc.at_end() == false );
 
     // Advance 1 and check.
