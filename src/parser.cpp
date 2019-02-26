@@ -359,13 +359,18 @@ class Parser
         MATCH_(LeftBraceToken);
         PARSE(trueStatements, parseBlock());
         MATCH_(RightBraceToken);
-        MATCH_(ElseToken);
-        MATCH_(LeftBraceToken);
-        PARSE(falseStatements, parseBlock());
-        MATCH_(RightBraceToken);
-        
+        if( match<ElseToken>() )
+        {
+            MATCH_(LeftBraceToken);
+            PARSE(falseStatements, parseBlock());
+            MATCH_(RightBraceToken);
+
+            CANCEL_ROLLBACK;
+            return make_unique<IfBlock>(move(logicExp), move(trueStatements), move(falseStatements));
+        }
+
         CANCEL_ROLLBACK;
-        return make_unique<IfBlock>(move(logicExp), move(trueStatements), move(falseStatements));
+        return make_unique<IfBlock>(move(logicExp), move(trueStatements), make_unique<Block>({}));
     }
 
 
