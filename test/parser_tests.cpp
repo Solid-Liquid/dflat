@@ -2,6 +2,7 @@
 
 #include "catch2/catch.hpp"
 #include "parser.hpp"
+#include "token_helpers.hpp"
 
 using namespace dflat;
 

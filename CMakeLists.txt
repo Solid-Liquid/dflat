@@ -24,6 +24,7 @@ add_executable(tests ${DFLAT_COMMON_FILES}
     test/lexercore_tests.cpp
     test/lexer_tests.cpp
     test/parser_tests.cpp
+    test/token_helpers.hpp
     )
     
 target_link_libraries(dflat 

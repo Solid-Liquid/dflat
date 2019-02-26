@@ -1,34 +1,19 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
-#include "map.hpp"
-#include "string.hpp"
-#include "token.hpp"
 #include "asn.hpp"
+#include "token.hpp"
+#include "vector.hpp"
 
 namespace dflat
 {
 
-class Parser
+ASNPtr parse(Vector<TokenPtr> const&);
+
+class ParserException : public std::exception
 {
 public:
-    const Vector<TokenPtr> tokens;
-    Parser();
-private:
-
-};
-
-class ParserException: public std::exception
-{
-public:
-    ParserException(String msg) noexcept;
-    const char* what() const noexcept;
-
-    ASNPtr parseExp();
-private:
-    String message;
-
-    ParseResult parseExp(const int startPos);
+    using std::exception::exception;
 };
 
 template <typename T>
