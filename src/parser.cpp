@@ -59,39 +59,65 @@ class Parser
     #define MATCH_(type) \
         if (!match<type>()) { return nullptr; } \
         /*end MATCH_*/
+    
+    // Combinator that calls a function and advances the current token
+    //  if it was successful.
+    template <typename T>
+    auto advancing(T const& f)
+    {
+        auto r = f();
+        
+        if (r)
+        {
+            next();
+        }
+        
+        return r;
+    }
 
     Optional<OpType> parseMultiveOp()
     {
-        switch (cur()->getType())
+        return advancing([this]() -> Optional<OpType>
         {
-            case tokMult:   return opMult;
-            case tokDiv:    return opDiv;
-            default:        return failure;
-        }
+            switch (cur()->getType())
+            {
+                case tokMult:   return opMult;
+                case tokDiv:    return opDiv;
+                default:        return failure;
+            }
+        });
     }
-    
+
     Optional<OpType> parseAdditiveOp()
     {
-        switch (cur()->getType())
+        return advancing([this]() -> Optional<OpType>
         {
-            case tokPlus:   return opPlus;
-            case tokMinus:  return opMinus;
-            default:        return failure;
-        }
+            switch (cur()->getType())
+            {
+                case tokPlus:   return opPlus;
+                case tokMinus:  return opMinus;
+                default:        return failure;
+            }
+        });
     }
 
     Optional<OpType> parseLogicalOp()
     {
-        switch (cur()->getType())
+        return advancing([this]() -> Optional<OpType>
         {
-            case tokAnd:    return opAnd;
-            case tokOr:     return opOr;
-            case tokEq:     return opLogEq;
-            case tokNotEq:  return opLogNotEq;
-            default:        return failure;
-        }
+            switch (cur()->getType())
+            {
+                case tokAnd:    return opAnd;
+                case tokOr:     return opOr;
+                case tokEq:     return opLogEq;
+                case tokNotEq:  return opLogNotEq;
+                default:        return failure;
+            }
+        });
     }
-    
+   
+    // EXPRESSION PARSERS
+
     ASNPtr parseVariable()
     {
         MATCH(var, VariableToken);
