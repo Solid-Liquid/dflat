@@ -63,4 +63,139 @@ String NumberExp::toString() const
     return to_string(value);
 }
 
+//UnaryMinusExp:
+UnaryMinusExp::UnaryMinusExp(ASNPtr&& _nested)
+    : nested(move(_nested))
+{
+}
+
+String UnaryMinusExp::toString() const
+{
+    return "(-" + nested->toString() + ")";
+}
+
+//UnaryNotExp:
+UnaryNotExp::UnaryNotExp(ASNPtr&& _nested)
+    : nested(move(_nested))
+{
+}
+
+String UnaryNotExp::toString() const
+{
+    return "(!" + nested->toString() + ")";
+}
+
+//IfBlock:
+IfBlock::IfBlock(ASNPtr&& _logicExp,std::vector<ASNPtr>&& _statements)
+    : logicExp(move(_logicExp)), statements(move(_statements))
+{
+}
+
+String IfBlock::toString() const
+{
+    String str = "\nif(" + logicExp->toString() + ")\n{\n";
+    for(auto&& stm : statements)
+        str += stm->toString() + "\n";
+    str += "}\n";
+    return str;
+}
+
+//ElseBlock:
+ElseBlock::ElseBlock(std::vector<ASNPtr>&& _statements)
+    : statements(move(_statements))
+{
+}
+
+String ElseBlock::toString() const
+{
+    String str = "\nelse\n{\n";
+    for(auto&& stm : statements)
+        str += stm->toString() + "\n";
+    str += "}\n";
+    return str;
+}
+
+//WhileBlock:
+WhileBlock::WhileBlock(ASNPtr&& _logicExp,std::vector<ASNPtr>&& _statements)
+    : logicExp(move(_logicExp)), statements(move(_statements))
+{
+}
+
+String WhileBlock::toString() const
+{
+    String str = "\nif(" + logicExp->toString() + ")\n{\n";
+    for(auto&& stm : statements)
+        str += stm->toString() + "\n";
+    str += "}\n";
+    return str;
+}
+
+//MethodBlock:
+MethodBlock::MethodBlock(String _type, String _name,
+             std::vector<ASNPtr>&& _args,std::vector<ASNPtr>&& _statements)
+    : type(_type),name(_name),args(move(_args)), statements(move(_statements))
+{
+}
+
+String MethodBlock::toString() const
+{
+    String str = "\n" + type + " " + name + "(";
+    int track = 0;
+    for(auto&& ar : args)
+    {
+        str += ar->toString();
+        if(track > 0)
+            str += ", ";
+        ++track;
+    }
+    str += ")\n{\n";
+    for(auto&& stm : statements)
+        str += stm->toString() + "\n";
+    str += "}\n";
+    return str;
+}
+
+//MethodStm:
+MethodStm::MethodStm(String _name,std::vector<ASNPtr>&& _args)
+  : name(_name), args(move(_args))
+{
+}
+
+String MethodStm::toString() const
+{
+    String str = name + "(";
+    int track = 0;
+    for(auto&& ar : args)
+    {
+        str += ar->toString();
+        if(track > 0)
+            str += ", ";
+        ++track;
+    }
+    str += ")";
+    return str;
+}
+
+//AssignmentStm:
+AssignmentStm::AssignmentStm(String _variable,ASNPtr&& _expression)
+  : variable(_variable), expression(move(_expression))
+{
+}
+
+String AssignmentStm::toString() const
+{
+    return variable + " = " + expression->toString();
+}
+
+//DeclarationStm:
+DeclarationStm::DeclarationStm(String _type, String _name)
+    : type(_type), name(_name)
+{
+}
+
+String DeclarationStm::toString() const
+{
+    return type + " " + name;
+}
+
 } //namespace dflat

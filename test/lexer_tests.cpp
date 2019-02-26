@@ -52,6 +52,7 @@ namespace dflat
             case tokLBrace:
             case tokLParen:
             case tokRParen:
+            case tokComma:
             case tokNewLine:
             case tokFor:
             case tokWhile:
@@ -61,6 +62,7 @@ namespace dflat
             case tokNotEq:
             case tokNot:
             case tokMember:
+            case tokNew:
                  return true;
      
             default: 
@@ -106,6 +108,10 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         ElseToken()
         ));
 
+    REQUIRE ( tokenize("new") == tokens(
+        NewToken()
+        ));
+
     REQUIRE ( tokenize("+") == tokens(
         PlusToken()
         ));
@@ -140,6 +146,10 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
 
     REQUIRE ( tokenize(")") == tokens(
         RightParenToken()
+        ));
+
+    REQUIRE ( tokenize(",") == tokens(
+        CommaToken()
         ));
 
     REQUIRE ( tokenize("for") == tokens(

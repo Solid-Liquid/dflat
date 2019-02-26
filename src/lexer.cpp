@@ -95,6 +95,7 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
         { "else", tokElse },
         { "for", tokFor },
         { "while", tokWhile },
+        { "new", tokNew },
     };
 
     auto it = KWS.find(name);
@@ -110,6 +111,7 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
         case tokElse: return make_unique<ElseToken>();
         case tokFor: return make_unique<ForToken>();
         case tokWhile: return make_unique<WhileToken>();
+        case tokNew: return make_unique<NewToken>();
         default: return nullptr;
     }
 }
@@ -120,6 +122,7 @@ TokenPtr Lexer::lookupPunct1(char c) const
     {
         case '(': return make_unique<LeftParenToken>();
         case ')': return make_unique<RightParenToken>();
+        case ',': return make_unique<CommaToken>();
         case '{': return make_unique<LeftBraceToken>();
         case '}': return make_unique<RightBraceToken>();
         case '=': return make_unique<AssignToken>();
@@ -190,10 +193,6 @@ void Lexer::skipWhitespace()
         c = peek();
     }
 }
-
-// TokenPtr Lexer::singleToken(){
-//     TokenPtr tok = nullptr;
-
 
 TokenPtr Lexer::singleToken(){
     TokenPtr tok = nullptr;
