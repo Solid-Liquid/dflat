@@ -14,6 +14,9 @@ ASNPtr operator~(T&& t)
     return std::make_unique<T>(std::forward<T>(t));
 }
 
+
+
+//Parser( tokens(NumberToken(1), PlusToken(), NumberToken(1)) ).parseAdditive()
 #define PT(method, ...) Parser(tokens(__VA_ARGS__)).method()
 
 TEST_CASE( "Parser works correctly", "[parser]" )
@@ -42,4 +45,11 @@ TEST_CASE( "Parser works correctly", "[parser]" )
             ~NumberExp(1)
             )
         );
+
+    REQUIRE( PT(parseUnary,
+                MinusToken(),
+                NumberToken(1)
+                ) ==
+             ~UnopExp(~NumberExp(1), opMinus)
+            );
 }
