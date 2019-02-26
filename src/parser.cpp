@@ -268,6 +268,76 @@ class Parser
         }
     }
 
+    // STATEMENT PARSERS
+
+    ASNPtr parseVarDecl()
+    {
+        return nullptr; //TODO
+    }
+    
+    ASNPtr parseAssignStmt()
+    {
+        return nullptr; //TODO
+    }
+    
+    ASNPtr parseMemberAssignStmt()
+    {
+        return nullptr; //TODO
+    }
+    
+    ASNPtr parseIfStmt()
+    {
+        return nullptr; //TODO
+    }
+    
+    ASNPtr parseWhileStmt()
+    {
+        return nullptr; //TODO
+    }
+    
+    ASNPtr parseForStmt()
+    {
+        return nullptr; //TODO
+    }
+
+    ASNPtr parseStmt()
+    {
+        ASNPtr result;
+
+        if (result = parseVarDecl())
+        {
+            return result;
+        }
+        else if (result = parseAssignStmt())
+        {
+            return result;
+        }
+        else if (result = parseMemberAssignStmt())
+        {
+            return result;
+        }
+        else if (result = parseIfStmt())
+        {
+            return result;
+        }
+        else if (result = parseWhileStmt())
+        {
+            return result;
+        }
+        else if (result = parseForStmt())
+        {
+            return result;
+        }
+        else if (result = parseExp())
+        {
+            return result;
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+
 public:
     Parser(Vector<TokenPtr> const& tokens)
         : _tokens(tokens)
