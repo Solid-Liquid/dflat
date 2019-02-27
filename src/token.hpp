@@ -2,6 +2,7 @@
 #define TOKEN_HPP
 
 #include "string.hpp"
+#include "vector.hpp"
 #include <memory>
 
 namespace dflat
@@ -33,7 +34,6 @@ namespace dflat
     };
 
     using TokenPtr = std::unique_ptr<Token>;
-
 
     class NumberToken : public Token
     {
@@ -214,6 +214,9 @@ namespace dflat
             TokType getType() const { return tokNew; }
             String toString() const { return "new"; }
     };
+    
+    String to_string(TokenPtr const&);
+    String to_string(Vector<TokenPtr> const&);
 
 } //namespace dflat
 
