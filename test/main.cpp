@@ -20,8 +20,6 @@ int main(int argc, char** argv)
     session.cli(cli); // Use the new CLI parser.
     auto rc = session.applyCommandLine(argc, argv); // Parse the CLI.
 
-    std::cout << config::trace << "\n";
-
     if (rc != 0)
     {
         return rc; // Exit with error.

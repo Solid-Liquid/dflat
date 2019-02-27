@@ -5,6 +5,7 @@
 #include "vector.hpp"
 #include "string.hpp"
 #include "asn.hpp"
+#include "tracer.hpp"
 
 namespace dflat
 {
@@ -47,9 +48,7 @@ class Parser
     Vector<TokenPtr> const& _tokens;
     size_t _tokenPos;
     TokenPtr const _end;
-    size_t _traceDepth;
-    void incTrace();
-    void decTrace();
+    Tracer _tracer;
 
     TokenPtr const& cur() const;
     void next();
