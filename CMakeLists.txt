@@ -5,7 +5,10 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(dflat CXX)
 
-set(DFLAT_COMMON_FILES
+
+#### PROJECT SOURCE FILES ####
+
+add_library(dflat_common
     src/lexer.cpp src/lexer.hpp
     src/lexercore.cpp src/lexercore.hpp
     src/token.cpp src/token.hpp
@@ -14,59 +17,77 @@ set(DFLAT_COMMON_FILES
     src/config.hpp
     )
 
-project(tests CXX)
-
-add_executable(dflat ${DFLAT_COMMON_FILES}
+add_executable(dflat
     src/main.cpp
     )
 
-add_executable(tests ${DFLAT_COMMON_FILES}
+add_executable(tests
     test/main.cpp
     test/lexercore_tests.cpp
     test/lexer_tests.cpp
     test/parser_tests.cpp
     test/token_helpers.hpp
     )
+
+
+#### PROJECT LINKED LIBRARIES ####
+
+# Uncomment these if there ever are any libs.
+#set(DFLAT_LIBS)
+
+#target_link_libraries(dflat_common ${DFLAT_LIBS}
+#    )
     
-target_link_libraries(dflat 
+target_link_libraries(dflat ${DFLAT_LIBS}
+    dflat_common
     )
 
-target_include_directories(dflat
-    PRIVATE 
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/util
-    SYSTEM
-        ${CMAKE_CURRENT_SOURCE_DIR}/external
+target_link_libraries(tests ${DFLAT_LIBS}
+    dflat_common
     )
 
-target_include_directories(tests
+
+#### PROJECT INCLUDE DIRECTORIES ####
+
+set(DFLAT_INCLUDES
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/util
-        ${CMAKE_CURRENT_SOURCE_DIR}/test
     SYSTEM
         ${CMAKE_CURRENT_SOURCE_DIR}/external
     )
 
+target_include_directories(dflat_common ${DFLAT_INCLUDES}
+    )
+
+target_include_directories(dflat ${DFLAT_INCLUDES}
+    )
+
+target_include_directories(tests ${DFLAT_INCLUDES}
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/test
+    )
+
+
+#### PROJECT COMPILE OPTIONS ####
+
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    target_compile_options(dflat
+    set(DFLAT_COMPILE_OPTIONS
         PUBLIC
             -Wall 
             -Wextra 
             -Werror=return-type
             -Werror=switch
-        
             -Wshadow
-    )
+        )
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    target_compile_options(dflat
+    set(DFLAT_COMPILE_OPTIONS
         PUBLIC
             -Wall 
             -Wextra 
             -Werror=return-type
             -Werror=switch
             -Wfatal-errors
-        
             -Wshadow
             -Wnon-virtual-dtor
             -Wold-style-cast
@@ -82,7 +103,15 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
             -Wnull-dereference
             -Wdouble-promotion
             -Wformat=2
-    )
+        )
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-  # using Visual Studio C++
+    set(DFLAT_COMPILE_OPTIONS
+        PUBLIC
+            /W4
+        )
 endif()
+   
+# Assume same opts for all.
+target_compile_options(dflat_common ${DFLAT_COMPILE_OPTIONS})
+target_compile_options(dflat ${DFLAT_COMPILE_OPTIONS})
+target_compile_options(tests ${DFLAT_COMPILE_OPTIONS})
