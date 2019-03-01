@@ -7,10 +7,6 @@ namespace dflat
 
 using namespace std;
 
-//#define COUT_TRACE std::cout << String(_traceDepth * 4, ' ')
-//#define TRACE if (config::trace) { COUT_TRACE << __func__ << " " << cur()->toString() << " (" << _tokenPos << ")\n"; incTrace(); }
-//#define SUCCESS if (config::trace) { decTrace(); COUT_TRACE << "SUCCESS: " << __func__ << "\n"; }
-//#define FAILURE if (config::trace) { decTrace(); COUT_TRACE << "FAILURE: " << __func__ << "\n"; }
 #define TRACE _tracer.push(__func__ + " "s + cur()->toString() + " (" + to_string(_tokenPos) + ")")
 #define SUCCESS _tracer.pop(TraceResult::success)
 #define FAILURE _tracer.pop(TraceResult::failure)
@@ -512,9 +508,12 @@ Parser::Parser(Vector<TokenPtr> const& tokens)
 
 Parser::~Parser()
 {
-    std::cout << "\n";
-    _tracer.finalize();
-    _tracer.print();
+    if (config::trace)
+    {
+        std::cout << "\n";
+        _tracer.finalize();
+        _tracer.print();
+    }
 }
 
 } //namespace dflat
