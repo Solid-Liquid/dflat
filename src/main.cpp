@@ -13,23 +13,6 @@ int main(int argc, char* argv[])
 {
     string fileName;
 
-// Please ignore me for now.
-//    if (argc == 3)
-//    {
-//        // Temporary hack to allow a single command line op for now
-//        if (argv[1] == "--trace"s)
-//        {
-//            globals::trace = true;
-//        }
-//        else
-//        {
-//            cout << "unknown option\n";
-//            return 1;
-//        }
-//
-//        fileName = argv[2];
-//    }
-//    else if(argc == 2)
     if(argc == 2)
     {
         //read in a file name from command line:

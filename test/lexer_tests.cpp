@@ -6,7 +6,6 @@
 
 using namespace dflat;
 
-// TODO This is hardly ideal
 namespace dflat 
 {
     template <typename T>
@@ -235,5 +234,15 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         WhileToken()
         ));
 
-    //TODO more tests
+    //Tests for bad input:
+
+    REQUIRE_THROWS_AS( tokenize("$"), LexerException );
+
+    REQUIRE_THROWS_AS( tokenize("@"), LexerException );
+
+    REQUIRE_THROWS_AS( tokenize("x = 2 + $"), LexerException );
+
+    REQUIRE_THROWS_AS( tokenize("x @ y"), LexerException );
+
+    REQUIRE_THROWS_AS( tokenize("var$ == 56"), LexerException );
 }
