@@ -21,40 +21,32 @@ ASNPtr operator~(T&& t)
 
 TEST_CASE( "Parser works correctly", "[parser]" )
 {
-//    REQUIRE( PT(parseIfStmt,
-//                IfToken(),
-//                LeftParenToken(),
-//                NumberToken(1),
-//                RightParenToken(),
-//                LeftBraceToken(),
-//                RightBraceToken(),
-//                ElseToken(),
-//                LeftBraceToken(),
-//                RightBraceToken()
-//                ) ==
-//             ~IfBlock(~NumberExp(1),
-//                      ~Block(),
-//                      ~Block())
-//             );
+    // Please forgive insane formatting :)
+    // == denotes the comparison between input and expected output
+    // PT[test function, token input...] == ~[resulting exp, block, or stm]
 
-    // Please forgive insane formatting.
-    REQUIRE( PT(parseNumber,
+    //Tests for success on individual functions:
+
+    REQUIRE( PT(parseNumber, //6 -> NumberExp
         NumberToken(6)
-        ) ==
+        )
+        ==
         ~NumberExp(6)
         );
 
-    REQUIRE( PT(parseVariable,
+    REQUIRE( PT(parseVariable, //fun -> VariableExp
         VariableToken("fun")
-        ) ==
+        )
+        ==
         ~VariableExp("fun")
         );
     
-    REQUIRE( PT(parseAdditive,
+    REQUIRE( PT(parseAdditive,  //1 + 1 -> BinopExp(additive)
         NumberToken(1),
         PlusToken(),
         NumberToken(1)
-        ) ==
+        )
+        ==
         ~BinopExp(
             ~NumberExp(1),
             opPlus,
@@ -62,18 +54,38 @@ TEST_CASE( "Parser works correctly", "[parser]" )
             )
         );
 
-    REQUIRE( PT(parseUnary,
-                MinusToken(),
-                NumberToken(1)
-                ) ==
-             ~UnopExp(~NumberExp(1), opMinus)
-            );
+//    REQUIRE( PT(parseExp,  //same as above but using parseExp
+//        NumberToken(1),
+//        PlusToken(),
+//        NumberToken(1)
+//        )
+//        ==
+//        ~BinopExp(
+//            ~NumberExp(1),
+//            opPlus,
+//            ~NumberExp(1)
+//            )
+//        );
 
-    REQUIRE( PT(parseMultive,
+    REQUIRE( PT(parseAdditive, //2 - 5 -> BinopExp(additive)
+        NumberToken(2),
+        MinusToken(),
+        NumberToken(5)
+        )
+        ==
+        ~BinopExp(
+            ~NumberExp(2),
+            opMinus,
+            ~NumberExp(5)
+            )
+        );
+
+    REQUIRE( PT(parseMultive,     //2 * 3 -> BinopExp(multive)
                 NumberToken(2),
                 MultiplyToken(),
                 NumberToken(3)
-                ) ==
+                )
+             ==
              ~BinopExp(
                 ~NumberExp(2),
                 opMult,
@@ -81,5 +93,123 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                  )
              );
 
+    REQUIRE( PT(parseMultive,     //10 / 5 -> BinopExp(multive)
+                NumberToken(10),
+                DivisionToken(),
+                NumberToken(5)
+                )
+             ==
+             ~BinopExp(
+                ~NumberExp(10),
+                opDiv,
+                ~NumberExp(5)
+                 )
+             );
 
+    REQUIRE( PT(parseLogical,         //foo && bar -> BinopExp(logical)
+                VariableToken("foo"),
+                AndToken(),
+                VariableToken("bar")
+                )
+             ==
+             ~BinopExp(
+                ~VariableExp("foo"),
+                opAnd,
+                ~VariableExp("bar")
+                 )
+             );
+
+    REQUIRE( PT(parseLogical,         //foo || bar -> BinopExp(logical)
+                VariableToken("foo"),
+                OrToken(),
+                VariableToken("bar")
+                )
+             ==
+             ~BinopExp(
+                ~VariableExp("foo"),
+                opOr,
+                ~VariableExp("bar")
+                 )
+             );
+
+    REQUIRE( PT(parseUnary,    //-1 -> UnaryExp
+                MinusToken(),
+                NumberToken(1)
+                )
+             ==
+             ~UnopExp(~NumberExp(1), opMinus)
+            );
+
+    REQUIRE( PT(parseUnary,    //!var -> UnaryExp
+                NotToken(),
+                VariableToken("var")
+                )
+             ==
+             ~UnopExp(~VariableExp("var"), opNot)
+            );
+
+    //nullptr is properly returned for unsuccessful parse:
+
+    REQUIRE( PT(parseNumber,  //parse is not Number
+        VariableToken("var")
+        )
+        ==
+        nullptr
+        );
+
+    REQUIRE( PT(parseVariable, //parse is not Variable
+        NumberToken(6)
+        )
+        ==
+        nullptr
+        );
+
+    REQUIRE( PT(parseAdditive,      //parse is not Additive
+                NumberToken(2)
+                )
+             ==
+             nullptr
+             );
+
+    REQUIRE( PT(parseAdditive,      //parse is not Additive
+                NumberToken(2),
+                MultiplyToken(),
+                NumberToken(3)
+                )
+             ==
+             nullptr
+             );
+
+    REQUIRE( PT(parseMultive,      //parse is not Multive
+                NumberToken(2),
+                PlusToken(),
+                NumberToken(3)
+                )
+             ==
+             nullptr
+             );
+
+    REQUIRE( PT(parseUnary,           //parse is not Unary
+                VariableToken("var")
+                )
+             ==
+             nullptr
+            );
+
+    //    REQUIRE( PT(parseIfStmt,
+    //                IfToken(),
+    //                LeftParenToken(),
+    //                NumberToken(1),
+    //                RightParenToken(),
+    //                LeftBraceToken(),
+    //                RightBraceToken(),
+    //                ElseToken(),
+    //                LeftBraceToken(),
+    //                RightBraceToken()
+    //                )
+    //             ==
+    //             ~IfBlock(~NumberExp(1),
+    //                      ~Block(),
+    //                      ~Block())
+    //             );
 }
