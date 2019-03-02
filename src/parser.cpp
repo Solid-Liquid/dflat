@@ -236,14 +236,14 @@ ASNPtr Parser::parseMultive()
 
     PARSE(left, parsePrimary());
     PARSE(op, parseMultiveOp());
-    PARSE(right, parseMultiveOrPrimary());
+    PARSE(right, parseMultiveDown());
 
     CANCEL_ROLLBACK;
     SUCCESS;
     return make_unique<BinopExp>(move(left), op, move(right));
 }
 
-ASNPtr Parser::parseMultiveOrPrimary()
+ASNPtr Parser::parseMultiveDown()
 {
     TRACE;
     ASNPtr result;
@@ -270,16 +270,16 @@ ASNPtr Parser::parseAdditive()
     TRACE;
     ENABLE_ROLLBACK;
 
-    PARSE(left, parseMultiveOrPrimary());
+    PARSE(left, parseMultiveDown());
     PARSE(op, parseAdditiveOp());
-    PARSE(right, parseAdditiveOrPrimary());
+    PARSE(right, parseAdditiveDown());
 
     CANCEL_ROLLBACK;
     SUCCESS;
     return make_unique<BinopExp>(move(left), op, move(right));
 }
 
-ASNPtr Parser::parseAdditiveOrPrimary()
+ASNPtr Parser::parseAdditiveDown()
 {
     TRACE;
     ASNPtr result;
@@ -289,7 +289,7 @@ ASNPtr Parser::parseAdditiveOrPrimary()
         SUCCESS;
         return result;
     }
-    else if (result = parsePrimary())
+    else if (result = parseMultiveDown())
     {
         SUCCESS;
         return result;
@@ -306,16 +306,16 @@ ASNPtr Parser::parseLogical()
     TRACE;
     ENABLE_ROLLBACK;
 
-    PARSE(left, parseAdditiveOrPrimary());
+    PARSE(left, parseAdditiveDown());
     PARSE(op, parseLogicalOp());
-    PARSE(right, parseLogicalOrPrimary());
+    PARSE(right, parseLogicalDown());
 
     CANCEL_ROLLBACK;
     SUCCESS;
     return make_unique<BinopExp>(move(left), op, move(right));
 }
 
-ASNPtr Parser::parseLogicalOrPrimary()
+ASNPtr Parser::parseLogicalDown()
 {
     TRACE;
     ASNPtr result;
@@ -325,7 +325,7 @@ ASNPtr Parser::parseLogicalOrPrimary()
         SUCCESS;
         return result;
     }
-    else if (result = parsePrimary())
+    else if (result = parseAdditiveDown())
     {
         SUCCESS;
         return result;
@@ -340,30 +340,9 @@ ASNPtr Parser::parseLogicalOrPrimary()
 ASNPtr Parser::parseExp()
 {
     TRACE;
-    //return parseLogicalOrPrimary();
-
     ASNPtr result;
-    if (result = parseLogical())
-    {
-        SUCCESS;
-        return result;
-    }
-    else if (result = parseAdditive())
-    {
-        SUCCESS;
-        return result;
-    }
-    else if (result = parseMultive())
-    {
-        SUCCESS;
-        return result;
-    }
-    else if (result = parseUnary())
-    {
-        SUCCESS;
-        return result;
-    }
-    else if (result = parsePrimary())
+
+    if (result = parseLogicalDown())
     {
         SUCCESS;
         return result;

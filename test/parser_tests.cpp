@@ -199,25 +199,24 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ~UnopExp(~VariableExp("var"), opNot)
             );
 
-//    REQUIRE( PT(parseExp,  //BinopExp(additive) with nested BinopExp(multive)
-//        NumberToken(1),    // 1 + 1 * 4
-//        PlusToken(),
-//        NumberToken(1),
-//        MultiplyToken(),
-//        NumberToken(4)
-//        )
-//        ==
-//        ~BinopExp(
-//             ~BinopExp(
-//                      ~NumberExp(1),
-//                      opPlus,
-//                      ~NumberExp(1)
-//                  ),
-//            opMult,
-//            ~NumberExp(4)
-//            )
-//        );
-
+    REQUIRE( PT(parseExp,  //BinopExp(additive) with nested BinopExp(multive)
+        NumberToken(1),    // 1 + 1 * 4
+        PlusToken(),
+        NumberToken(1),
+        MultiplyToken(),
+        NumberToken(4)
+        )
+        ==
+        ~BinopExp(
+            ~NumberExp(1),
+            opPlus,
+            ~BinopExp(
+                ~NumberExp(1),
+                opMult,
+                ~NumberExp(4)
+                )
+            )
+        );
 
 
     /*
