@@ -25,7 +25,10 @@ TEST_CASE( "Parser works correctly", "[parser]" )
     // == denotes the comparison between input and expected output
     // PT[test function, token input...] == ~[resulting exp, block, or stm]
 
-    //Tests for success on individual functions:
+
+    /*
+     * Tests for success on individual functions:
+     */
 
     REQUIRE( PT(parseNumber, //6 -> NumberExp
         NumberToken(6)
@@ -34,7 +37,21 @@ TEST_CASE( "Parser works correctly", "[parser]" )
         ~NumberExp(6)
         );
 
+    REQUIRE( PT(parseExp, //same as above but using parseExp
+        NumberToken(6)
+        )
+        ==
+        ~NumberExp(6)
+        );
+
     REQUIRE( PT(parseVariable, //fun -> VariableExp
+        VariableToken("fun")
+        )
+        ==
+        ~VariableExp("fun")
+        );
+
+    REQUIRE( PT(parseExp,      //same as above but using parseExp
         VariableToken("fun")
         )
         ==
@@ -54,20 +71,20 @@ TEST_CASE( "Parser works correctly", "[parser]" )
             )
         );
 
-//    REQUIRE( PT(parseExp,  //same as above but using parseExp
-//        NumberToken(1),
-//        PlusToken(),
-//        NumberToken(1)
-//        )
-//        ==
-//        ~BinopExp(
-//            ~NumberExp(1),
-//            opPlus,
-//            ~NumberExp(1)
-//            )
-//        );
-
     REQUIRE( PT(parseAdditive, //2 - 5 -> BinopExp(additive)
+        NumberToken(2),
+        MinusToken(),
+        NumberToken(5)
+        )
+        ==
+        ~BinopExp(
+            ~NumberExp(2),
+            opMinus,
+            ~NumberExp(5)
+            )
+        );
+
+    REQUIRE( PT(parseExp, //same as above but using parseExp
         NumberToken(2),
         MinusToken(),
         NumberToken(5)
@@ -106,6 +123,19 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                  )
              );
 
+    REQUIRE( PT(parseExp,         //same as above but using parseExp
+                NumberToken(10),
+                DivisionToken(),
+                NumberToken(5)
+                )
+             ==
+             ~BinopExp(
+                ~NumberExp(10),
+                opDiv,
+                ~NumberExp(5)
+                 )
+             );
+
     REQUIRE( PT(parseLogical,         //foo && bar -> BinopExp(logical)
                 VariableToken("foo"),
                 AndToken(),
@@ -120,6 +150,19 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              );
 
     REQUIRE( PT(parseLogical,         //foo || bar -> BinopExp(logical)
+                VariableToken("foo"),
+                OrToken(),
+                VariableToken("bar")
+                )
+             ==
+             ~BinopExp(
+                ~VariableExp("foo"),
+                opOr,
+                ~VariableExp("bar")
+                 )
+             );
+
+    REQUIRE( PT(parseLogical,         //same as above but using parseExp
                 VariableToken("foo"),
                 OrToken(),
                 VariableToken("bar")
@@ -148,7 +191,38 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ~UnopExp(~VariableExp("var"), opNot)
             );
 
-    //nullptr is properly returned for unsuccessful parse:
+    REQUIRE( PT(parseExp,    //same as above but using parseExp
+                NotToken(),
+                VariableToken("var")
+                )
+             ==
+             ~UnopExp(~VariableExp("var"), opNot)
+            );
+
+//    REQUIRE( PT(parseExp,  //BinopExp(additive) with nested BinopExp(multive)
+//        NumberToken(1),    // 1 + 1 * 4
+//        PlusToken(),
+//        NumberToken(1),
+//        MultiplyToken(),
+//        NumberToken(4)
+//        )
+//        ==
+//        ~BinopExp(
+//             ~BinopExp(
+//                      ~NumberExp(1),
+//                      opPlus,
+//                      ~NumberExp(1)
+//                  ),
+//            opMult,
+//            ~NumberExp(4)
+//            )
+//        );
+
+
+
+    /*
+     * nullptr is properly returned for unsuccessful parse:
+     */
 
     REQUIRE( PT(parseNumber,  //parse is not Number
         VariableToken("var")

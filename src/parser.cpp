@@ -340,7 +340,39 @@ ASNPtr Parser::parseLogicalOrPrimary()
 ASNPtr Parser::parseExp()
 {
     TRACE;
-    return parseLogicalOrPrimary();
+    //return parseLogicalOrPrimary();
+
+    ASNPtr result;
+    if (result = parseLogical())
+    {
+        SUCCESS;
+        return result;
+    }
+    else if (result = parseAdditive())
+    {
+        SUCCESS;
+        return result;
+    }
+    else if (result = parseMultive())
+    {
+        SUCCESS;
+        return result;
+    }
+    else if (result = parseUnary())
+    {
+        SUCCESS;
+        return result;
+    }
+    else if (result = parsePrimary())
+    {
+        SUCCESS;
+        return result;
+    }
+    else
+    {
+        FAILURE;
+        return nullptr;
+    }
 }
 
 // STATEMENT PARSERS
