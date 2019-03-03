@@ -250,6 +250,7 @@ class AssignmentStm : public ASN
         String variable;
         ASNPtr expression;
 
+        // first: variable name, second: Expression
         AssignmentStm(String, ASNPtr&&);
         ASNType getType() const { return stmAssignment; }
         String toString() const;
@@ -263,24 +264,27 @@ class AssignmentStm : public ASN
         DECLARE_CMP(AssignmentStm)
 };
 
-class VarDefStm : public ASN
+class VarDecStm : public ASN
 {
     //Example Input: int x
     public:
         String type;
         String name;
+        ASNPtr value;
 
-        VarDefStm(String, String);
+        // first: type, second: name, third: Exp
+        VarDecStm(String, String, ASNPtr&&);
         ASNType getType() const { return stmVarDef; }
         String toString() const;
         
-        bool operator==(VarDefStm const& other) const
+        bool operator==(VarDecStm const& other) const
         {
             return type == other.type
-                && name == other.name;
+                && name == other.name
+                && value == other.value;
         }
         
-        DECLARE_CMP(VarDefStm)
+        DECLARE_CMP(VarDecStm)
 };
 
 } //namespace dflat

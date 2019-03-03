@@ -178,12 +178,12 @@ String AssignmentStm::toString() const
 }
 
 //DeclarationStm:
-VarDefStm::VarDefStm(String _type, String _name)
-    : type(_type), name(_name)
+VarDecStm::VarDecStm(String _type, String _name, ASNPtr&& _value)
+    : type(_type), name(_name), value(move(_value))
 {
 }
 
-String VarDefStm::toString() const
+String VarDecStm::toString() const
 {
     return type + " " + name;
 }

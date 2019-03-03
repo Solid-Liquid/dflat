@@ -226,7 +226,8 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ~Block()
              );
 
-    REQUIRE( PT(parseIfStmt,
+    // If
+    REQUIRE( PT(parseIfStm,
                 IfToken(),
                 LeftParenToken(),
                 NumberToken(1),
@@ -240,6 +241,55 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                       ~Block())
              );
 
+    // If else
+    REQUIRE( PT(parseIfStm,
+                IfToken(),
+                LeftParenToken(),
+                NumberToken(1),
+                RightParenToken(),
+                LeftBraceToken(),
+                RightBraceToken(),
+                LeftBraceToken(),
+                RightBraceToken()
+                )
+             ==
+             ~IfStm(~NumberExp(1),
+                    ~Block(),
+                    ~Block())
+             );
+
+    REQUIRE( PT(parseWhileStm,
+                WhileToken(),
+                LeftParenToken(),
+                NumberToken(1),
+                RightParenToken(),
+                LeftBraceToken(),
+                RightBraceToken()
+                )
+             ==
+             ~WhileStm(~NumberExp(1),
+                       ~Block()
+                       )
+             );
+
+    REQUIRE( PT(parseAssignStm,
+                VariableToken("name"),
+                AssignToken(),
+                NumberToken(1)
+                )
+             ==
+             ~AssignmentStm("name", ~NumberExp(1))
+             );
+
+    REQUIRE( PT(parseVarDecl,
+                VariableToken("type"),
+                VariableToken("name"),
+                AssignToken(),
+                NumberToken(1)
+                )
+             ==
+             ~VarDecStm("type", "name", ~NumberExp(1))
+             );
 
     /*
      * nullptr is properly returned for unsuccessful parse:

@@ -101,11 +101,11 @@ public:
     ASNPtr parseLogicalDown();
     ASNPtr parseExp();
     ASNPtr parseVarDecl();
-    ASNPtr parseAssignStmt();
-    ASNPtr parseMemberAssignStmt();
-    ASNPtr parseIfStmt();
-    ASNPtr parseWhileStmt();
-    ASNPtr parseStmt();
+    ASNPtr parseAssignStm();
+    ASNPtr parseMemberAssignStm();
+    ASNPtr parseIfStm();
+    ASNPtr parseWhileStm();
+    ASNPtr parseStm();
     ASNPtr parseBlock();
     ASNPtr parseProgram();
     Parser(Vector<TokenPtr> const&);

@@ -359,25 +359,40 @@ ASNPtr Parser::parseExp()
 ASNPtr Parser::parseVarDecl()
 {
     TRACE;
-    FAILURE;
-    return nullptr; //TODO
+    ENABLE_ROLLBACK;
+
+    MATCH(varType, VariableToken);
+    MATCH(varName, VariableToken);
+    MATCH_(AssignToken);
+    PARSE(exp, parseExp());
+
+    CANCEL_ROLLBACK;
+    SUCCESS;
+    return make_unique<VarDecStm>(varType.name, varName.name, move(exp));
 }
 
-ASNPtr Parser::parseAssignStmt()
+ASNPtr Parser::parseAssignStm()
+{
+    TRACE;
+    ENABLE_ROLLBACK;
+
+    MATCH(varName, VariableToken);
+    MATCH_(AssignToken);
+    PARSE(exp, parseExp());
+
+    CANCEL_ROLLBACK;
+    SUCCESS;
+    return make_unique<AssignmentStm>(varName.name, move(exp));
+}
+
+ASNPtr Parser::parseMemberAssignStm()
 {
     TRACE;
     FAILURE;
     return nullptr; //TODO
 }
 
-ASNPtr Parser::parseMemberAssignStmt()
-{
-    TRACE;
-    FAILURE;
-    return nullptr; //TODO
-}
-
-ASNPtr Parser::parseIfStmt()
+ASNPtr Parser::parseIfStm()
 {
     TRACE;
 
@@ -407,7 +422,7 @@ ASNPtr Parser::parseIfStmt()
         );
 }
 
-ASNPtr Parser::parseWhileStmt()
+ASNPtr Parser::parseWhileStm()
 {
     TRACE;
     ENABLE_ROLLBACK;
@@ -423,7 +438,7 @@ ASNPtr Parser::parseWhileStmt()
     return make_unique<WhileStm>(move(cond), move(body));
 }
 
-ASNPtr Parser::parseStmt()
+ASNPtr Parser::parseStm()
 {
     TRACE;
     ASNPtr result;
@@ -433,22 +448,22 @@ ASNPtr Parser::parseStmt()
         SUCCESS;
         return result;
     }
-    else if (result = parseAssignStmt())
+    else if (result = parseAssignStm())
     {
         SUCCESS;
         return result;
     }
-    else if (result = parseMemberAssignStmt())
+    else if (result = parseMemberAssignStm())
     {
         SUCCESS;
         return result;
     }
-    else if (result = parseIfStmt())
+    else if (result = parseIfStm())
     {
         SUCCESS;
         return result;
     }
-    else if (result = parseWhileStmt())
+    else if (result = parseWhileStm())
     {
         SUCCESS;
         return result;
@@ -477,7 +492,7 @@ ASNPtr Parser::parseBlock()
 
     MATCH_(LeftBraceToken);
 
-    while((curstm = parseStmt()))
+    while((curstm = parseStm()))
     {
         stm.push_back(move(curstm));
     }
