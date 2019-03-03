@@ -105,7 +105,6 @@ public:
     ASNPtr parseMemberAssignStmt();
     ASNPtr parseIfStmt();
     ASNPtr parseWhileStmt();
-    ASNPtr parseForStmt();
     ASNPtr parseStmt();
     ASNPtr parseBlock();
     ASNPtr parseProgram();

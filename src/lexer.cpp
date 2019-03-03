@@ -93,7 +93,6 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
     {
         { "if", tokIf },
         { "else", tokElse },
-        { "for", tokFor },
         { "while", tokWhile },
         { "new", tokNew },
     };
@@ -109,7 +108,6 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
     {
         case tokIf: return make_unique<IfToken>();
         case tokElse: return make_unique<ElseToken>();
-        case tokFor: return make_unique<ForToken>();
         case tokWhile: return make_unique<WhileToken>();
         case tokNew: return make_unique<NewToken>();
         default: return nullptr;

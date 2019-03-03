@@ -53,7 +53,6 @@ namespace dflat
             case tokRParen:
             case tokComma:
             case tokNewLine:
-            case tokFor:
             case tokWhile:
             case tokAnd:
             case tokOr:
@@ -151,10 +150,6 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         CommaToken()
         ));
 
-    REQUIRE ( tokenize("for") == tokens(
-        ForToken()
-        ));
-
     REQUIRE ( tokenize("while") == tokens(
         WhileToken()
         ));
@@ -223,13 +218,12 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         AssignToken()
         ));
     
-    REQUIRE ( tokenize("*if+else-for/while") == tokens(
+    REQUIRE ( tokenize("*if+else-/while") == tokens(
         MultiplyToken(),
         IfToken(),
         PlusToken(),
         ElseToken(),
         MinusToken(),
-        ForToken(),
         DivisionToken(),
         WhileToken()
         ));

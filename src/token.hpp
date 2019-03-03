@@ -9,7 +9,7 @@ namespace dflat
 {
     enum TokType { tokNum, tokVar, tokIf, tokElse, tokPlus, tokMinus,
                     tokDiv, tokAssign, tokMult, tokRBrace, tokLBrace,
-                    tokLParen, tokRParen, tokComma, tokNewLine, tokFor, tokWhile,
+                    tokLParen, tokRParen, tokComma, tokNewLine, tokWhile,
                     tokAnd, tokOr, tokEq, tokNotEq, tokNot, tokMember,
                     tokEnd, tokNew };
 
@@ -142,13 +142,6 @@ namespace dflat
     public:
         TokType getType() const { return tokNewLine; }
         String toString() const { return "\\n"; }
-    };
-
-    class ForToken : public Token
-    {
-    public:
-        TokType getType() const { return tokFor; }
-        String toString() const { return "for"; }
     };
 
     class WhileToken : public Token

@@ -439,13 +439,6 @@ ASNPtr Parser::parseWhileStmt()
     return make_unique<WhileBlock>(move(cond), move(body));
 }
 
-ASNPtr Parser::parseForStmt()
-{
-    TRACE;
-    FAILURE;
-    return nullptr; //TODO
-}
-
 ASNPtr Parser::parseStmt()
 {
     TRACE;
@@ -472,11 +465,6 @@ ASNPtr Parser::parseStmt()
         return result;
     }
     else if (result = parseWhileStmt())
-    {
-        SUCCESS;
-        return result;
-    }
-    else if (result = parseForStmt())
     {
         SUCCESS;
         return result;
