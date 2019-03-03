@@ -209,4 +209,39 @@ String VarDefStm::toString() const
     return type + " " + name;
 }
 
+// Method Declaration
+MethodDecl::MethodDecl(String _type, String _name, Vector<ASNPtr>&& _exps)
+    : type(_type), name(_name), exps(move(_exps))
+{
+}
+
+String MethodDecl::toString() const
+{
+    String str = type + " " + name + "(\n";
+    int track = exps.size();
+    for(auto&& ex : exps)
+    {
+        str += ex -> toString();
+        if(track > 1)
+            str += ", ";
+        track--;
+    }
+    str += ")\n";
+    return str;
+}
+// Class Definition
+ClassDecl::ClassDecl(String _name, Vector<ASNPtr>&& _members)
+    : name(_name), members(move(_members))
+{
+}
+
+String ClassDecl::toString() const
+{
+    String str = "class " + name + "{\n";
+    for(auto&& ex : members)
+        str += ex -> toString();
+    str += "}\n";
+    return str;
+}
+
 } //namespace dflat

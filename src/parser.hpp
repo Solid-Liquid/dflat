@@ -107,6 +107,9 @@ public:
     ASNPtr parseWhileStmt();
     ASNPtr parseStmt();
     ASNPtr parseBlock();
+    ASNPtr parseMethodDecl();
+    ASNPtr parseClassDecl();
+    ASNPtr parseClassStm();
     ASNPtr parseProgram();
     Parser(Vector<TokenPtr> const&);
     ~Parser();

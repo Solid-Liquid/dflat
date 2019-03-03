@@ -531,6 +531,89 @@ ASNPtr Parser::parseBlock()
     return make_unique<Block>(move(stm));
 }
 
+ASNPtr Parser::parseMethodDecl()
+{
+    /*
+    type + name + ( + exp + (, + exp)* + ) + \n
+    */
+    TRACE;
+    ENABLE_ROLLBACK;
+
+    Vector<ASNPtr> exps;
+    ASNPtr temp = nullptr;
+
+    MATCH(typeName, VariableToken);
+    MATCH(functionName, VariableToken);
+    MATCH_(LeftParenToken)
+    temp = parseExp();
+    if(temp)
+    {
+        exps.push_back(move(temp));
+        while(match<CommaToken>())
+        {
+            PARSE(temp1, parseExp());
+            exps.push_back(move(temp1));
+        }
+    }
+    MATCH_(RightParenToken);
+
+    CANCEL_ROLLBACK;
+    SUCCESS;
+    return make_unique<MethodDecl>(typeName.name, functionName.name, move(exps));
+}
+
+ASNPtr Parser::parseClassDecl()
+{
+    //distinguish variable from methods
+    /*
+    class name {
+        block
+        block
+    }\n
+    */
+    TRACE;
+    ENABLE_ROLLBACK;
+
+    Vector<ASNPtr> stm;
+    ASNPtr curstm = nullptr;
+
+    MATCH_(ClassToken);
+    MATCH(className, VariableToken);
+    MATCH_(LeftBraceToken)
+
+    while(curstm = parseClassStm())
+    {
+        stm.push_back(move(curstm));
+    }
+    MATCH_(RightBraceToken);
+
+    CANCEL_ROLLBACK;
+    SUCCESS;
+    return make_unique<ClassDecl>(className.name, move(stm));
+}
+
+ASNPtr Parser::parseClassStm()
+{
+    TRACE;
+    ASNPtr result;
+
+    if (result = parseVarDecl())
+    {
+        SUCCESS;
+        return result;
+    }
+    else if (result = parseMethodDecl())
+    {
+        SUCCESS;
+        return result;
+    }
+    else
+    {
+        FAILURE;
+        return nullptr;
+    }
+}
+
 ASNPtr Parser::parseProgram()
 {
     TRACE;

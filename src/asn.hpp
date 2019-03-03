@@ -13,7 +13,7 @@ namespace dflat
 
 enum ASNType { expBinop, expNumber, expVariable, expUnop,
                block, stmIf, defMethod, stmWhile, stmAssignment,
-               expMethod, stmVarDef, expNew, stmRet};
+               expMethod, stmVarDef, expNew, stmRet, declMethod, declClass};
 
 enum OpType { opNull = 0, opPlus, opMinus, opMult, opDiv, opNot, opAnd, opOr,
               opLogEq, opLogNotEq };
@@ -301,6 +301,51 @@ class NewExp : public ASN
         }
         
         DECLARE_CMP(NewExp)
+};
+
+class MethodDecl : public ASN
+{
+    public:
+        String type;
+        String name;
+        Vector<ASNPtr> exps;
+
+        MethodDecl(String, String, Vector<ASNPtr>&&);
+        ASNType getType() const { return declMethod; }
+        String toString() const;
+        
+        bool operator==(MethodDecl const& other) const
+        {
+            return type     == other.type
+                && name     == other.name
+                && exps     == other.exps;
+        }
+        
+        DECLARE_CMP(MethodDecl)
+};
+
+class ClassDecl : public ASN
+{
+    /*
+    class name {
+        block
+    }\n
+    */
+    public:
+        String name;
+        Vector<ASNPtr> members;
+
+        ClassDecl(String, Vector<ASNPtr>&&);
+        ASNType getType() const { return declClass; }
+        String toString() const;
+        
+        bool operator==(ClassDecl const& other) const
+        {
+            return name   == other.name
+                && members == other.members;
+        }
+        
+        DECLARE_CMP(ClassDecl)
 };
 
 } //namespace dflat
