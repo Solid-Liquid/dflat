@@ -10,10 +10,15 @@
 namespace dflat
 {
 
+Program parse(Vector<TokenPtr> const&);  //Main runner function for parser
+
 class ParserException : public std::exception
 {
 public:
-    using std::exception::exception;
+    ParserException(String msg) noexcept;
+    const char* what() const noexcept;
+private:
+    String message;
 };
 
 class Parser
@@ -101,16 +106,17 @@ public:
     ASNPtr parseLogicalDown();
     ASNPtr parseExp();
     ASNPtr parseVarDecl();
-    ASNPtr parseAssignStmt();
-    ASNPtr parseMemberAssignStmt();
-    ASNPtr parseIfStmt();
-    ASNPtr parseWhileStmt();
-    ASNPtr parseStmt();
+    ASNPtr parseAssignStm();
+    ASNPtr parseMemberAssignStm();
+    ASNPtr parseIfStm();
+    ASNPtr parseWhileStm();
+    ASNPtr parseStm();
     ASNPtr parseBlock();
     ASNPtr parseMethodDecl();
     ASNPtr parseClassDecl();
     ASNPtr parseClassStm();
-    ASNPtr parseProgram();
+    Program parseProgram();
+    ASNPtr parseRetStm();
     Parser(Vector<TokenPtr> const&);
     ~Parser();
 };

@@ -14,6 +14,23 @@ using namespace std;
 #define ENABLE_ROLLBACK auto rollbacker = Rollbacker(*this, _tokenPos)
 #define CANCEL_ROLLBACK rollbacker.disable()
 
+
+Program parse(Vector<TokenPtr> const& tokens)
+{
+    Parser p(tokens);
+    return p.parseProgram();
+}
+
+ParserException::ParserException(String msg) noexcept
+{
+    message = msg;
+}
+
+const char* ParserException::what() const noexcept
+{
+    return message.c_str();
+}
+
 /**
  * @brief Returns the current token or end of program token.
  * @return TokenPtr
@@ -401,25 +418,40 @@ ASNPtr Parser::parseExp()
 ASNPtr Parser::parseVarDecl()
 {
     TRACE;
-    FAILURE;
-    return nullptr; //TODO
+    ENABLE_ROLLBACK;
+
+    MATCH(varType, VariableToken);
+    MATCH(varName, VariableToken);
+    MATCH_(AssignToken);
+    PARSE(exp, parseExp());
+
+    CANCEL_ROLLBACK;
+    SUCCESS;
+    return make_unique<VarDecStm>(varType.name, varName.name, move(exp));
 }
 
-ASNPtr Parser::parseAssignStmt()
+ASNPtr Parser::parseAssignStm()
+{
+    TRACE;
+    ENABLE_ROLLBACK;
+
+    MATCH(varName, VariableToken);
+    MATCH_(AssignToken);
+    PARSE(exp, parseExp());
+
+    CANCEL_ROLLBACK;
+    SUCCESS;
+    return make_unique<AssignmentStm>(varName.name, move(exp));
+}
+
+ASNPtr Parser::parseMemberAssignStm()
 {
     TRACE;
     FAILURE;
     return nullptr; //TODO
 }
 
-ASNPtr Parser::parseMemberAssignStmt()
-{
-    TRACE;
-    FAILURE;
-    return nullptr; //TODO
-}
-
-ASNPtr Parser::parseIfStmt()
+ASNPtr Parser::parseIfStm()
 {
     TRACE;
 
@@ -449,7 +481,7 @@ ASNPtr Parser::parseIfStmt()
         );
 }
 
-ASNPtr Parser::parseWhileStmt()
+ASNPtr Parser::parseWhileStm()
 {
     TRACE;
     ENABLE_ROLLBACK;
@@ -465,7 +497,7 @@ ASNPtr Parser::parseWhileStmt()
     return make_unique<WhileStm>(move(cond), move(body));
 }
 
-ASNPtr Parser::parseStmt()
+ASNPtr Parser::parseStm()
 {
     TRACE;
     ASNPtr result;
@@ -475,22 +507,22 @@ ASNPtr Parser::parseStmt()
         SUCCESS;
         return result;
     }
-    else if (result = parseAssignStmt())
+    else if (result = parseAssignStm())
     {
         SUCCESS;
         return result;
     }
-    else if (result = parseMemberAssignStmt())
+    else if (result = parseMemberAssignStm())
     {
         SUCCESS;
         return result;
     }
-    else if (result = parseIfStmt())
+    else if (result = parseIfStm())
     {
         SUCCESS;
         return result;
     }
-    else if (result = parseWhileStmt())
+    else if (result = parseWhileStm())
     {
         SUCCESS;
         return result;
@@ -519,7 +551,7 @@ ASNPtr Parser::parseBlock()
 
     MATCH_(LeftBraceToken);
 
-    while((curstm = parseStmt()))
+    while((curstm = parseStm()))
     {
         stm.push_back(move(curstm));
     }
@@ -614,11 +646,47 @@ ASNPtr Parser::parseClassStm()
     }
 }
 
-ASNPtr Parser::parseProgram()
+ASNPtr Parser::parseRetStm()
 {
     TRACE;
-    FAILURE;
-    return nullptr; // TODO
+    ENABLE_ROLLBACK;
+
+    MATCH_(ReturnToken);
+    PARSE(exp, parseExp());
+
+    CANCEL_ROLLBACK;
+    SUCCESS;
+    return make_unique<RetStm>(move(exp));
+}
+
+Program Parser::parseProgram()
+{
+    TRACE;
+    Program prog;
+    bool run = true;
+    ASNPtr result;
+
+    while(run)
+    {
+        //TODO in the future, only calls parseClass()
+        if(result = parseExp())
+        {
+            prog.classes.push_back(move(result));
+        }
+        else
+        {
+            run = false;
+        }
+    }
+
+    if(!match<EndToken>())
+    {
+        FAILURE;
+        String msg = "Unable to parse at position: " + to_string(_tokenPos);
+        throw ParserException(msg);
+    }
+
+    return prog; // TODO
 }
 
 Parser::Parser(Vector<TokenPtr> const& tokens)

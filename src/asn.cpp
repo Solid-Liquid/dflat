@@ -175,7 +175,7 @@ NewExp::NewExp(String _type, Vector<ASNPtr>&& _args)
 String NewExp::toString() const
 {
     String str = "new " + type + " (";
-    int track = args.size();
+    size_t track = args.size();
     for(auto&& ar : args)
     {
         str += ar -> toString();
@@ -199,14 +199,24 @@ String AssignmentStm::toString() const
 }
 
 //DeclarationStm:
-VarDefStm::VarDefStm(String _type, String _name)
-    : type(_type), name(_name)
+VarDecStm::VarDecStm(String _type, String _name, ASNPtr&& _value)
+    : type(_type), name(_name), value(move(_value))
 {
 }
 
-String VarDefStm::toString() const
+String VarDecStm::toString() const
 {
-    return type + " " + name;
+    return type + " " + name + " = " + value->toString();
+}
+
+RetStm::RetStm(ASNPtr&& _value)
+    : value(move(_value))
+{
+}
+
+String RetStm::toString() const
+{
+    return "return " + value->toString();
 }
 
 // Method Declaration

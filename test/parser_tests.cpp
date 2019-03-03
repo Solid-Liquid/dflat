@@ -14,7 +14,13 @@ ASNPtr operator~(T&& t)
     return std::make_unique<T>(std::forward<T>(t));
 }
 
-
+template <typename... Ts>
+Vector<ASNPtr> asns(Ts&&... in)
+{
+    Vector<ASNPtr> out;
+    (out.push_back(std::make_unique<Ts>(in)), ...);
+    return out;
+}
 
 //Parser( tokens(NumberToken(1), PlusToken(), NumberToken(1)) ).parseAdditive()
 #define PT(method, ...) Parser(tokens(__VA_ARGS__)).method()
@@ -218,7 +224,36 @@ TEST_CASE( "Parser works correctly", "[parser]" )
             )
         );
 
-    REQUIRE( PT(parseBlock,
+    REQUIRE( PT(parseExp,  //BinopExp(additive) with nested BinopExp(multive)
+        NumberToken(1),    // 1 * 1 + 4    ->   (1 * 1) + 4
+        MultiplyToken(),
+        NumberToken(1),
+        PlusToken(),
+        NumberToken(4)
+        )
+        ==
+        ~BinopExp(
+            ~BinopExp(~NumberExp(1),opMult,~NumberExp(1)),
+            opPlus,
+            ~NumberExp(4)
+            )
+        );
+
+    REQUIRE( PT(parseExp,  //BinopExp(additive) with nested UnaryExp
+        MinusToken(),
+        NumberToken(1),    // -1 * 1    ->   (-1) * 1
+        MultiplyToken(),
+        NumberToken(1)
+        )
+        ==
+        ~BinopExp(
+            ~UnopExp(~NumberExp(1),opMinus),
+            opMult,
+            ~NumberExp(1)
+            )
+        );
+
+    REQUIRE( PT(parseBlock,        // { }   ->   empty block
                 LeftBraceToken(),
                 RightBraceToken()
                 )
@@ -226,7 +261,8 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ~Block()
              );
 
-    REQUIRE( PT(parseIfStmt,
+    // If
+    REQUIRE( PT(parseIfStm,
                 IfToken(),
                 LeftParenToken(),
                 NumberToken(1),
@@ -240,6 +276,55 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                       ~Block())
              );
 
+    // If else
+    REQUIRE( PT(parseIfStm,
+                IfToken(),
+                LeftParenToken(),
+                NumberToken(1),
+                RightParenToken(),
+                LeftBraceToken(),
+                RightBraceToken(),
+                LeftBraceToken(),
+                RightBraceToken()
+                )
+             ==
+             ~IfStm(~NumberExp(1),
+                    ~Block(),
+                    ~Block())
+             );
+
+    REQUIRE( PT(parseWhileStm,
+                WhileToken(),
+                LeftParenToken(),
+                NumberToken(1),
+                RightParenToken(),
+                LeftBraceToken(),
+                RightBraceToken()
+                )
+             ==
+             ~WhileStm(~NumberExp(1),
+                       ~Block()
+                       )
+             );
+
+    REQUIRE( PT(parseAssignStm,
+                VariableToken("name"),
+                AssignToken(),
+                NumberToken(1)
+                )
+             ==
+             ~AssignmentStm("name", ~NumberExp(1))
+             );
+
+    REQUIRE( PT(parseVarDecl,
+                VariableToken("type"),
+                VariableToken("name"),
+                AssignToken(),
+                NumberToken(1)
+                )
+             ==
+             ~VarDecStm("type", "name", ~NumberExp(1))
+             );
 // new test
     REQUIRE( PT(parseNew,
                 NewToken(),
@@ -262,8 +347,69 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 )
              ==
              ~NewExp("int",
-                      Vector<ASNPtr>{~NumberExp(3)})
+                      asns(NumberExp(3)))
              );
+
+// new test with 2 expressions
+    REQUIRE( PT(parseNew,
+                NewToken(),
+                VariableToken("int"),
+                LeftParenToken(),
+                NumberToken(3),
+                CommaToken(),
+                VariableToken("suh"),
+                RightParenToken()
+                )
+             ==
+             ~NewExp("int",
+                      asns(NumberExp(3), VariableExp("suh")))
+             );
+
+// method call test with 0 expressions
+    REQUIRE( PT(parseMethodCall,
+                VariableToken("function"),
+                LeftParenToken(),
+                RightParenToken()
+                )
+             ==
+             ~MethodExp("function",
+                      Vector<ASNPtr>{})
+             );
+
+// method call test with 1 expression
+    REQUIRE( PT(parseMethodCall,
+                VariableToken("function"),
+                LeftParenToken(),
+                NumberToken(3),
+                RightParenToken()
+                )
+             ==
+             ~MethodExp("function",
+                      asns(NumberExp(3)))
+             );
+
+// new test with 2 expressions
+    REQUIRE( PT(parseMethodCall,
+                VariableToken("function"),
+                LeftParenToken(),
+                NumberToken(3),
+                CommaToken(),
+                VariableToken("suh"),
+                RightParenToken()
+                )
+             ==
+             ~MethodExp("function",
+                      asns(NumberExp(3), VariableExp("suh")))
+             );
+
+    REQUIRE( PT(parseRetStm,
+                ReturnToken(),
+                NumberToken(1)
+                )
+             ==
+            ~RetStm(~NumberExp(1))
+             );
+
     /*
      * nullptr is properly returned for unsuccessful parse:
      */

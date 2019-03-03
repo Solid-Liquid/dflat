@@ -95,6 +95,9 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
         { "else", tokElse },
         { "while", tokWhile },
         { "new", tokNew },
+        { "return", tokReturn },
+        { "this", tokThis },
+        { "class", tokClass }
     };
 
     auto it = KWS.find(name);
@@ -106,11 +109,14 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
 
     switch (it->second)
     {
-        case tokIf: return make_unique<IfToken>();
-        case tokElse: return make_unique<ElseToken>();
-        case tokWhile: return make_unique<WhileToken>();
-        case tokNew: return make_unique<NewToken>();
-        default: return nullptr;
+        case tokIf:     return make_unique<IfToken>();
+        case tokElse:   return make_unique<ElseToken>();
+        case tokWhile:  return make_unique<WhileToken>();
+        case tokNew:    return make_unique<NewToken>();
+        case tokReturn: return make_unique<ReturnToken>();
+        case tokThis:   return make_unique<ThisToken>();
+        case tokClass:  return make_unique<ClassToken>();
+        default:        return nullptr;
     }
 }
 
@@ -118,20 +124,20 @@ TokenPtr Lexer::lookupPunct1(char c) const
 {
     switch (c)
     {
-        case '(': return make_unique<LeftParenToken>();
-        case ')': return make_unique<RightParenToken>();
-        case ',': return make_unique<CommaToken>();
-        case '{': return make_unique<LeftBraceToken>();
-        case '}': return make_unique<RightBraceToken>();
-        case '=': return make_unique<AssignToken>();
-        case '+': return make_unique<PlusToken>();
-        case '-': return make_unique<MinusToken>();
-        case '*': return make_unique<MultiplyToken>();
-        case '/': return make_unique<DivisionToken>();
-        case '!': return make_unique<NotToken>();
-        case '.': return make_unique<MemberToken>();
-        case '\n': return make_unique<NewlineToken>();
-        default: return nullptr;
+        case '(':   return make_unique<LeftParenToken>();
+        case ')':   return make_unique<RightParenToken>();
+        case ',':   return make_unique<CommaToken>();
+        case '{':   return make_unique<LeftBraceToken>();
+        case '}':   return make_unique<RightBraceToken>();
+        case '=':   return make_unique<AssignToken>();
+        case '+':   return make_unique<PlusToken>();
+        case '-':   return make_unique<MinusToken>();
+        case '*':   return make_unique<MultiplyToken>();
+        case '/':   return make_unique<DivisionToken>();
+        case '!':   return make_unique<NotToken>();
+        case '.':   return make_unique<MemberToken>();
+        case '\n':  return make_unique<NewlineToken>();
+        default:    return nullptr;
     }
 }
 
