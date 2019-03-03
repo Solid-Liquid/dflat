@@ -12,8 +12,8 @@ namespace dflat
 {
 
 enum ASNType { expBinop, expNumber, expVariable, expUnop,
-               block, blockIf, blockMethod, blockWhile, stmAssignment,
-               stmMethod, stmDeclaration};
+               block, stmIf, defMethod, stmWhile, stmAssignment,
+               expMethod, stmVarDef, expNew, stmRet};
 
 enum OpType { opNull = 0, opPlus, opMinus, opMult, opDiv, opNot, opAnd, opOr,
               opLogEq, opLogNotEq };
@@ -157,7 +157,7 @@ class Block : public ASN
         DECLARE_CMP(Block)
 };
 
-class IfBlock : public ASN
+class IfStm : public ASN
 {
     //Example Input: if(x == y) { statement } else { statement }
     public:
@@ -165,41 +165,41 @@ class IfBlock : public ASN
         ASNPtr trueStatements;
         ASNPtr falseStatements;
 
-        IfBlock(ASNPtr&&, ASNPtr&&, ASNPtr&&);
-        ASNType getType() const { return blockIf; }
+        IfStm(ASNPtr&&, ASNPtr&&, ASNPtr&&);
+        ASNType getType() const { return stmIf; }
         String toString() const;
         
-        bool operator==(IfBlock const& other) const
+        bool operator==(IfStm const& other) const
         {
             return logicExp        == other.logicExp
                 && trueStatements  == other.trueStatements
                 && falseStatements == other.falseStatements;
         }
         
-        DECLARE_CMP(IfBlock)
+        DECLARE_CMP(IfStm)
 };
 
-class WhileBlock : public ASN
+class WhileStm : public ASN
 {
     //Example Input: while(x == y) { statement }
     public:
         ASNPtr logicExp;
         ASNPtr statements;
 
-        WhileBlock(ASNPtr&&, ASNPtr&&);
-        ASNType getType() const { return blockWhile; }
+        WhileStm(ASNPtr&&, ASNPtr&&);
+        ASNType getType() const { return stmWhile; }
         String toString() const;
         
-        bool operator==(WhileBlock const& other) const
+        bool operator==(WhileStm const& other) const
         {
             return logicExp   == other.logicExp
                 && statements == other.statements;
         }
         
-        DECLARE_CMP(WhileBlock)
+        DECLARE_CMP(WhileStm)
 };
 
-class MethodBlock : public ASN
+class MethodDef : public ASN
 {
     //Example Input: int func(int x, int y) { statement }
     public:
@@ -208,11 +208,11 @@ class MethodBlock : public ASN
         Vector<ASNPtr> args;
         ASNPtr statements;
 
-        MethodBlock(String, String, Vector<ASNPtr>&&, ASNPtr&&);
-        ASNType getType() const { return blockMethod; }
+        MethodDef(String, String, Vector<ASNPtr>&&, ASNPtr&&);
+        ASNType getType() const { return defMethod; }
         String toString() const;
         
-        bool operator==(MethodBlock const& other) const
+        bool operator==(MethodDef const& other) const
         {
             return type       == other.type
                 && name       == other.name
@@ -220,27 +220,27 @@ class MethodBlock : public ASN
                 && statements == other.statements;
         }
         
-        DECLARE_CMP(MethodBlock)
+        DECLARE_CMP(MethodDef)
 };
 
-class MethodStm : public ASN
+class MethodExp : public ASN
 {
     //Example Input: func(int x, int y)
     public:
         String name;
         Vector<ASNPtr> args;
 
-        MethodStm(String, Vector<ASNPtr>&&);
-        ASNType getType() const { return stmMethod; }
+        MethodExp(String, Vector<ASNPtr>&&);
+        ASNType getType() const { return expMethod; }
         String toString() const;
         
-        bool operator==(MethodStm const& other) const
+        bool operator==(MethodExp const& other) const
         {
             return name == other.name
                 && args == other.args;
         }
         
-        DECLARE_CMP(MethodStm)
+        DECLARE_CMP(MethodExp)
 };
 
 class AssignmentStm : public ASN
@@ -263,24 +263,24 @@ class AssignmentStm : public ASN
         DECLARE_CMP(AssignmentStm)
 };
 
-class DeclarationStm : public ASN
+class VarDefStm : public ASN
 {
     //Example Input: int x
     public:
         String type;
         String name;
 
-        DeclarationStm(String, String);
-        ASNType getType() const { return stmDeclaration; }
+        VarDefStm(String, String);
+        ASNType getType() const { return stmVarDef; }
         String toString() const;
         
-        bool operator==(DeclarationStm const& other) const
+        bool operator==(VarDefStm const& other) const
         {
             return type == other.type
                 && name == other.name;
         }
         
-        DECLARE_CMP(DeclarationStm)
+        DECLARE_CMP(VarDefStm)
 };
 
 } //namespace dflat

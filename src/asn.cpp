@@ -93,14 +93,14 @@ String Block::toString() const
 }
 
 //IfBlock:
-IfBlock::IfBlock(ASNPtr&& _logicExp, ASNPtr&& _trueStatements, ASNPtr&& _falseStatements)
+IfStm::IfStm(ASNPtr&& _logicExp, ASNPtr&& _trueStatements, ASNPtr&& _falseStatements)
     : logicExp(move(_logicExp))
     , trueStatements(move(_trueStatements))
     , falseStatements(move(_falseStatements))
 {
 }
 
-String IfBlock::toString() const
+String IfStm::toString() const
 {
     String str = "\nif(" + logicExp->toString() + ")\n";
     str += trueStatements->toString() + "\n";
@@ -110,12 +110,12 @@ String IfBlock::toString() const
 }
 
 //WhileBlock:
-WhileBlock::WhileBlock(ASNPtr&& _logicExp, ASNPtr&& _statements)
+WhileStm::WhileStm(ASNPtr&& _logicExp, ASNPtr&& _statements)
     : logicExp(move(_logicExp)), statements(move(_statements))
 {
 }
 
-String WhileBlock::toString() const
+String WhileStm::toString() const
 {
     String str = "\nif(" + logicExp->toString() + ")\n";
     str += statements->toString() + "\n";
@@ -123,13 +123,13 @@ String WhileBlock::toString() const
 }
 
 //MethodBlock:
-MethodBlock::MethodBlock(String _type, String _name,
+MethodDef::MethodDef(String _type, String _name,
              Vector<ASNPtr>&& _args, ASNPtr&& _statements)
     : type(_type),name(_name),args(move(_args)), statements(move(_statements))
 {
 }
 
-String MethodBlock::toString() const
+String MethodDef::toString() const
 {
     String str = "\n" + type + " " + name + "(";
     int track = 0;
@@ -146,12 +146,12 @@ String MethodBlock::toString() const
 }
 
 //MethodStm:
-MethodStm::MethodStm(String _name, Vector<ASNPtr>&& _args)
+MethodExp::MethodExp(String _name, Vector<ASNPtr>&& _args)
   : name(_name), args(move(_args))
 {
 }
 
-String MethodStm::toString() const
+String MethodExp::toString() const
 {
     String str = name + "(";
     int track = 0;
@@ -178,12 +178,12 @@ String AssignmentStm::toString() const
 }
 
 //DeclarationStm:
-DeclarationStm::DeclarationStm(String _type, String _name)
+VarDefStm::VarDefStm(String _type, String _name)
     : type(_type), name(_name)
 {
 }
 
-String DeclarationStm::toString() const
+String VarDefStm::toString() const
 {
     return type + " " + name;
 }

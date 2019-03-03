@@ -416,7 +416,7 @@ ASNPtr Parser::parseIfStmt()
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<IfBlock>(
+    return make_unique<IfStm>(
         move(logicExp),
         move(trueStatements),
         move(elseBlock)
@@ -436,7 +436,7 @@ ASNPtr Parser::parseWhileStmt()
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<WhileBlock>(move(cond), move(body));
+    return make_unique<WhileStm>(move(cond), move(body));
 }
 
 ASNPtr Parser::parseStmt()
@@ -487,6 +487,18 @@ ASNPtr Parser::parseBlock()
 {
     TRACE;
     FAILURE;
+
+//    Vector<ASNPtr> stm;
+//    ASNPtr current = nullptr;
+
+//    MATCH_(LeftBraceToken);
+
+//    while((current = ()))
+//    {
+//        tokens.push_back(move(current));
+//        skipWhitespace();
+//    }
+
     return nullptr; //TODO
 }
 

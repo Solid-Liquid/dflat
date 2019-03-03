@@ -71,7 +71,7 @@ target_include_directories(tests ${DFLAT_INCLUDES}
 
 #### PROJECT COMPILE OPTIONS ####
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
     set(DFLAT_COMPILE_OPTIONS
         PUBLIC
             -Wall 
