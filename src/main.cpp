@@ -44,11 +44,15 @@ int main(int argc, char* argv[])
     {
         //Take file contents and run compiler:
         Vector<TokenPtr> tokens = tokenize(fileContents); //run lexer
-        for(unsigned long long i=0; i<tokens.size(); ++i)
-            cout << tokens[i]->toString() << endl;
+        //for(size_t i=0; i<tokens.size(); ++i)
+            //cout << tokens[i]->toString() << endl;
+        Program prog = parse(tokens);  //run parser
+        for(size_t i=0; i<tokens.size(); ++i)
+            cout << prog.classes[i]->toString() << endl;
     }
     catch(LexerException& e) { cout << e.what() << endl; }
     catch(ParserException& e) { cout << e.what() << endl; }
+    catch(exception& e){ cout << e.what() << endl; }
 
     return 0;
 }

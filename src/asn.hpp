@@ -63,6 +63,13 @@ bool operator==(ASNPtr const& a, ASNPtr const& b)
     return *a == *b;
 }
 
+class Program
+{
+    public:
+        Vector<ASNPtr> classes;
+        //TODO might need to add other stuff
+};
+
 class BinopExp: public ASN
 {
     //Example Input: 5 + 6

@@ -175,7 +175,7 @@ NewExp::NewExp(String _type, Vector<ASNPtr>&& _args)
 String NewExp::toString() const
 {
     String str = "new " + type + " (";
-    int track = args.size();
+    size_t track = args.size();
     for(auto&& ar : args)
     {
         str += ar -> toString();
