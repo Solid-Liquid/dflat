@@ -14,6 +14,23 @@ using namespace std;
 #define ENABLE_ROLLBACK auto rollbacker = Rollbacker(*this, _tokenPos)
 #define CANCEL_ROLLBACK rollbacker.disable()
 
+
+Program parse(Vector<TokenPtr> const& tokens)
+{
+    Parser p(tokens);
+    return p.parseProgram();
+}
+
+ParserException::ParserException(String msg) noexcept
+{
+    message = msg;
+}
+
+const char* ParserException::what() const noexcept
+{
+    return message.c_str();
+}
+
 /**
  * @brief Returns the current token or end of program token.
  * @return TokenPtr
@@ -546,11 +563,47 @@ ASNPtr Parser::parseBlock()
     return make_unique<Block>(move(stm));
 }
 
-ASNPtr Parser::parseProgram()
+ASNPtr Parser::parseRetStm()
 {
     TRACE;
-    FAILURE;
-    return nullptr; // TODO
+    ENABLE_ROLLBACK;
+
+    MATCH_(ReturnToken);
+    PARSE(exp, parseExp());
+
+    CANCEL_ROLLBACK;
+    SUCCESS;
+    return make_unique<RetStm>(move(exp));
+}
+
+Program Parser::parseProgram()
+{
+    TRACE;
+    Program prog;
+    bool run = true;
+    ASNPtr result;
+
+    while(run)
+    {
+        //TODO in the future, only calls parseClass()
+        if(result = parseExp())
+        {
+            prog.classes.push_back(move(result));
+        }
+        else
+        {
+            run = false;
+        }
+    }
+
+    if(!match<EndToken>())
+    {
+        FAILURE;
+        String msg = "Unable to parse at position: " + to_string(_tokenPos);
+        throw ParserException(msg);
+    }
+
+    return prog; // TODO
 }
 
 Parser::Parser(Vector<TokenPtr> const& tokens)
