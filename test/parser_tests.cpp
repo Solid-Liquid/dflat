@@ -299,6 +299,59 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ~NewExp("int",
                       asns(NumberExp(3)))
              );
+
+// new test with 2 expressions
+    REQUIRE( PT(parseNew,
+                NewToken(),
+                VariableToken("int"),
+                LeftParenToken(),
+                NumberToken(3),
+                CommaToken(),
+                VariableToken("suh"),
+                RightParenToken()
+                )
+             ==
+             ~NewExp("int",
+                      asns(NumberExp(3), VariableExp("suh")))
+             );
+
+// method call test with 0 expressions
+    REQUIRE( PT(parseMethodCall,
+                VariableToken("function"),
+                LeftParenToken(),
+                RightParenToken()
+                )
+             ==
+             ~MethodExp("function",
+                      Vector<ASNPtr>{})
+             );
+
+// method call test with 1 expression
+    REQUIRE( PT(parseMethodCall,
+                VariableToken("function"),
+                LeftParenToken(),
+                NumberToken(3),
+                RightParenToken()
+                )
+             ==
+             ~MethodExp("function",
+                      asns(NumberExp(3)))
+             );
+
+// new test with 2 expressions
+    REQUIRE( PT(parseMethodCall,
+                VariableToken("function"),
+                LeftParenToken(),
+                NumberToken(3),
+                CommaToken(),
+                VariableToken("suh"),
+                RightParenToken()
+                )
+             ==
+             ~MethodExp("function",
+                      asns(NumberExp(3), VariableExp("suh")))
+             );
+
     /*
      * nullptr is properly returned for unsuccessful parse:
      */
