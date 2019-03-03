@@ -166,6 +166,27 @@ String MethodExp::toString() const
     return str;
 }
 
+//NewStm:
+NewExp::NewExp(String _type, Vector<ASNPtr>&& _args)
+    : type(_type), args(move(_args))
+{
+}
+
+String NewExp::toString() const
+{
+    String str = "new " + type + " (";
+    int track = args.size();
+    for(auto&& ar : args)
+    {
+        str += ar -> toString();
+        if(track > 1)
+            str += ", ";
+        track--;
+    }
+    str += ")";
+    return str;
+}
+
 //AssignmentStm:
 AssignmentStm::AssignmentStm(String _variable, ASNPtr&& _expression)
   : variable(_variable), expression(move(_expression))

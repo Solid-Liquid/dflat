@@ -287,6 +287,26 @@ class VarDecStm : public ASN
         DECLARE_CMP(VarDecStm)
 };
 
+class NewExp : public ASN
+{
+    //Example Input: new type(exp, exp)
+    public:
+        String type;
+        Vector<ASNPtr> args;
+
+        NewExp(String, Vector<ASNPtr>&&);
+        ASNType getType() const { return expNew; }
+        String toString() const;
+        
+        bool operator==(NewExp const& other) const
+        {
+            return type == other.type
+                && args == other.args;
+        }
+        
+        DECLARE_CMP(NewExp)
+};
+
 } //namespace dflat
 
 #endif // ASN_HPP
