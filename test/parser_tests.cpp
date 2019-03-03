@@ -402,6 +402,14 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                       asns(NumberExp(3), VariableExp("suh")))
              );
 
+    REQUIRE( PT(parseRetStm,
+                ReturnToken(),
+                NumberToken(1)
+                )
+             ==
+            ~RetStm(~NumberExp(1))
+             );
+
     /*
      * nullptr is properly returned for unsuccessful parse:
      */

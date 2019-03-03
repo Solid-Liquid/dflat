@@ -206,7 +206,17 @@ VarDecStm::VarDecStm(String _type, String _name, ASNPtr&& _value)
 
 String VarDecStm::toString() const
 {
-    return type + " " + name;
+    return type + " " + name + " = " + value->toString();
+}
+
+RetStm::RetStm(ASNPtr&& _value)
+    : value(move(_value))
+{
+}
+
+String RetStm::toString() const
+{
+    return "return " + value->toString();
 }
 
 } //namespace dflat
