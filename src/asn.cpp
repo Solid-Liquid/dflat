@@ -228,7 +228,7 @@ MethodDecl::MethodDecl(String _type, String _name, Vector<ASNPtr>&& _exps)
 String MethodDecl::toString() const
 {
     String str = type + " " + name + "(\n";
-    int track = exps.size();
+    size_t track = exps.size();
     for(auto&& ex : exps)
     {
         str += ex -> toString();

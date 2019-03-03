@@ -52,7 +52,7 @@ namespace dflat
             case tokLParen:
             case tokRParen:
             case tokComma:
-            case tokNewLine:
+            case tokSemi:
             case tokWhile:
             case tokAnd:
             case tokOr:
@@ -94,8 +94,8 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         VariableToken("func")
         ));
 
-    REQUIRE ( tokenize("\n") == tokens(
-        NewlineToken()
+    REQUIRE ( tokenize(";") == tokens(
+        SemiToken()
         ));
 
     REQUIRE ( tokenize("if") == tokens(
