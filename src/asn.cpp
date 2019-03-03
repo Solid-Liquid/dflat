@@ -178,7 +178,7 @@ String NewExp::toString() const
     int track = args.size();
     for(auto&& ar : args)
     {
-        str += ar -> toString;
+        str += ar -> toString();
         if(track > 1)
             str += ", ";
         track--;

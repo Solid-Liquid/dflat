@@ -7,7 +7,7 @@ namespace dflat
 
 using namespace std;
 
-#define TRACE _tracer.push(__func__ + " "s + cur()->toString() + " (" + to_string(_tokenPos) + ")")
+#define TRACE _tracer.push(__func__ + String(" ") + cur()->toString() + " (" + to_string(_tokenPos) + ")")
 #define SUCCESS _tracer.pop(TraceResult::success)
 #define FAILURE _tracer.pop(TraceResult::failure)
 
@@ -162,20 +162,20 @@ ASNPtr Parser::parseMethodCall()
 
     Vector<ASNPtr> exps;
 
-    PARSE(name, parseVariable());
+    MATCH(var, VariableToken);
     MATCH_(LeftParenToken);
     PARSE(temp, parseExp());
     exps.push_back(move(temp));
     while(match<CommaToken>())
     {
-        PARSE(temp, parseExp());
-        exps.push_back(move(temp));
+        PARSE(temp1, parseExp());
+        exps.push_back(move(temp1));
     }
     MATCH_(RightParenToken);
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<MethodExp>(move(name), move(exps));
+    return make_unique<MethodExp>(var.name, move(exps));
 }
 
 ASNPtr Parser::parseNew()
@@ -187,20 +187,20 @@ ASNPtr Parser::parseNew()
     Vector<ASNPtr> exps;
 
     MATCH_(NewToken);
-    PARSE(type, parseVariable());
+    MATCH(var, VariableToken);
     MATCH_(LeftParenToken);
     PARSE(temp, parseExp());
     exps.push_back(move(temp));
     while(match<CommaToken>())
     {
-        PARSE(temp, parseExp());
-        exps.push_back(move(temp));
+        PARSE(temp1, parseExp());
+        exps.push_back(move(temp1));
     }
     MATCH_(RightParenToken);
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<NewExp>(move(type), move(exps));
+    return make_unique<NewExp>(var.name, move(exps));
 }
 
 /**
