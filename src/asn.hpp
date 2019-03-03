@@ -297,6 +297,11 @@ class RetStm : public ASN
         ASNType getType() const { return stmRet; }
         String toString() const;
 
+        bool operator==(RetStm const& other) const
+        {
+            return value == other.value;
+        }
+
         DECLARE_CMP(RetStm);
 };
 
