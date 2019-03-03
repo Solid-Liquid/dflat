@@ -414,34 +414,18 @@ ASNPtr Parser::parseMemberAssignStmt()
 ASNPtr Parser::parseIfStmt()
 {
     TRACE;
-    //  incomplete
-    //  only one statement accepted in each brace
-    /*
-    if(exp)
-    {
-        exp
-    }
-    else
-    {
-        exp
-    }
-    */
 
     ENABLE_ROLLBACK;
     MATCH_(IfToken);
     MATCH_(LeftParenToken);
     PARSE(logicExp, parseExp());
     MATCH_(RightParenToken);
-    MATCH_(LeftBraceToken);
     PARSE(trueStatements, parseBlock());
-    MATCH_(RightBraceToken);
     ASNPtr elseBlock;
     if( match<ElseToken>() )
     {
-        MATCH_(LeftBraceToken);
         PARSE(falseStatements, parseBlock());
         elseBlock = move(falseStatements);
-        MATCH_(RightBraceToken);
     }
     else
     {
@@ -520,8 +504,29 @@ ASNPtr Parser::parseStmt()
 ASNPtr Parser::parseBlock()
 {
     TRACE;
-    FAILURE;
-    return nullptr; //TODO
+    ENABLE_ROLLBACK;
+
+    Vector<ASNPtr> stm;
+    ASNPtr curstm = nullptr;
+
+    if(!match<LeftBraceToken>()){
+        FAILURE;
+        return nullptr;
+    }
+
+    while((curstm = parseStmt()))
+    {
+        stm.push_back(move(curstm));
+    }
+
+    if(!match<RightBraceToken>()){
+        FAILURE;
+        return nullptr;
+    }
+
+    CANCEL_ROLLBACK;
+    SUCCESS;
+    return make_unique<Block>(move(stm));
 }
 
 ASNPtr Parser::parseProgram()

@@ -218,6 +218,14 @@ TEST_CASE( "Parser works correctly", "[parser]" )
             )
         );
 
+    REQUIRE( PT(parseBlock,
+                LeftBraceToken(),
+                RightBraceToken()
+                )
+             ==
+             ~Block()
+             );
+
     REQUIRE( PT(parseIfStmt,
                 IfToken(),
                 LeftParenToken(),
