@@ -161,15 +161,19 @@ ASNPtr Parser::parseMethodCall()
     ENABLE_ROLLBACK;
 
     Vector<ASNPtr> exps;
+    ASNPtr temp;
 
     MATCH(var, VariableToken);
     MATCH_(LeftParenToken);
-    PARSE(temp, parseExp());
-    exps.push_back(move(temp));
-    while(match<CommaToken>())
+    temp = parseExp();
+    if(temp)
     {
-        PARSE(temp1, parseExp());
-        exps.push_back(move(temp1));
+        exps.push_back(move(temp));
+        while(match<CommaToken>())
+        {
+            PARSE(temp1, parseExp());
+            exps.push_back(move(temp1));
+        }
     }
     MATCH_(RightParenToken);
 
@@ -185,16 +189,20 @@ ASNPtr Parser::parseNew()
     ENABLE_ROLLBACK;
 
     Vector<ASNPtr> exps;
+    ASNPtr temp;
 
     MATCH_(NewToken);
     MATCH(var, VariableToken);
     MATCH_(LeftParenToken);
-    PARSE(temp, parseExp());
-    exps.push_back(move(temp));
-    while(match<CommaToken>())
+    temp = parseExp();
+    if(temp)
     {
-        PARSE(temp1, parseExp());
-        exps.push_back(move(temp1));
+        exps.push_back(move(temp));
+        while(match<CommaToken>())
+        {
+            PARSE(temp1, parseExp());
+            exps.push_back(move(temp1));
+        }
     }
     MATCH_(RightParenToken);
 
