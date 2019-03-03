@@ -240,7 +240,30 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                       ~Block())
              );
 
+// new test
+    REQUIRE( PT(parseNew,
+                NewToken(),
+                VariableToken("int"),
+                LeftParenToken(),
+                RightParenToken()
+                )
+             ==
+             ~NewExp("int",
+                      Vector<ASNPtr>{})
+             );
 
+// new test with 1 expression
+    REQUIRE( PT(parseNew,
+                NewToken(),
+                VariableToken("int"),
+                LeftParenToken(),
+                NumberToken(3),
+                RightParenToken()
+                )
+             ==
+             ~NewExp("int",
+                      Vector<ASNPtr>{~NumberExp(3)})
+             );
     /*
      * nullptr is properly returned for unsuccessful parse:
      */
