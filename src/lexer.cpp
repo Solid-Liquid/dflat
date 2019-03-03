@@ -96,7 +96,8 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
         { "while", tokWhile },
         { "new", tokNew },
         { "return", tokReturn },
-        { "this", tokThis }
+        { "this", tokThis },
+        { "class", tokClass }
     };
 
     auto it = KWS.find(name);
@@ -114,6 +115,7 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
         case tokNew:    return make_unique<NewToken>();
         case tokReturn: return make_unique<ReturnToken>();
         case tokThis:   return make_unique<ThisToken>();
+        case tokClass:  return make_unique<ClassToken>();
         default:        return nullptr;
     }
 }
