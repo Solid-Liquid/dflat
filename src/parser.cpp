@@ -156,17 +156,51 @@ ASNPtr Parser::parseUnary()
 
 ASNPtr Parser::parseMethodCall()
 {
+    // functionName + ( + exp + (, + exp)* + )
     TRACE;
-    FAILURE;
-    return nullptr; //TODO
+    ENABLE_ROLLBACK;
+
+    Vector<ASNPtr> exps;
+
+    PARSE(name, parseVariable());
+    MATCH_(LeftParenToken);
+    PARSE(temp, parseExp());
+    exps.push_back(move(temp));
+    while(match<CommaToken>())
+    {
+        PARSE(temp, parseExp());
+        exps.push_back(move(temp));
+    }
+    MATCH_(RightParenToken);
+
+    CANCEL_ROLLBACK;
+    SUCCESS;
+    return make_unique<MethodExp>(move(name), move(exps));
 }
 
 ASNPtr Parser::parseNew()
 {
+    // new + type + ( + exp + (, + exp)* + )
     TRACE;
-    // new + type + ( + exp + exp* + )
-    FAILURE;
-    return nullptr; //TODO
+    ENABLE_ROLLBACK;
+
+    Vector<ASNPtr> exps;
+
+    MATCH_(NewToken);
+    PARSE(type, parseVariable());
+    MATCH_(LeftParenToken);
+    PARSE(temp, parseExp());
+    exps.push_back(move(temp));
+    while(match<CommaToken>())
+    {
+        PARSE(temp, parseExp());
+        exps.push_back(move(temp));
+    }
+    MATCH_(RightParenToken);
+
+    CANCEL_ROLLBACK;
+    SUCCESS;
+    return make_unique<NewExp>(move(type), move(exps));
 }
 
 /**
@@ -487,18 +521,6 @@ ASNPtr Parser::parseBlock()
 {
     TRACE;
     FAILURE;
-
-//    Vector<ASNPtr> stm;
-//    ASNPtr current = nullptr;
-
-//    MATCH_(LeftBraceToken);
-
-//    while((current = ()))
-//    {
-//        tokens.push_back(move(current));
-//        skipWhitespace();
-//    }
-
     return nullptr; //TODO
 }
 
