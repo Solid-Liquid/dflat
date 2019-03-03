@@ -563,6 +563,19 @@ ASNPtr Parser::parseBlock()
     return make_unique<Block>(move(stm));
 }
 
+ASNPtr Parser::parseRetStm()
+{
+    TRACE;
+    ENABLE_ROLLBACK;
+
+    MATCH_(ReturnToken);
+    PARSE(exp, parseExp());
+
+    CANCEL_ROLLBACK;
+    SUCCESS;
+    return make_unique<RetStm>(move(exp));
+}
+
 Program Parser::parseProgram()
 {
     TRACE;

@@ -113,6 +113,7 @@ public:
     ASNPtr parseStm();
     ASNPtr parseBlock();
     Program parseProgram();
+    ASNPtr parseRetStm();
     Parser(Vector<TokenPtr> const&);
     ~Parser();
 };
