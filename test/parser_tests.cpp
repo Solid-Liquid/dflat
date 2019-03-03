@@ -218,7 +218,36 @@ TEST_CASE( "Parser works correctly", "[parser]" )
             )
         );
 
-    REQUIRE( PT(parseBlock,
+    REQUIRE( PT(parseExp,  //BinopExp(additive) with nested BinopExp(multive)
+        NumberToken(1),    // 1 * 1 + 4    ->   (1 * 1) + 4
+        MultiplyToken(),
+        NumberToken(1),
+        PlusToken(),
+        NumberToken(4)
+        )
+        ==
+        ~BinopExp(
+            ~BinopExp(~NumberExp(1),opMult,~NumberExp(1)),
+            opPlus,
+            ~NumberExp(4)
+            )
+        );
+
+    REQUIRE( PT(parseExp,  //BinopExp(additive) with nested UnaryExp
+        MinusToken(),
+        NumberToken(1),    // -1 * 1    ->   (-1) * 1
+        MultiplyToken(),
+        NumberToken(1)
+        )
+        ==
+        ~BinopExp(
+            ~UnopExp(~NumberExp(1),opMinus),
+            opMult,
+            ~NumberExp(1)
+            )
+        );
+
+    REQUIRE( PT(parseBlock,        // { }   ->   empty block
                 LeftBraceToken(),
                 RightBraceToken()
                 )
@@ -226,7 +255,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ~Block()
              );
 
-    REQUIRE( PT(parseIfStmt,
+    REQUIRE( PT(parseIfStmt,       // if(1) { }   ->  if statement
                 IfToken(),
                 LeftParenToken(),
                 NumberToken(1),
