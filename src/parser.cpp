@@ -509,20 +509,14 @@ ASNPtr Parser::parseBlock()
     Vector<ASNPtr> stm;
     ASNPtr curstm = nullptr;
 
-    if(!match<LeftBraceToken>()){
-        FAILURE;
-        return nullptr;
-    }
+    MATCH_(LeftBraceToken);
 
     while((curstm = parseStmt()))
     {
         stm.push_back(move(curstm));
     }
 
-    if(!match<RightBraceToken>()){
-        FAILURE;
-        return nullptr;
-    }
+    MATCH_(RightBraceToken);
 
     CANCEL_ROLLBACK;
     SUCCESS;
