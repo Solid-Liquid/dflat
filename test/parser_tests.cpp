@@ -14,7 +14,13 @@ ASNPtr operator~(T&& t)
     return std::make_unique<T>(std::forward<T>(t));
 }
 
-
+template <typename... Ts>
+Vector<ASNPtr> asns(Ts&&... in)
+{
+    Vector<ASNPtr> out;
+    (out.push_back(std::make_unique<Ts>(in)), ...);
+    return out;
+}
 
 //Parser( tokens(NumberToken(1), PlusToken(), NumberToken(1)) ).parseAdditive()
 #define PT(method, ...) Parser(tokens(__VA_ARGS__)).method()
@@ -262,7 +268,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 )
              ==
              ~NewExp("int",
-                      Vector<ASNPtr>{~NumberExp(3)})
+                      asns(NumberExp(3)))
              );
     /*
      * nullptr is properly returned for unsuccessful parse:
