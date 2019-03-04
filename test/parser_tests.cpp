@@ -103,6 +103,21 @@ TEST_CASE( "Parser works correctly", "[parser]" )
             )
         );
 
+    REQUIRE( PT(parseExp, // (2 - 5)  -> BinopExp(additive) from parentheses
+        LeftParenToken(),
+        NumberToken(2),
+        MinusToken(),
+        NumberToken(5),
+        RightParenToken()
+        )
+        ==
+        ~BinopExp(
+            ~NumberExp(2),
+            opMinus,
+            ~NumberExp(5)
+            )
+        );
+
     REQUIRE( PT(parseMultive,     //2 * 3 -> BinopExp(multive)
                 NumberToken(2),
                 MultiplyToken(),
@@ -203,7 +218,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 )
              ==
              ~UnopExp(~VariableExp("var"), opNot)
-            );
+            );    
 
     REQUIRE( PT(parseExp,  //BinopExp(additive) with nested BinopExp(multive)
         NumberToken(1),    // 1 + 1 * 4
@@ -240,8 +255,8 @@ TEST_CASE( "Parser works correctly", "[parser]" )
         );
 
     REQUIRE( PT(parseExp,  //BinopExp(additive) with nested UnaryExp
-        MinusToken(),
-        NumberToken(1),    // -1 * 1    ->   (-1) * 1
+        MinusToken(),      // -1 * 1    ->   (-1) * 1
+        NumberToken(1),
         MultiplyToken(),
         NumberToken(1)
         )
@@ -261,8 +276,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ~Block()
              );
 
-    // If
-    REQUIRE( PT(parseIfStm,
+    REQUIRE( PT(parseIfStm,         // If (1) { }  ->  IfStm
                 IfToken(),
                 LeftParenToken(),
                 NumberToken(1),
@@ -276,14 +290,14 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                       ~Block())
              );
 
-    // If else
-    REQUIRE( PT(parseIfStm,
+    REQUIRE( PT(parseIfStm,         // if(1){} else{}  ->  If else stm
                 IfToken(),
                 LeftParenToken(),
                 NumberToken(1),
                 RightParenToken(),
                 LeftBraceToken(),
                 RightBraceToken(),
+                ElseToken(),
                 LeftBraceToken(),
                 RightBraceToken()
                 )
@@ -293,7 +307,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                     ~Block())
              );
 
-    REQUIRE( PT(parseWhileStm,
+    REQUIRE( PT(parseWhileStm,      //while(1){}  ->  while statement
                 WhileToken(),
                 LeftParenToken(),
                 NumberToken(1),
@@ -307,8 +321,8 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                        )
              );
 
-    REQUIRE( PT(parseAssignStm,
-                VariableToken("name"),
+    REQUIRE( PT(parseAssignStm,         //name = 1;  ->  Assignment statement
+                VariableToken("name"),  //TODO semicolon
                 AssignToken(),
                 NumberToken(1)
                 )
@@ -316,8 +330,8 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ~AssignmentStm("name", ~NumberExp(1))
              );
 
-    REQUIRE( PT(parseVarDecl,
-                VariableToken("type"),
+    REQUIRE( PT(parseVarDecl,           //type name = 1;  -> variable declaration
+                VariableToken("type"),  //TODO semicolon?; declaration without assignment???
                 VariableToken("name"),
                 AssignToken(),
                 NumberToken(1)
@@ -325,8 +339,9 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ==
              ~VarDecStm("type", "name", ~NumberExp(1))
              );
-// new test
-    REQUIRE( PT(parseNew,
+
+
+    REQUIRE( PT(parseNew,       //new int()  ->  NewExp
                 NewToken(),
                 VariableToken("int"),
                 LeftParenToken(),
@@ -337,8 +352,8 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                       Vector<ASNPtr>{})
              );
 
-// new test with 1 expression
-    REQUIRE( PT(parseNew,
+
+    REQUIRE( PT(parseNew,       //new int(3) -> NewExp
                 NewToken(),
                 VariableToken("int"),
                 LeftParenToken(),
@@ -350,8 +365,8 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                       asns(NumberExp(3)))
              );
 
-// new test with 2 expressions
-    REQUIRE( PT(parseNew,
+
+    REQUIRE( PT(parseNew,       //new int(3,suh)  -> NewExp
                 NewToken(),
                 VariableToken("int"),
                 LeftParenToken(),
@@ -365,8 +380,8 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                       asns(NumberExp(3), VariableExp("suh")))
              );
 
-// method call test with 0 expressions
-    REQUIRE( PT(parseMethodCall,
+
+    REQUIRE( PT(parseMethodCall,          //function()  ->  MethodExp
                 VariableToken("function"),
                 LeftParenToken(),
                 RightParenToken()
@@ -376,8 +391,8 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                       Vector<ASNPtr>{})
              );
 
-// method call test with 1 expression
-    REQUIRE( PT(parseMethodCall,
+
+    REQUIRE( PT(parseMethodCall,            //function(3)  ->  MethodExp
                 VariableToken("function"),
                 LeftParenToken(),
                 NumberToken(3),
@@ -388,8 +403,8 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                       asns(NumberExp(3)))
              );
 
-// new test with 2 expressions
-    REQUIRE( PT(parseMethodCall,
+
+    REQUIRE( PT(parseMethodCall,            //function(3,suh)  -> MethodExp
                 VariableToken("function"),
                 LeftParenToken(),
                 NumberToken(3),
@@ -402,8 +417,8 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                       asns(NumberExp(3), VariableExp("suh")))
              );
 
-    REQUIRE( PT(parseRetStm,
-                ReturnToken(),
+    REQUIRE( PT(parseRetStm,        //return 1;  ->  ReturnStm
+                ReturnToken(),      //TODO semicolon
                 NumberToken(1)
                 )
              ==
@@ -458,5 +473,111 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 )
              ==
              nullptr
+            );
+
+
+    /*
+     * exception is thrown for bad parse:
+     */
+
+
+    REQUIRE_THROWS_AS( PT(parseExp, // (2 - 5  -> missing )
+        LeftParenToken(),
+        NumberToken(2),
+        MinusToken(),
+        NumberToken(5)
+        ),
+        ParserException
+        );
+
+    REQUIRE_THROWS_AS( PT(parseMethodCall,          //function()  ->  missing )
+                VariableToken("function"),
+                LeftParenToken()
+                ),
+             ParserException
+             );
+
+    REQUIRE_THROWS_AS( PT(parseMethodCall,     //function(3,)  -> expected stm after ,
+                VariableToken("function"),
+                LeftParenToken(),
+                NumberToken(3),
+                CommaToken(),
+                RightParenToken()
+                ),
+            ParserException
+             );
+
+    REQUIRE_THROWS_AS( PT(parseNew,       //new ()  ->  missing type
+                NewToken(),
+                LeftParenToken(),
+                RightParenToken()
+                ),
+             ParserException
+             );
+
+    REQUIRE_THROWS_AS( PT(parseVarDecl, //type name = ;  -> expected expression
+                VariableToken("type"),  //TODO semicolon?; declaration without assignment???
+                VariableToken("name"),
+                AssignToken()
+                ),
+             ParserException
+             );
+
+    REQUIRE_THROWS_AS( PT(parseVarDecl, //type name = 1 +;  -> expected expression
+                VariableToken("type"),  //TODO semicolon?; declaration without assignment???
+                VariableToken("name"),
+                AssignToken(),
+                NumberToken(1),
+                PlusToken()
+                ),
+             ParserException
+             );
+
+    REQUIRE_THROWS_AS( PT(parseAdditive,  //1 + -> expected expression after '+'
+        NumberToken(1),
+        PlusToken()
+        ),
+        ParserException
+        );
+
+    REQUIRE_THROWS_AS( PT(parseUnary,  //- -> expected expression after unary -
+                MinusToken()
+                ),
+            ParserException
+            );
+
+    REQUIRE_THROWS_AS( PT(parseAdditive,  //1 + - -> expected expresion after unary -
+        NumberToken(1),
+        PlusToken(),
+        MinusToken()
+        ),
+        ParserException
+        );
+
+    REQUIRE_THROWS_AS( PT(parseIfStm,      // if(1){} else{}  ->  expected block after if
+                IfToken(),
+                LeftParenToken(),
+                NumberToken(1),
+                RightParenToken()
+                ),
+            ParserException
+             );
+
+    REQUIRE_THROWS_AS( PT(parseIfStm,   // if(1){} else{}  -> expected block after else
+                IfToken(),
+                LeftParenToken(),
+                NumberToken(1),
+                RightParenToken(),
+                LeftBraceToken(),
+                RightBraceToken(),
+                ElseToken()
+                ),
+            ParserException
+             );
+
+    REQUIRE_THROWS_AS( PT(parseBlock,   // {  -> missing right bracket for block
+                LeftBraceToken()
+                ),
+            ParserException
             );
 }
