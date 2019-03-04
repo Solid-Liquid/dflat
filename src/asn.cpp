@@ -135,9 +135,9 @@ String MethodDef::toString() const
     int track = 0;
     for(auto&& ar : args)
     {
-        str += ar->toString();
         if(track > 0)
             str += ", ";
+        str += ar->toString();
         ++track;
     }
     str += ")\n";
@@ -157,9 +157,9 @@ String MethodExp::toString() const
     int track = 0;
     for(auto&& ar : args)
     {
-        str += ar->toString();
         if(track > 0)
             str += ", ";
+        str += ar->toString();
         ++track;
     }
     str += ")";
@@ -175,13 +175,13 @@ NewExp::NewExp(String _type, Vector<ASNPtr>&& _args)
 String NewExp::toString() const
 {
     String str = "new " + type + " (";
-    size_t track = args.size();
+    size_t track = 0;
     for(auto&& ar : args)
     {
-        str += ar -> toString();
-        if(track > 1)
+        if(track > 0)
             str += ", ";
-        track--;
+        str += ar -> toString();
+        ++track;
     }
     str += ")";
     return str;
@@ -227,16 +227,16 @@ MethodDecl::MethodDecl(String _type, String _name, Vector<ASNPtr>&& _exps)
 
 String MethodDecl::toString() const
 {
-    String str = type + " " + name + "(\n";
-    size_t track = exps.size();
+    String str = type + " " + name + "(";
+    size_t track = 0;
     for(auto&& ex : exps)
     {
-        str += ex -> toString();
-        if(track > 1)
+        if(track > 0)
             str += ", ";
-        track--;
+        str += ex -> toString();
+        ++track;
     }
-    str += ")\n";
+    str += ");\n";
     return str;
 }
 // Class Definition

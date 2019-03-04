@@ -581,11 +581,16 @@ ASNPtr Parser::parseStm()
         SUCCESS;
         return result;
     }
-    else if (result = parseExp())
+    else if (result = parseMethodDecl())
     {
         SUCCESS;
         return result;
     }
+//    else if (result = parseExp())
+//    {
+//        SUCCESS;
+//        return result;
+//    }
     else
     {
         FAILURE;
