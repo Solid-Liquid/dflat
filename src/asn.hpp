@@ -309,7 +309,7 @@ class RetStm : public ASN
             return value == other.value;
         }
 
-        DECLARE_CMP(RetStm);
+        DECLARE_CMP(RetStm)
 };
 
 class NewExp : public ASN

@@ -83,12 +83,12 @@ Block::Block(Vector<ASNPtr>&& _statements)
 
 String Block::toString() const
 {
-    String s = "{";
+    String s = "{\n";
     for (ASNPtr const& stmt : statements)
     {
         s += stmt->toString() + "\n";
     }
-    s += "}";
+    s += "}\n";
     return s;
 }
 
@@ -103,9 +103,9 @@ IfStm::IfStm(ASNPtr&& _logicExp, ASNPtr&& _trueStatements, ASNPtr&& _falseStatem
 String IfStm::toString() const
 {
     String str = "\nif(" + logicExp->toString() + ")\n";
-    str += trueStatements->toString() + "\n";
-    str += "else";
-    str += falseStatements->toString() + "\n";
+    str += trueStatements->toString();
+    str += "else\n";
+    str += falseStatements->toString();
     return str;
 }
 
@@ -117,8 +117,8 @@ WhileStm::WhileStm(ASNPtr&& _logicExp, ASNPtr&& _statements)
 
 String WhileStm::toString() const
 {
-    String str = "\nif(" + logicExp->toString() + ")\n";
-    str += statements->toString() + "\n";
+    String str = "\nwhile(" + logicExp->toString() + ")\n";
+    str += statements->toString();
     return str;
 }
 
@@ -195,7 +195,7 @@ AssignmentStm::AssignmentStm(String _variable, ASNPtr&& _expression)
 
 String AssignmentStm::toString() const
 {
-    return variable + " = " + expression->toString();
+    return variable + " = " + expression->toString() + ";";
 }
 
 //DeclarationStm:
@@ -206,7 +206,7 @@ VarDecStm::VarDecStm(String _type, String _name, ASNPtr&& _value)
 
 String VarDecStm::toString() const
 {
-    return type + " " + name + " = " + value->toString();
+    return type + " " + name + " = " + value->toString() + ";";
 }
 
 RetStm::RetStm(ASNPtr&& _value)
@@ -216,7 +216,7 @@ RetStm::RetStm(ASNPtr&& _value)
 
 String RetStm::toString() const
 {
-    return "return " + value->toString();
+    return "return " + value->toString() + ";";
 }
 
 // Method Declaration

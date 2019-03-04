@@ -322,19 +322,21 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              );
 
     REQUIRE( PT(parseAssignStm,         //name = 1;  ->  Assignment statement
-                VariableToken("name"),  //TODO semicolon
+                VariableToken("name"),
                 AssignToken(),
-                NumberToken(1)
+                NumberToken(1),
+                SemiToken()
                 )
              ==
              ~AssignmentStm("name", ~NumberExp(1))
              );
 
     REQUIRE( PT(parseVarDecl,           //type name = 1;  -> variable declaration
-                VariableToken("type"),  //TODO semicolon?; declaration without assignment???
+                VariableToken("type"),
                 VariableToken("name"),
                 AssignToken(),
-                NumberToken(1)
+                NumberToken(1),
+                SemiToken()
                 )
              ==
              ~VarDecStm("type", "name", ~NumberExp(1))
@@ -382,7 +384,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
 
 
     REQUIRE( PT(parseMethodCall,          //function()  ->  MethodExp
-                VariableToken("function"),
+                VariableToken("function"), //TODO method call as exp vs as statement??
                 LeftParenToken(),
                 RightParenToken()
                 )
@@ -418,12 +420,24 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              );
 
     REQUIRE( PT(parseRetStm,        //return 1;  ->  ReturnStm
-                ReturnToken(),      //TODO semicolon
-                NumberToken(1)
+                ReturnToken(),
+                NumberToken(1),
+                SemiToken()
                 )
              ==
             ~RetStm(~NumberExp(1))
              );
+
+    REQUIRE( PT(parseClassDecl, // class MyClass { };  -> ClassDeclaration
+                ClassToken(),
+                VariableToken("MyClass"),
+                LeftBraceToken(),
+                RightBraceToken(),
+                SemiToken()
+                )
+             ==
+             ~ClassDecl("MyClass",Vector<ASNPtr>())
+            );
 
     /*
      * nullptr is properly returned for unsuccessful parse:
@@ -577,6 +591,12 @@ TEST_CASE( "Parser works correctly", "[parser]" )
 
     REQUIRE_THROWS_AS( PT(parseBlock,   // {  -> missing right bracket for block
                 LeftBraceToken()
+                ),
+            ParserException
+            );
+
+    REQUIRE_THROWS_AS( PT(parseClassDecl, // class -> expected class name
+                ClassToken()
                 ),
             ParserException
             );

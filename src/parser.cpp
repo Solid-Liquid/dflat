@@ -221,6 +221,9 @@ ASNPtr Parser::parseMethodCall()
     }
     MUST_MATCH_(RightParenToken);
 
+    //TODO version of this that returns expression vs version that returns stm
+    //needs semicolon termination for stm form
+
     CANCEL_ROLLBACK;
     SUCCESS;
     return make_unique<MethodExp>(var.name, move(exps));
@@ -461,6 +464,7 @@ ASNPtr Parser::parseVarDecl()
     String msg = "Expected expression in assignment at position: "
                  + to_string(_tokenPos);
     MUST_PARSE(exp, parseExp(),msg);
+    MUST_MATCH_(SemiToken);
 
     CANCEL_ROLLBACK;
     SUCCESS;
@@ -477,6 +481,7 @@ ASNPtr Parser::parseAssignStm()
     String msg = "Expected expression in assignment at position: "
                  + to_string(_tokenPos);
     MUST_PARSE(exp, parseExp(), msg);
+    MUST_MATCH_(SemiToken);
 
     CANCEL_ROLLBACK;
     SUCCESS;
@@ -615,7 +620,7 @@ ASNPtr Parser::parseBlock()
 ASNPtr Parser::parseMethodDecl()
 {
     /*
-    type + name + ( + exp + (, + exp)* + ) + \n
+    type + name + ( + exp + (, + exp)* + ) + ;
     */
     TRACE;
     ENABLE_ROLLBACK;
@@ -632,11 +637,15 @@ ASNPtr Parser::parseMethodDecl()
         exps.push_back(move(temp));
         while(match<CommaToken>())
         {
-            PARSE(temp1, parseExp());
+            String msg =  "Expected expression after ',' at position: " +
+                               to_string(_tokenPos);
+            MUST_PARSE(temp1, parseExp(), msg);
             exps.push_back(move(temp1));
         }
     }
-    MATCH_(RightParenToken);
+    MUST_MATCH_(RightParenToken);
+    MUST_MATCH_(SemiToken);
+    //TODO version of this function with block {} body??
 
     CANCEL_ROLLBACK;
     SUCCESS;
@@ -659,14 +668,15 @@ ASNPtr Parser::parseClassDecl()
     ASNPtr curstm = nullptr;
 
     MATCH_(ClassToken);
-    MATCH(className, VariableToken);
-    MATCH_(LeftBraceToken)
+    MUST_MATCH(className, VariableToken, "class name");
+    MUST_MATCH_(LeftBraceToken)
 
     while(curstm = parseClassStm())
     {
         stm.push_back(move(curstm));
     }
-    MATCH_(RightBraceToken);
+    MUST_MATCH_(RightBraceToken);
+    MUST_MATCH_(SemiToken);
 
     CANCEL_ROLLBACK;
     SUCCESS;
@@ -701,7 +711,10 @@ ASNPtr Parser::parseRetStm()
     ENABLE_ROLLBACK;
 
     MATCH_(ReturnToken);
-    PARSE(exp, parseExp());
+    String msg =  "Expected expression for return statement at position: " +
+                       to_string(_tokenPos);
+    MUST_PARSE(exp, parseExp(), msg);
+    MUST_MATCH_(SemiToken);
 
     CANCEL_ROLLBACK;
     SUCCESS;
@@ -718,7 +731,7 @@ Program Parser::parseProgram()
     while(run)
     {
         //TODO in the future, only calls parseClass()
-        if(result = parseExp())
+        if(result = parseStm())
         {
             prog.classes.push_back(move(result));
         }
@@ -736,7 +749,7 @@ Program Parser::parseProgram()
         throw ParserException(msg);
     }
 
-    return prog; // TODO
+    return prog;
 }
 
 Parser::Parser(Vector<TokenPtr> const& tokens)
