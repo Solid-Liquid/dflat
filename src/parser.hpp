@@ -95,7 +95,8 @@ public:
     ASNPtr parseTypeVariable();
     ASNPtr parseNumber();
     ASNPtr parseUnary();
-    ASNPtr parseMethodCall();
+    ASNPtr parseMethodExp();
+    ASNPtr parseMethodStm();
     ASNPtr parseNew();
     ASNPtr parseParensExp();
     ASNPtr parsePrimary();

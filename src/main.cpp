@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
             //cout << tokens[i]->toString() << endl;
         Program prog = parse(tokens);  //run parser
         for(size_t i=0; i<prog.classes.size(); ++i)
-            cout << prog.classes[i]->toString() << endl;
+            cout << prog.classes[i]->toString() << endl << endl;
     }
     catch(LexerException& e) { cout << e.what() << endl; }
     catch(ParserException& e) { cout << e.what() << endl; }

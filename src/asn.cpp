@@ -99,7 +99,7 @@ String Block::toString() const
     {
         s += "\t" + stmt->toString() + "\n";
     }
-    s += "}\n";
+    s += "}";
     return s;
 }
 
@@ -113,7 +113,7 @@ IfStm::IfStm(ASNPtr&& _logicExp, ASNPtr&& _trueStatements, ASNPtr&& _falseStatem
 
 String IfStm::toString() const
 {
-    String str = "\nif(" + logicExp->toString() + ")\n";
+    String str = "if(" + logicExp->toString() + ")\n";
     str += trueStatements->toString();
     str += "else\n";
     str += falseStatements->toString();
@@ -128,7 +128,7 @@ WhileStm::WhileStm(ASNPtr&& _logicExp, ASNPtr&& _statements)
 
 String WhileStm::toString() const
 {
-    String str = "\nwhile(" + logicExp->toString() + ")\n";
+    String str = "while(" + logicExp->toString() + ")\n";
     str += statements->toString();
     return str;
 }
@@ -142,7 +142,7 @@ MethodDef::MethodDef(String _type, String _name,
 
 String MethodDef::toString() const
 {
-    String str = "\n" + type + " " + name + "(";
+    String str = type + " " + name + "(";
     int track = 0;
     for(auto&& ar : args)
     {
@@ -152,11 +152,11 @@ String MethodDef::toString() const
         ++track;
     }
     str += ")\n";
-    str += statements->toString() + "\n";
+    str += statements->toString();
     return str;
 }
 
-//MethodStm:
+//MethodExp:
 MethodExp::MethodExp(String _name, Vector<ASNPtr>&& _args)
   : name(_name), args(move(_args))
 {
@@ -175,6 +175,17 @@ String MethodExp::toString() const
     }
     str += ")";
     return str;
+}
+
+//MethodStm:
+MethodStm::MethodStm(ASNPtr&& methodExp_)
+  : methodExp(move(methodExp_))
+{
+}
+
+String MethodStm::toString() const
+{
+    return methodExp->toString() + ";";
 }
 
 //NewStm:
@@ -247,9 +258,10 @@ String MethodDecl::toString() const
         str += ex -> toString();
         ++track;
     }
-    str += ");\n";
+    str += ");";
     return str;
 }
+
 // Class Definition
 ClassDecl::ClassDecl(String _name, Vector<ASNPtr>&& _members)
     : name(_name), members(move(_members))
@@ -261,7 +273,7 @@ String ClassDecl::toString() const
     String str = "class " + name + "{\n";
     for(auto&& ex : members)
         str += "\t" + ex->toString();
-    str += "}\n";
+    str += "}";
     return str;
 }
 

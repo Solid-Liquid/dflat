@@ -205,7 +205,7 @@ ASNPtr Parser::parseUnary()
     return make_unique<UnopExp>(move(prim), op);
 }
 
-ASNPtr Parser::parseMethodCall()
+ASNPtr Parser::parseMethodExp()
 {
     // functionName + ( + exp + (, + exp)* + )
     TRACE;
@@ -227,9 +227,6 @@ ASNPtr Parser::parseMethodCall()
         }
     }
     MUST_MATCH_(RightParenToken);
-
-    //TODO version of this that returns expression vs version that returns stm
-    //needs semicolon termination for stm form
 
     CANCEL_ROLLBACK;
     SUCCESS;
@@ -303,7 +300,7 @@ ASNPtr Parser::parsePrimary()
         SUCCESS;
         return result;
     }
-    else if (result = parseMethodCall())
+    else if (result = parseMethodExp())
     {
         SUCCESS;
         return result;
@@ -483,6 +480,20 @@ ASNPtr Parser::parseAssignStm()
     return make_unique<AssignmentStm>(varName.name, move(exp));
 }
 
+ASNPtr Parser::parseMethodStm()
+{
+    // functionName + ( + exp + (, + exp)* + ) + ;
+    TRACE;
+    ENABLE_ROLLBACK;
+
+    PARSE(exp, parseMethodExp());
+    MATCH_(SemiToken);
+
+    CANCEL_ROLLBACK;
+    SUCCESS;
+    return make_unique<MethodStm>(move(exp));
+}
+
 ASNPtr Parser::parseMemberAssignStm()
 {
     TRACE;
@@ -556,6 +567,11 @@ ASNPtr Parser::parseStm()
         SUCCESS;
         return result;
     }
+    else if (result = parseMethodStm())
+    {
+        SUCCESS;
+        return result;
+    }
     else if (result = parseIfStm())
     {
         SUCCESS;
@@ -571,7 +587,7 @@ ASNPtr Parser::parseStm()
         SUCCESS;
         return result;
     }
-//    else if (result = parseExp())
+//    else if (result = parseExp())     //only for testing
 //    {
 //        SUCCESS;
 //        return result;

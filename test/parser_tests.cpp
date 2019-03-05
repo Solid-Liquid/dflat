@@ -383,7 +383,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              );
 
 
-    REQUIRE( PT(parseMethodCall,          //function()  ->  MethodExp
+    REQUIRE( PT(parseMethodExp,          //function()  ->  MethodExp
                 VariableToken("function"), //TODO method call as exp vs as statement??
                 LeftParenToken(),
                 RightParenToken()
@@ -394,7 +394,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              );
 
 
-    REQUIRE( PT(parseMethodCall,            //function(3)  ->  MethodExp
+    REQUIRE( PT(parseMethodExp,            //function(3)  ->  MethodExp
                 VariableToken("function"),
                 LeftParenToken(),
                 NumberToken(3),
@@ -406,7 +406,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              );
 
 
-    REQUIRE( PT(parseMethodCall,            //function(3,suh)  -> MethodExp
+    REQUIRE( PT(parseMethodExp,            //function(3,suh)  -> MethodExp
                 VariableToken("function"),
                 LeftParenToken(),
                 NumberToken(3),
@@ -417,6 +417,20 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ==
              ~MethodExp("function",
                       asns(NumberExp(3), VariableExp("suh")))
+             );
+
+    REQUIRE( PT(parseMethodStm,            //function(3,suh);  -> MethodStm
+                VariableToken("function"),
+                LeftParenToken(),
+                NumberToken(3),
+                CommaToken(),
+                VariableToken("suh"),
+                RightParenToken(),
+                SemiToken()
+                )
+             ==
+             ~MethodStm(
+                 ~MethodExp("function",asns(NumberExp(3), VariableExp("suh"))))
              );
 
     REQUIRE( PT(parseRetStm,        //return 1;  ->  ReturnStm
@@ -516,14 +530,14 @@ TEST_CASE( "Parser works correctly", "[parser]" )
         ParserException
         );
 
-    REQUIRE_THROWS_AS( PT(parseMethodCall,          //function()  ->  missing )
+    REQUIRE_THROWS_AS( PT(parseMethodExp,          //function()  ->  missing )
                 VariableToken("function"),
                 LeftParenToken()
                 ),
              ParserException
              );
 
-    REQUIRE_THROWS_AS( PT(parseMethodCall,     //function(3,)  -> expected stm after ,
+    REQUIRE_THROWS_AS( PT(parseMethodExp,     //function(3,)  -> expected stm after ,
                 VariableToken("function"),
                 LeftParenToken(),
                 NumberToken(3),

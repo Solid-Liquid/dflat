@@ -12,7 +12,7 @@ namespace dflat
 {
 
 enum ASNType { expBinop, expNumber, expVariable, expTypeVariable, expUnop,
-               block, stmIf, defMethod, stmWhile, stmAssignment,
+               block, stmIf, defMethod, stmWhile, stmAssignment, stmMethod,
                expMethod, stmVarDef, expNew, stmRet, declMethod, declClass};
 
 enum OpType { opNull = 0, opPlus, opMinus, opMult, opDiv, opNot, opAnd, opOr,
@@ -251,7 +251,7 @@ class MethodDef : public ASN
 
 class MethodExp : public ASN
 {
-    //Example Input: func(int x, int y)
+    //Example Input: func(var, 1)
     public:
         String name;
         Vector<ASNPtr> args;
@@ -267,6 +267,24 @@ class MethodExp : public ASN
         }
 
         DECLARE_CMP(MethodExp)
+};
+
+class MethodStm : public ASN
+{
+    //Example Input: func(var, 1);
+    public:
+        ASNPtr methodExp;
+
+        MethodStm(ASNPtr&&);
+        ASNType getType() const { return stmMethod; }
+        String toString() const;
+
+        bool operator==(MethodStm const& other) const
+        {
+            return methodExp == other.methodExp;
+        }
+
+        DECLARE_CMP(MethodStm)
 };
 
 class AssignmentStm : public ASN
