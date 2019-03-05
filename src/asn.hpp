@@ -12,7 +12,7 @@ namespace dflat
 {
 
 enum ASNType { expBinop, expNumber, expVariable, expTypeVariable, expUnop,
-               block, stmIf, defMethod, stmWhile, stmAssignment, stmMethod,
+               block, stmIf, defMethod, stmWhile, stmAssign, stmMethod,
                expMethod, stmVarDef, expNew, stmRet, declMethod, declClass};
 
 enum OpType { opNull = 0, opPlus, opMinus, opMult, opDiv, opNot, opAnd, opOr,
@@ -287,7 +287,7 @@ class MethodStm : public ASN
         DECLARE_CMP(MethodStm)
 };
 
-class AssignmentStm : public ASN
+class AssignStm : public ASN
 {
     //Example Input: x = 1 + y
     public:
@@ -295,17 +295,40 @@ class AssignmentStm : public ASN
         ASNPtr expression;
 
         // first: variable name, second: Expression
-        AssignmentStm(String, ASNPtr&&);
-        ASNType getType() const { return stmAssignment; }
+        AssignStm(String, ASNPtr&&);
+        ASNType getType() const { return stmAssign; }
         String toString() const;
 
-        bool operator==(AssignmentStm const& other) const
+        bool operator==(AssignStm const& other) const
         {
             return variable   == other.variable
                 && expression == other.expression;
         }
 
-        DECLARE_CMP(AssignmentStm)
+        DECLARE_CMP(AssignStm)
+};
+
+class MemberAssignStm : public ASN
+{
+    //Example Input: x = 1 + y
+    public:
+        String object;
+        String member;
+        ASNPtr expression;
+
+        // first: variable name, second: Expression
+        MemberAssignStm(String, String, ASNPtr&&);
+        ASNType getType() const { return stmAssign; }
+        String toString() const;
+
+        bool operator==(MemberAssignStm const& other) const
+        {
+            return object     == other.object
+                && member     == other.member
+                && expression == other.expression;
+        }
+
+        DECLARE_CMP(MemberAssignStm)
 };
 
 class VarDecStm : public ASN

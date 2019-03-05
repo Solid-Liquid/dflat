@@ -209,15 +209,26 @@ String NewExp::toString() const
     return str;
 }
 
-//AssignmentStm:
-AssignmentStm::AssignmentStm(String _variable, ASNPtr&& _expression)
+//AssignStm:
+AssignStm::AssignStm(String _variable, ASNPtr&& _expression)
   : variable(_variable), expression(move(_expression))
 {
 }
 
-String AssignmentStm::toString() const
+String AssignStm::toString() const
 {
     return variable + " = " + expression->toString() + ";";
+}
+
+//MemberAssignStm:
+MemberAssignStm::MemberAssignStm(String _object, String _member, ASNPtr&& _expression)
+  : object(_object), member(_member), expression(move(_expression))
+{
+}
+
+String MemberAssignStm::toString() const
+{
+    return object + "." + member + " = " + expression->toString() + ";";
 }
 
 //DeclarationStm:

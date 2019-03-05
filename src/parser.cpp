@@ -480,7 +480,7 @@ ASNPtr Parser::parseAssignStm()
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<AssignmentStm>(varName.name, move(exp));
+    return make_unique<AssignStm>(varName.name, move(exp));
 }
 
 ASNPtr Parser::parseMethodStm()
@@ -500,8 +500,18 @@ ASNPtr Parser::parseMethodStm()
 ASNPtr Parser::parseMemberAssignStm()
 {
     TRACE;
-    FAILURE;
-    return nullptr; //TODO
+    ENABLE_ROLLBACK;
+
+    MATCH(object, VariableToken);
+    MATCH_(MemberToken);
+    MATCH(member, VariableToken);
+    MATCH_(AssignToken);
+    PARSE(value, parseExp());
+    MATCH_(SemiToken);
+
+    CANCEL_ROLLBACK;
+    SUCCESS;
+    return make_unique<MemberAssignStm>(object.name, member.name, move(value));
 }
 
 ASNPtr Parser::parseIfStm()

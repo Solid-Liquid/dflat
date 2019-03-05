@@ -321,14 +321,26 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                        )
              );
 
-    REQUIRE( PT(parseAssignStm,         //name = 1;  ->  Assignment statement
+    REQUIRE( PT(parseAssignStm,         //name = 1;  ->  Assign statement
                 VariableToken("name"),
                 AssignToken(),
                 NumberToken(1),
                 SemiToken()
                 )
              ==
-             ~AssignmentStm("name", ~NumberExp(1))
+             ~AssignStm("name", ~NumberExp(1))
+             );
+
+    REQUIRE( PT(parseMemberAssignStm,   //myobj.x = 1;
+                VariableToken("myobj"),
+                MemberToken(),
+                VariableToken("x"),
+                AssignToken(),
+                NumberToken(1),
+                SemiToken()
+                )
+             ==
+             ~MemberAssignStm("myobj", "x", ~NumberExp(1))
              );
 
     REQUIRE( PT(parseVarDecl,           //type name = 1;  -> variable declaration
