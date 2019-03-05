@@ -97,7 +97,7 @@ String Block::toString() const
     String s = "{\n";
     for (ASNPtr const& stmt : statements)
     {
-        s += "\t" + stmt->toString() + "\n";
+        s += stmt->toString() + "\n";
     }
     s += "}";
     return s;
@@ -115,7 +115,7 @@ String IfStm::toString() const
 {
     String str = "if(" + logicExp->toString() + ")\n";
     str += trueStatements->toString();
-    str += "else\n";
+    str += "\nelse\n";
     str += falseStatements->toString();
     return str;
 }
@@ -270,10 +270,10 @@ ClassDecl::ClassDecl(String _name, Vector<ASNPtr>&& _members)
 
 String ClassDecl::toString() const
 {
-    String str = "class " + name + "{\n";
+    String str = "class " + name + "\n{\n";
     for(auto&& ex : members)
-        str += "\t" + ex->toString();
-    str += "}";
+        str += ex->toString() + "\n\n";
+    str += "};";
     return str;
 }
 

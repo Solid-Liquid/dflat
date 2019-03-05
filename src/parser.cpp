@@ -87,7 +87,8 @@ void Parser::next()
 #define MUST_MATCH_(type) \
     if (!match<type>()) { FAILURE; \
     throw ParserException("Expected '" + type().toString() \
-        + "' at position: " + to_string(_tokenPos)); } \
+        + "' at position: " + to_string(_tokenPos)\
+        + "\nPossible invalid expression or statement."); } \
     /*end MUST_MATCH_*/
 
 // Calls <parser> and stores the result in <var>.
@@ -587,6 +588,11 @@ ASNPtr Parser::parseStm()
         SUCCESS;
         return result;
     }
+    else if (result = parseRetStm())
+    {
+        SUCCESS;
+        return result;
+    }
 //    else if (result = parseExp())     //only for testing
 //    {
 //        SUCCESS;
@@ -732,8 +738,7 @@ Program Parser::parseProgram()
 
     while(run)
     {
-        //TODO in the future, only calls parseClass()
-        if(result = parseStm())
+        if(result = parseClassDecl())
         {
             prog.classes.push_back(move(result));
         }
