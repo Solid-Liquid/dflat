@@ -178,8 +178,10 @@ ASNPtr Parser::parseVariable()
 ASNPtr Parser::parseTypeVariable()
 {
     TRACE;
+    ENABLE_ROLLBACK;
     MATCH(type, VariableToken);
     MATCH(var, VariableToken);
+    CANCEL_ROLLBACK;
     SUCCESS;
     return make_unique<TypeVariableExp>(type.name,var.name);
 }
