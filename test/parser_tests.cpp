@@ -51,14 +51,14 @@ TEST_CASE( "Parser works correctly", "[parser]" )
         );
 
     REQUIRE( PT(parseVariable, //fun -> VariableExp
-        VariableToken("fun")
+        NameToken("fun")
         )
         ==
         ~VariableExp("fun")
         );
 
     REQUIRE( PT(parseExp,      //same as above but using parseExp
-        VariableToken("fun")
+        NameToken("fun")
         )
         ==
         ~VariableExp("fun")
@@ -158,9 +158,9 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              );
 
     REQUIRE( PT(parseLogical,         //foo && bar -> BinopExp(logical)
-                VariableToken("foo"),
+                NameToken("foo"),
                 AndToken(),
-                VariableToken("bar")
+                NameToken("bar")
                 )
              ==
              ~BinopExp(
@@ -171,9 +171,9 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              );
 
     REQUIRE( PT(parseLogical,         //foo || bar -> BinopExp(logical)
-                VariableToken("foo"),
+                NameToken("foo"),
                 OrToken(),
-                VariableToken("bar")
+                NameToken("bar")
                 )
              ==
              ~BinopExp(
@@ -184,9 +184,9 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              );
 
     REQUIRE( PT(parseLogical,         //same as above but using parseExp
-                VariableToken("foo"),
+                NameToken("foo"),
                 OrToken(),
-                VariableToken("bar")
+                NameToken("bar")
                 )
              ==
              ~BinopExp(
@@ -206,7 +206,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
 
     REQUIRE( PT(parseUnary,    //!var -> UnaryExp
                 NotToken(),
-                VariableToken("var")
+                NameToken("var")
                 )
              ==
              ~UnopExp(~VariableExp("var"), opNot)
@@ -214,7 +214,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
 
     REQUIRE( PT(parseExp,    //same as above but using parseExp
                 NotToken(),
-                VariableToken("var")
+                NameToken("var")
                 )
              ==
              ~UnopExp(~VariableExp("var"), opNot)
@@ -322,7 +322,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              );
 
     REQUIRE( PT(parseAssignStm,         //name = 1;  ->  Assign statement
-                VariableToken("name"),
+                NameToken("name"),
                 AssignToken(),
                 NumberToken(1),
                 SemiToken()
@@ -332,9 +332,9 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              );
 
     REQUIRE( PT(parseMemberAssignStm,   //myobj.x = 1;
-                VariableToken("myobj"),
+                NameToken("myobj"),
                 MemberToken(),
-                VariableToken("x"),
+                NameToken("x"),
                 AssignToken(),
                 NumberToken(1),
                 SemiToken()
@@ -344,8 +344,8 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              );
 
     REQUIRE( PT(parseVarDecl,           //type name = 1;  -> variable declaration
-                VariableToken("type"),
-                VariableToken("name"),
+                NameToken("type"),
+                NameToken("name"),
                 AssignToken(),
                 NumberToken(1),
                 SemiToken()
@@ -357,7 +357,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
 
     REQUIRE( PT(parseNew,       //new int()  ->  NewExp
                 NewToken(),
-                VariableToken("int"),
+                NameToken("int"),
                 LeftParenToken(),
                 RightParenToken()
                 )
@@ -369,7 +369,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
 
     REQUIRE( PT(parseNew,       //new int(3) -> NewExp
                 NewToken(),
-                VariableToken("int"),
+                NameToken("int"),
                 LeftParenToken(),
                 NumberToken(3),
                 RightParenToken()
@@ -382,11 +382,11 @@ TEST_CASE( "Parser works correctly", "[parser]" )
 
     REQUIRE( PT(parseNew,       //new int(3,suh)  -> NewExp
                 NewToken(),
-                VariableToken("int"),
+                NameToken("int"),
                 LeftParenToken(),
                 NumberToken(3),
                 CommaToken(),
-                VariableToken("suh"),
+                NameToken("suh"),
                 RightParenToken()
                 )
              ==
@@ -396,7 +396,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
 
 
     REQUIRE( PT(parseMethodExp,          //function()  ->  MethodExp
-                VariableToken("function"), //TODO method call as exp vs as statement??
+                NameToken("function"), //TODO method call as exp vs as statement??
                 LeftParenToken(),
                 RightParenToken()
                 )
@@ -407,7 +407,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
 
 
     REQUIRE( PT(parseMethodExp,            //function(3)  ->  MethodExp
-                VariableToken("function"),
+                NameToken("function"),
                 LeftParenToken(),
                 NumberToken(3),
                 RightParenToken()
@@ -419,11 +419,11 @@ TEST_CASE( "Parser works correctly", "[parser]" )
 
 
     REQUIRE( PT(parseMethodExp,            //function(3,suh)  -> MethodExp
-                VariableToken("function"),
+                NameToken("function"),
                 LeftParenToken(),
                 NumberToken(3),
                 CommaToken(),
-                VariableToken("suh"),
+                NameToken("suh"),
                 RightParenToken()
                 )
              ==
@@ -432,11 +432,11 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              );
 
     REQUIRE( PT(parseMethodStm,            //function(3,suh);  -> MethodStm
-                VariableToken("function"),
+                NameToken("function"),
                 LeftParenToken(),
                 NumberToken(3),
                 CommaToken(),
-                VariableToken("suh"),
+                NameToken("suh"),
                 RightParenToken(),
                 SemiToken()
                 )
@@ -456,7 +456,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
 
     REQUIRE( PT(parseClassDecl, // class MyClass { };  -> ClassDeclaration
                 ClassToken(),
-                VariableToken("MyClass"),
+                NameToken("MyClass"),
                 LeftBraceToken(),
                 RightBraceToken(),
                 SemiToken()
@@ -466,8 +466,8 @@ TEST_CASE( "Parser works correctly", "[parser]" )
             );
 
     REQUIRE( PT(parseMethodDecl,            //int func(){ }  -> MethodDef
-                VariableToken("int"),
-                VariableToken("func"),
+                NameToken("int"),
+                NameToken("func"),
                 LeftParenToken(),
                 RightParenToken(),
                 LeftBraceToken(),
@@ -482,7 +482,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
      */
 
     REQUIRE( PT(parseNumber,  //parse is not Number
-        VariableToken("var")
+        NameToken("var")
         )
         ==
         nullptr
@@ -521,7 +521,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              );
 
     REQUIRE( PT(parseUnary,           //parse is not Unary
-                VariableToken("var")
+                NameToken("var")
                 )
              ==
              nullptr
@@ -543,14 +543,14 @@ TEST_CASE( "Parser works correctly", "[parser]" )
         );
 
     REQUIRE_THROWS_AS( PT(parseMethodExp,          //function()  ->  missing )
-                VariableToken("function"),
+                NameToken("function"),
                 LeftParenToken()
                 ),
              ParserException
              );
 
     REQUIRE_THROWS_AS( PT(parseMethodExp,     //function(3,)  -> expected stm after ,
-                VariableToken("function"),
+                NameToken("function"),
                 LeftParenToken(),
                 NumberToken(3),
                 CommaToken(),
@@ -568,16 +568,16 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              );
 
     REQUIRE_THROWS_AS( PT(parseVarDecl, //type name = ;  -> expected expression
-                VariableToken("type"),  //TODO semicolon?; declaration without assignment???
-                VariableToken("name"),
+                NameToken("type"),  //TODO semicolon?; declaration without assignment???
+                NameToken("name"),
                 AssignToken()
                 ),
              ParserException
              );
 
     REQUIRE_THROWS_AS( PT(parseVarDecl, //type name = 1 +;  -> expected expression
-                VariableToken("type"),  //TODO semicolon?; declaration without assignment???
-                VariableToken("name"),
+                NameToken("type"),  //TODO semicolon?; declaration without assignment???
+                NameToken("name"),
                 AssignToken(),
                 NumberToken(1),
                 PlusToken()

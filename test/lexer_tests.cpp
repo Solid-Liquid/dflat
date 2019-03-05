@@ -19,10 +19,10 @@ namespace dflat
     }
 
     template <>
-    bool cmp<VariableToken>(TokenPtr const& a, TokenPtr const& b)
+    bool cmp<NameToken>(TokenPtr const& a, TokenPtr const& b)
     {
-        return a->as<VariableToken>()->name
-            == b->as<VariableToken>()->name;
+        return a->as<NameToken>()->name
+            == b->as<NameToken>()->name;
     }
 
     bool operator==(TokenPtr const& a, TokenPtr const& b)
@@ -38,7 +38,7 @@ namespace dflat
                 return cmp<NumberToken>(a, b);
             
             case tokVar: 
-                return cmp<VariableToken>(a, b);
+                return cmp<NameToken>(a, b);
             
             case tokIf:
             case tokElse:
@@ -87,11 +87,11 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         ));
 
     REQUIRE ( tokenize("x") == tokens(
-        VariableToken("x")
+        NameToken("x")
         ));
 
     REQUIRE ( tokenize("func") == tokens(
-        VariableToken("func")
+        NameToken("func")
         ));
 
     REQUIRE ( tokenize(";") == tokens(
@@ -189,21 +189,21 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         ));
 
     REQUIRE ( tokenize("hello") == tokens( 
-        VariableToken("hello") 
+        NameToken("hello") 
         ));
     
     REQUIRE ( tokenize(" 3 x ") == tokens( 
         NumberToken(3),
-        VariableToken("x")
+        NameToken("x")
         )); 
     
     REQUIRE ( tokenize("3x") == tokens( 
         NumberToken(3),
-        VariableToken("x")
+        NameToken("x")
         )); 
     
     REQUIRE ( tokenize("x3") == tokens( 
-        VariableToken("x3")
+        NameToken("x3")
         )); 
     
     REQUIRE ( tokenize("({})") == tokens(

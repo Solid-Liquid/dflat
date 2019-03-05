@@ -8,8 +8,8 @@ namespace dflat
 using namespace std;
 
 #define TRACE _tracer.push(__func__ + String(" ") + cur()->toString() + " (" + to_string(_tokenPos) + ")")
-#define SUCCESS _tracer.pop(TraceResult::success)
-#define FAILURE _tracer.pop(TraceResult::failure)
+#define SUCCESS _tracer.pop(traceSuccess)
+#define FAILURE _tracer.pop(traceFailure)
 
 #define ENABLE_ROLLBACK auto rollbacker = Rollbacker(*this, _tokenPos)
 #define CANCEL_ROLLBACK rollbacker.disable()
@@ -91,78 +91,95 @@ void Parser::next()
         + "\nPossible invalid expression or statement."); } \
     /*end MUST_MATCH_*/
 
+ASNPtr deref(ASNPtr& p)
+{
+    return move(p);
+}
+
+template <typename T>
+decltype(auto) deref(T& t)
+{
+    return *t;
+}
+
 // Calls <parser> and stores the result in <var>.
 //  On success, var holds the result.
 //  On failure, the present function returns early with nullptr:
 #define PARSE(var, parser) \
-    auto var = parser; \
-    if (!var) { FAILURE; return nullptr; } \
+    auto var##__ = parser; \
+    if (!var##__) { FAILURE; return nullptr; } \
+    decltype(auto) var = deref(var##__)
     /*end PARSE*/
 
 // Same as PARSE, but throws a specified exception message if it fails:
 #define MUST_PARSE(var, parser, exceptionMsg) \
-    auto var = parser; \
-    if (!var) { FAILURE; \
+    auto var##__ = parser; \
+    if (!var##__) { FAILURE; \
     throw ParserException( String(exceptionMsg) \
         + " at position: " + to_string(_tokenPos)); } \
+    decltype(auto) var = deref(var##__)
     /*end MUST_PARSE*/
 
-OpType Parser::parseUnaryOp()
+// Parses a NameToken as a string.
+Optional<String> Parser::parseName()
 {
     TRACE;
-    return advancing([this]()
+    if (NameToken const* tok = match<NameToken>())
     {
-        switch (cur()->getType())
-        {
-            case tokNot:    SUCCESS; return opNot;
-            case tokMinus:  SUCCESS; return opMinus;
-            default:        FAILURE; return opNull;
-        }
-    });
+        SUCCESS;
+        return tok->name;
+    }
+    else
+    {
+        FAILURE;
+        return failure;
+    }
 }
 
-OpType Parser::parseMultiveOp()
+Optional<OpType> Parser::parseUnaryOp()
 {
     TRACE;
-    return advancing([this]()
+    switch (cur()->getType())
     {
-        switch (cur()->getType())
-        {
-            case tokMult:   SUCCESS; return opMult;
-            case tokDiv:    SUCCESS; return opDiv;
-            default:        FAILURE; return opNull;
-        }
-    });
+        case tokNot:    SUCCESS; next(); return opNot;
+        case tokMinus:  SUCCESS; next(); return opMinus;
+        default:        FAILURE; return failure;
+    }
 }
 
-OpType Parser::parseAdditiveOp()
+Optional<OpType> Parser::parseMultiveOp()
 {
     TRACE;
-    return advancing([this]()
+    switch (cur()->getType())
     {
-        switch (cur()->getType())
-        {
-            case tokPlus:   SUCCESS; return opPlus;
-            case tokMinus:  SUCCESS; return opMinus;
-            default:        FAILURE; return opNull;
-        }
-    });
+        case tokMult:   SUCCESS; next(); return opMult;
+        case tokDiv:    SUCCESS; next(); return opDiv;
+        default:        FAILURE; return failure;
+    }
 }
 
-OpType Parser::parseLogicalOp()
+Optional<OpType> Parser::parseAdditiveOp()
 {
     TRACE;
-    return advancing([this]()
+    switch (cur()->getType())
     {
-        switch (cur()->getType())
-        {
-            case tokAnd:    SUCCESS; return opAnd;
-            case tokOr:     SUCCESS; return opOr;
-            case tokEq:     SUCCESS; return opLogEq;
-            case tokNotEq:  SUCCESS; return opLogNotEq;
-            default:        FAILURE; return opNull;
-        }
-    });
+        case tokPlus:   SUCCESS; next(); return opPlus;
+        case tokMinus:  SUCCESS; next(); return opMinus;
+        default:        FAILURE; return failure;
+    }
+}
+
+Optional<OpType> Parser::parseLogicalOp()
+{
+    TRACE;
+    switch (cur()->getType())
+    {
+        case tokAnd:    SUCCESS; next(); return opAnd;
+        case tokOr:     SUCCESS; next(); return opOr;
+        case tokEq:     SUCCESS; next(); return opLogEq;
+        case tokNotEq:  SUCCESS; next(); return opLogNotEq;
+        default:        FAILURE; return failure;
+    }
 }
 
 // EXPRESSION PARSERS
@@ -170,20 +187,20 @@ OpType Parser::parseLogicalOp()
 ASNPtr Parser::parseVariable()
 {
     TRACE;
-    MATCH(var, VariableToken);
+    PARSE(var, parseName());
     SUCCESS;
-    return make_unique<VariableExp>(var.name);
+    return make_unique<VariableExp>(var);
 }
 
 ASNPtr Parser::parseTypeVariable()
 {
     TRACE;
     ENABLE_ROLLBACK;
-    MATCH(type, VariableToken);
-    MATCH(var, VariableToken);
+    PARSE(type, parseName());
+    PARSE(var, parseName());
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<TypeVariableExp>(type.name,var.name);
+    return make_unique<TypeVariableExp>(type, var);
 }
 
 ASNPtr Parser::parseNumber()
@@ -217,7 +234,7 @@ ASNPtr Parser::parseMethodExp()
     Vector<ASNPtr> exps;
     ASNPtr temp;
 
-    MATCH(var, VariableToken);
+    PARSE(var, parseName());
     MATCH_(LeftParenToken);
     temp = parseExp();
     if(temp)
@@ -233,7 +250,7 @@ ASNPtr Parser::parseMethodExp()
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<MethodExp>(var.name, move(exps));
+    return make_unique<MethodExp>(var, move(exps));
 }
 
 ASNPtr Parser::parseNew()
@@ -246,7 +263,7 @@ ASNPtr Parser::parseNew()
     ASNPtr temp;
 
     MATCH_(NewToken);
-    MUST_MATCH(var, VariableToken, "type declaration for new");
+    MUST_PARSE(var, parseName(), "type declaration for new");
     MATCH_(LeftParenToken);
     temp = parseExp();
     if(temp)
@@ -262,7 +279,7 @@ ASNPtr Parser::parseNew()
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<NewExp>(var.name, move(exps));
+    return make_unique<NewExp>(var, move(exps));
 }
 
 /**
@@ -457,15 +474,15 @@ ASNPtr Parser::parseVarDecl()
     TRACE;
     ENABLE_ROLLBACK;
 
-    MATCH(varType, VariableToken);
-    MATCH(varName, VariableToken);
+    PARSE(varType, parseName());
+    PARSE(varName, parseName());
     MATCH_(AssignToken);
     MUST_PARSE(exp, parseExp(), "Expected expression in assignment");
     MUST_MATCH_(SemiToken);
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<VarDecStm>(varType.name, varName.name, move(exp));
+    return make_unique<VarDecStm>(varType, varName, move(exp));
 }
 
 ASNPtr Parser::parseAssignStm()
@@ -473,14 +490,14 @@ ASNPtr Parser::parseAssignStm()
     TRACE;
     ENABLE_ROLLBACK;
 
-    MATCH(varName, VariableToken);
+    PARSE(varName, parseName());
     MATCH_(AssignToken);
     MUST_PARSE(exp, parseExp(), "Expected expression in assignment");
     MUST_MATCH_(SemiToken);
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<AssignStm>(varName.name, move(exp));
+    return make_unique<AssignStm>(varName, move(exp));
 }
 
 ASNPtr Parser::parseMethodStm()
@@ -502,16 +519,16 @@ ASNPtr Parser::parseMemberAssignStm()
     TRACE;
     ENABLE_ROLLBACK;
 
-    MATCH(object, VariableToken);
+    PARSE(object, parseName());
     MATCH_(MemberToken);
-    MATCH(member, VariableToken);
+    PARSE(member, parseName());
     MATCH_(AssignToken);
     PARSE(value, parseExp());
     MATCH_(SemiToken);
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<MemberAssignStm>(object.name, member.name, move(value));
+    return make_unique<MemberAssignStm>(object, member, move(value));
 }
 
 ASNPtr Parser::parseIfStm()
@@ -652,8 +669,8 @@ ASNPtr Parser::parseMethodDecl()
     Vector<ASNPtr> exps;
     ASNPtr temp = nullptr;
 
-    MATCH(typeName, VariableToken);
-    MATCH(functionName, VariableToken);
+    PARSE(typeName, parseName());
+    PARSE(functionName, parseName());
     MATCH_(LeftParenToken)
     temp = parseTypeVariable();
     if(temp)
@@ -670,7 +687,7 @@ ASNPtr Parser::parseMethodDecl()
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<MethodDef>(typeName.name, functionName.name,
+    return make_unique<MethodDef>(typeName, functionName,
                                   move(exps), move(body));
 }
 
@@ -690,7 +707,7 @@ ASNPtr Parser::parseClassDecl()
     ASNPtr curstm = nullptr;
 
     MATCH_(ClassToken);
-    MUST_MATCH(className, VariableToken, "class name");
+    MUST_PARSE(className, parseName(), "class name");
     MUST_MATCH_(LeftBraceToken)
 
     while(curstm = parseClassStm())
@@ -702,7 +719,7 @@ ASNPtr Parser::parseClassDecl()
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<ClassDecl>(className.name, move(stm));
+    return make_unique<ClassDecl>(className, move(stm));
 }
 
 ASNPtr Parser::parseClassStm()

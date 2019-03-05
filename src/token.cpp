@@ -41,8 +41,8 @@ NumberToken::NumberToken(int num_)
 {
 }
 
-//VariableToken:
-VariableToken::VariableToken(String const& name_)
+//NameToken:
+NameToken::NameToken(String const& name_)
     : name(name_)
 {
 }

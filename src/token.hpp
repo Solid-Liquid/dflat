@@ -44,11 +44,11 @@ namespace dflat
         String toString() const { return to_string(num); }
     };
 
-    class VariableToken : public Token
+    class NameToken : public Token
     {
     public:
         String name;
-        VariableToken(String const&);
+        NameToken(String const&);
         TokType getType() const { return tokVar; }
         String toString() const { return name; }
     };

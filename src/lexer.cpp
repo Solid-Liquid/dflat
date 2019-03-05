@@ -11,7 +11,7 @@ class Lexer : private LexerCore
         Lexer(String const&);
         Vector<TokenPtr> tokenize();
         TokenPtr singleToken();
-        TokenPtr tryTokenizeVariable();
+        TokenPtr tryTokenizeName();
         TokenPtr tryTokenizeNumber();
         TokenPtr tryTokenizePunct();
         //TokenPtr singleToken();
@@ -36,7 +36,7 @@ Lexer::Lexer(String const& input)
 {
 }
 
-TokenPtr Lexer::tryTokenizeVariable()
+TokenPtr Lexer::tryTokenizeName()
 {
     char c = peek();
     String var = "";
@@ -58,7 +58,7 @@ TokenPtr Lexer::tryTokenizeVariable()
     TokenPtr ret = lookupKeyword(var);
 
     if(ret == nullptr)
-        return make_unique<VariableToken>(var);
+        return make_unique<NameToken>(var);
 
     return ret;
 }
@@ -201,7 +201,7 @@ void Lexer::skipWhitespace()
 TokenPtr Lexer::singleToken(){
     TokenPtr tok = nullptr;
 
-    if ((tok = tryTokenizeVariable()))
+    if ((tok = tryTokenizeName()))
     {
         return tok;
     } 

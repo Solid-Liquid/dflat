@@ -7,17 +7,17 @@
 namespace dflat 
 {
 
-enum class TraceResult { undefined, success, failure, subfailure };
+enum TraceResult { traceUndefined, traceSuccess, traceFailure, traceSubfailure };
 
 inline
 String to_string(TraceResult t)
 {
     switch (t)
     {
-        case TraceResult::undefined:    return "undefined";
-        case TraceResult::success:      return "success";
-        case TraceResult::failure:      return "failure";
-        case TraceResult::subfailure:   return "subfailure";
+        case traceUndefined:    return "undefined";
+        case traceSuccess:      return "success";
+        case traceFailure:      return "failure";
+        case traceSubfailure:   return "subfailure";
     }
 
     std::abort();
@@ -29,7 +29,7 @@ struct Trace
     size_t depth;
     Trace* parent;
     Vector<Trace> children;
-    TraceResult result = TraceResult::undefined;
+    TraceResult result = traceUndefined;
 
     Trace(String _name, Trace* _parent, size_t _depth)
         : name(_name)
@@ -51,14 +51,14 @@ class Tracer
     {
         if (flag)
         {
-            if (t.result == TraceResult::success)
+            if (t.result == traceSuccess)
             {
-                t.result = TraceResult::subfailure;
+                t.result = traceSubfailure;
             }
         }
         else
         {
-            if (t.result == TraceResult::failure)
+            if (t.result == traceFailure)
             {
                 flag = true;
             }
@@ -76,10 +76,10 @@ class Tracer
         {
             switch (t.result)
             {
-                case TraceResult::undefined:    return 0;
-                case TraceResult::success:      return 32;
-                case TraceResult::failure:      return 31;
-                case TraceResult::subfailure:   return 33;
+                case traceUndefined:    return 0;
+                case traceSuccess:      return 32;
+                case traceFailure:      return 31;
+                case traceSubfailure:   return 33;
             }
 
             std::abort();

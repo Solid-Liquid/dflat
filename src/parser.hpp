@@ -3,6 +3,7 @@
 #include "parser.hpp"
 #include "token.hpp"
 #include "vector.hpp"
+#include "result.hpp"
 #include "string.hpp"
 #include "asn.hpp"
 #include "tracer.hpp"
@@ -70,27 +71,13 @@ class Parser
 
         return t;
     }
-
-    // Combinator that calls a function and advances the current token
-    //  if it was successful.
-    template <typename T>
-    auto advancing(T const& f)
-    {
-        auto r = f();
-        
-        if (r)
-        {
-            next();
-        }
-        
-        return r;
-    }
     
 public:
-    OpType parseUnaryOp();
-    OpType parseMultiveOp();
-    OpType parseAdditiveOp();
-    OpType parseLogicalOp();
+    Optional<String> parseName();
+    Optional<OpType> parseUnaryOp();
+    Optional<OpType> parseMultiveOp();
+    Optional<OpType> parseAdditiveOp();
+    Optional<OpType> parseLogicalOp();
     ASNPtr parseVariable();
     ASNPtr parseTypeVariable();
     ASNPtr parseNumber();
