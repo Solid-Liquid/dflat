@@ -92,6 +92,7 @@ public:
     OpType parseAdditiveOp();
     OpType parseLogicalOp();
     ASNPtr parseVariable();
+    ASNPtr parseTypeVariable();
     ASNPtr parseNumber();
     ASNPtr parseUnary();
     ASNPtr parseMethodCall();

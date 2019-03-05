@@ -172,6 +172,15 @@ ASNPtr Parser::parseVariable()
     return make_unique<VariableExp>(var.name);
 }
 
+ASNPtr Parser::parseTypeVariable()
+{
+    TRACE;
+    MATCH(type, VariableToken);
+    MATCH(var, VariableToken);
+    SUCCESS;
+    return make_unique<TypeVariableExp>(type.name,var.name);
+}
+
 ASNPtr Parser::parseNumber()
 {
     TRACE;
@@ -636,25 +645,27 @@ ASNPtr Parser::parseMethodDecl()
     MATCH(typeName, VariableToken);
     MATCH(functionName, VariableToken);
     MATCH_(LeftParenToken)
-    temp = parseExp();
+    temp = parseTypeVariable();
     if(temp)
     {
         exps.push_back(move(temp));
         while(match<CommaToken>())
         {
-            String msg =  "Expected expression after ',' at position: " +
+            String msg =  "Expected type variable after ',' at position: " +
                                to_string(_tokenPos);
-            MUST_PARSE(temp1, parseExp(), msg);
+            MUST_PARSE(temp1, parseTypeVariable(), msg);
             exps.push_back(move(temp1));
         }
     }
     MUST_MATCH_(RightParenToken);
-    MUST_MATCH_(SemiToken);
-    //TODO version of this function with block {} body??
+    String msg = "Expected block{} after while statement at position: "
+                 + to_string(_tokenPos);
+    MUST_PARSE(body, parseBlock(), msg);
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<MethodDecl>(typeName.name, functionName.name, move(exps));
+    return make_unique<MethodDef>(typeName.name, functionName.name,
+                                  move(exps), move(body));
 }
 
 ASNPtr Parser::parseClassDecl()

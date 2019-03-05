@@ -439,6 +439,18 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ~ClassDecl("MyClass",Vector<ASNPtr>())
             );
 
+    REQUIRE( PT(parseMethodDecl,            //int func(){ }  -> MethodDef
+                VariableToken("int"),
+                VariableToken("func"),
+                LeftParenToken(),
+                RightParenToken(),
+                LeftBraceToken(),
+                RightBraceToken()
+                )
+             ==
+             ~MethodDef("int","func",Vector<ASNPtr>(), ~Block())
+             );
+
     /*
      * nullptr is properly returned for unsuccessful parse:
      */

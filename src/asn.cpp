@@ -53,6 +53,17 @@ String VariableExp::toString() const
     return name;
 }
 
+//TypeVariableExp:
+TypeVariableExp::TypeVariableExp(String const& type_, String const& name_)
+    : type(type_), name(name_)
+{
+}
+
+String TypeVariableExp::toString() const
+{
+    return type + " " + name;
+}
+
 //NumberExp:
 NumberExp::NumberExp(int value_)
     : value(value_)
@@ -86,7 +97,7 @@ String Block::toString() const
     String s = "{\n";
     for (ASNPtr const& stmt : statements)
     {
-        s += stmt->toString() + "\n";
+        s += "\t" + stmt->toString() + "\n";
     }
     s += "}\n";
     return s;
@@ -249,7 +260,7 @@ String ClassDecl::toString() const
 {
     String str = "class " + name + "{\n";
     for(auto&& ex : members)
-        str += ex -> toString();
+        str += "\t" + ex->toString();
     str += "}\n";
     return str;
 }

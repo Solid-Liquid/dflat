@@ -11,7 +11,7 @@
 namespace dflat
 {
 
-enum ASNType { expBinop, expNumber, expVariable, expUnop,
+enum ASNType { expBinop, expNumber, expVariable, expTypeVariable, expUnop,
                block, stmIf, defMethod, stmWhile, stmAssignment,
                expMethod, stmVarDef, expNew, stmRet, declMethod, declClass};
 
@@ -107,6 +107,25 @@ class VariableExp : public ASN
         }
 
         DECLARE_CMP(VariableExp)
+};
+
+class TypeVariableExp : public ASN
+{
+    //Example Input: int var
+    public:
+        String type;
+        String name;
+
+        TypeVariableExp(String const&, String const&);
+        ASNType getType() const { return expTypeVariable; }
+        String toString() const;
+
+        bool operator==(TypeVariableExp const& other) const
+        {
+            return name == other.name && type == other.type;
+        }
+
+        DECLARE_CMP(TypeVariableExp)
 };
 
 class NumberExp : public ASN
@@ -334,6 +353,10 @@ class NewExp : public ASN
 
 class MethodDecl : public ASN
 {
+    //TODO: Delete? This is currently unused. Parser method 'parseMethodDecl()'
+    //actually makes an instance of MethodDef. Method declaration currently must
+    //include the definition of the method.
+
     public:
         String type;
         String name;
