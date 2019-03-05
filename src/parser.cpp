@@ -99,9 +99,11 @@ void Parser::next()
     /*end PARSE*/
 
 // Same as PARSE, but throws a specified exception message if it fails:
-#define MUST_PARSE(var, parser, exceptionMessage) \
+#define MUST_PARSE(var, parser, exceptionMsg) \
     auto var = parser; \
-    if (!var) { FAILURE; throw ParserException(exceptionMessage); } \
+    if (!var) { FAILURE; \
+    throw ParserException( String(exceptionMsg) \
+        + " at position: " + to_string(_tokenPos)); } \
     /*end MUST_PARSE*/
 
 OpType Parser::parseUnaryOp()
@@ -196,9 +198,7 @@ ASNPtr Parser::parseUnary()
     ENABLE_ROLLBACK;
 
     PARSE(op, parseUnaryOp());
-    String msg = "Expected expression after unary operator at position: "
-                 + to_string(_tokenPos);
-    MUST_PARSE(prim, parsePrimary(), msg);
+    MUST_PARSE(prim, parsePrimary(), "Expected expression after unary operator");
 
     CANCEL_ROLLBACK;
     SUCCESS;
@@ -222,9 +222,7 @@ ASNPtr Parser::parseMethodCall()
         exps.push_back(move(temp));
         while(match<CommaToken>())
         {
-            String excptMsg =  "Expected expression after ',' at position: " +
-                               to_string(_tokenPos); //msg in case of exception
-            MUST_PARSE(temp1, parseExp(), excptMsg);
+            MUST_PARSE(temp1, parseExp(), "Expected expression after ','");
             exps.push_back(move(temp1));
         }
     }
@@ -256,9 +254,7 @@ ASNPtr Parser::parseNew()
         exps.push_back(move(temp));
         while(match<CommaToken>())
         {
-            String excptMsg =  "Expected expression after ',' at position: " +
-                               to_string(_tokenPos); //msg in case of exception
-            MUST_PARSE(temp1, parseExp(), excptMsg);
+            MUST_PARSE(temp1, parseExp(), "Expected expression after ','");
             exps.push_back(move(temp1));
         }
     }
@@ -336,9 +332,7 @@ ASNPtr Parser::parseMultive()
 
     PARSE(left, parsePrimary());
     PARSE(op, parseMultiveOp());
-    String msg = "Expected expression after multive operator at position: "
-                 + to_string(_tokenPos);
-    MUST_PARSE(right, parseMultiveDown(), msg);
+    MUST_PARSE(right, parseMultiveDown(), "Expected expression after multive operator");
 
     CANCEL_ROLLBACK;
     SUCCESS;
@@ -374,9 +368,7 @@ ASNPtr Parser::parseAdditive()
 
     PARSE(left, parseMultiveDown());
     PARSE(op, parseAdditiveOp());
-    String msg = "Expected expression after additive operator at position: "
-                 + to_string(_tokenPos);
-    MUST_PARSE(right, parseAdditiveDown(), msg);
+    MUST_PARSE(right, parseAdditiveDown(), "Expected expression after additive operator");
 
     CANCEL_ROLLBACK;
     SUCCESS;
@@ -412,9 +404,7 @@ ASNPtr Parser::parseLogical()
 
     PARSE(left, parseAdditiveDown());
     PARSE(op, parseLogicalOp());
-    String msg = "Expected expression after logical operator at position: "
-                 + to_string(_tokenPos);
-    MUST_PARSE(right, parseLogicalDown(), msg);
+    MUST_PARSE(right, parseLogicalDown(), "Expected expression after logical operator");
 
     CANCEL_ROLLBACK;
     SUCCESS;
@@ -470,9 +460,7 @@ ASNPtr Parser::parseVarDecl()
     MATCH(varType, VariableToken);
     MATCH(varName, VariableToken);
     MATCH_(AssignToken);
-    String msg = "Expected expression in assignment at position: "
-                 + to_string(_tokenPos);
-    MUST_PARSE(exp, parseExp(),msg);
+    MUST_PARSE(exp, parseExp(), "Expected expression in assignment");
     MUST_MATCH_(SemiToken);
 
     CANCEL_ROLLBACK;
@@ -487,9 +475,7 @@ ASNPtr Parser::parseAssignStm()
 
     MATCH(varName, VariableToken);
     MATCH_(AssignToken);
-    String msg = "Expected expression in assignment at position: "
-                 + to_string(_tokenPos);
-    MUST_PARSE(exp, parseExp(), msg);
+    MUST_PARSE(exp, parseExp(), "Expected expression in assignment");
     MUST_MATCH_(SemiToken);
 
     CANCEL_ROLLBACK;
@@ -511,19 +497,13 @@ ASNPtr Parser::parseIfStm()
     ENABLE_ROLLBACK;
     MATCH_(IfToken);
     MUST_MATCH_(LeftParenToken);
-    String msg = "Expected expression in if statement at position: "
-                 + to_string(_tokenPos);
-    MUST_PARSE(logicExp, parseExp(), msg);
+    MUST_PARSE(logicExp, parseExp(), "Expected expression in if statement");
     MUST_MATCH_(RightParenToken);
-    msg = "Expected block{} after if statement at position: "
-                 + to_string(_tokenPos);
-    MUST_PARSE(trueStatements, parseBlock(), msg);
+    MUST_PARSE(trueStatements, parseBlock(), "Expected block{} after if statement");
     ASNPtr elseBlock;
     if( match<ElseToken>() )
     {
-        msg = "Expected block{} after else statement at position: "
-                     + to_string(_tokenPos);
-        MUST_PARSE(falseStatements, parseBlock(), msg);
+        MUST_PARSE(falseStatements, parseBlock(), "Expected block{} after else statement");
         elseBlock = move(falseStatements);
     }
     else
@@ -547,13 +527,9 @@ ASNPtr Parser::parseWhileStm()
 
     MATCH_(WhileToken);
     MUST_MATCH_(LeftParenToken);
-    String msg = "Expected expression in while statement at position: "
-                 + to_string(_tokenPos);
-    MUST_PARSE(cond, parseExp(), msg);
+    MUST_PARSE(cond, parseExp(), "Expected expression in while statement");
     MUST_MATCH_(RightParenToken);
-    msg = "Expected block{} after while statement at position: "
-                 + to_string(_tokenPos);
-    MUST_PARSE(body, parseBlock(), msg);
+    MUST_PARSE(body, parseBlock(), "Expected block{} after while statement");
 
     CANCEL_ROLLBACK;
     SUCCESS;
@@ -651,16 +627,12 @@ ASNPtr Parser::parseMethodDecl()
         exps.push_back(move(temp));
         while(match<CommaToken>())
         {
-            String msg =  "Expected type variable after ',' at position: " +
-                               to_string(_tokenPos);
-            MUST_PARSE(temp1, parseTypeVariable(), msg);
+            MUST_PARSE(temp1, parseTypeVariable(), "Expected type variable after ','");
             exps.push_back(move(temp1));
         }
     }
     MUST_MATCH_(RightParenToken);
-    String msg = "Expected block{} after while statement at position: "
-                 + to_string(_tokenPos);
-    MUST_PARSE(body, parseBlock(), msg);
+    MUST_PARSE(body, parseBlock(), "Expected block{} after while statement");
 
     CANCEL_ROLLBACK;
     SUCCESS;
@@ -727,9 +699,7 @@ ASNPtr Parser::parseRetStm()
     ENABLE_ROLLBACK;
 
     MATCH_(ReturnToken);
-    String msg =  "Expected expression for return statement at position: " +
-                       to_string(_tokenPos);
-    MUST_PARSE(exp, parseExp(), msg);
+    MUST_PARSE(exp, parseExp(), "Expected expression for return statement");
     MUST_MATCH_(SemiToken);
 
     CANCEL_ROLLBACK;
