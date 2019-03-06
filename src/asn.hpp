@@ -12,8 +12,9 @@ namespace dflat
 {
 
 enum ASNType { expBinop, expNumber, expVariable, expTypeVariable, expUnop,
-               block, stmIf, defMethod, stmWhile, stmAssign, stmMethod,
-               expMethod, stmVarDef, expNew, stmRet, declMethod, declClass};
+               block, stmIf, defMethod, stmWhile, stmAssign, stmMemberAssign,
+               stmMethod, expMethod, stmVarDef, expNew, stmRet, 
+               declMethod, declClass };
 
 enum OpType { opPlus, opMinus, opMult, opDiv, opNot, opAnd, opOr,
               opLogEq, opLogNotEq };
@@ -253,17 +254,19 @@ class MethodExp : public ASN
 {
     //Example Input: func(var, 1)
     public:
-        String name;
+        String object;
+        String method;
         Vector<ASNPtr> args;
 
-        MethodExp(String, Vector<ASNPtr>&&);
+        MethodExp(String, String, Vector<ASNPtr>&&);
         ASNType getType() const { return expMethod; }
         String toString() const;
 
         bool operator==(MethodExp const& other) const
         {
-            return name == other.name
-                && args == other.args;
+            return object == other.object
+                && method == other.method
+                && args   == other.args;
         }
 
         DECLARE_CMP(MethodExp)
@@ -318,7 +321,7 @@ class MemberAssignStm : public ASN
 
         // first: variable name, second: Expression
         MemberAssignStm(String, String, ASNPtr&&);
-        ASNType getType() const { return stmAssign; }
+        ASNType getType() const { return stmMemberAssign; }
         String toString() const;
 
         bool operator==(MemberAssignStm const& other) const

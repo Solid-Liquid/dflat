@@ -156,14 +156,14 @@ String MethodDef::toString() const
 }
 
 //MethodExp:
-MethodExp::MethodExp(String _name, Vector<ASNPtr>&& _args)
-  : name(_name), args(move(_args))
+MethodExp::MethodExp(String _object, String _method, Vector<ASNPtr>&& _args)
+  : object(_object), method(_method), args(move(_args))
 {
 }
 
 String MethodExp::toString() const
 {
-    String str = name + "(";
+    String str = object + "." + method + "(";
     int track = 0;
     for(auto&& ar : args)
     {

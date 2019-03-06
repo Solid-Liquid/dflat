@@ -234,7 +234,9 @@ ASNPtr Parser::parseMethodExp()
     Vector<ASNPtr> exps;
     ASNPtr temp;
 
-    PARSE(var, parseName());
+    PARSE(object, parseName());
+    MATCH_(MemberToken);
+    PARSE(method, parseName());
     MATCH_(LeftParenToken);
     temp = parseExp();
     if(temp)
@@ -250,7 +252,7 @@ ASNPtr Parser::parseMethodExp()
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<MethodExp>(var, move(exps));
+    return make_unique<MethodExp>(object, method, move(exps));
 }
 
 ASNPtr Parser::parseNew()

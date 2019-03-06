@@ -395,31 +395,37 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              );
 
 
-    REQUIRE( PT(parseMethodExp,          //function()  ->  MethodExp
-                NameToken("function"), //TODO method call as exp vs as statement??
+    REQUIRE( PT(parseMethodExp,          //obj.meth()  ->  MethodExp
+                NameToken("obj"),
+                MemberToken(),
+                NameToken("meth"),
                 LeftParenToken(),
                 RightParenToken()
                 )
              ==
-             ~MethodExp("function",
+             ~MethodExp("obj", "meth",
                       Vector<ASNPtr>{})
              );
 
 
-    REQUIRE( PT(parseMethodExp,            //function(3)  ->  MethodExp
-                NameToken("function"),
+    REQUIRE( PT(parseMethodExp,            //obj.meth(3)  ->  MethodExp
+                NameToken("obj"),
+                MemberToken(),
+                NameToken("meth"),
                 LeftParenToken(),
                 NumberToken(3),
                 RightParenToken()
                 )
              ==
-             ~MethodExp("function",
+             ~MethodExp("obj", "meth",
                       asns(NumberExp(3)))
              );
 
 
-    REQUIRE( PT(parseMethodExp,            //function(3,suh)  -> MethodExp
-                NameToken("function"),
+    REQUIRE( PT(parseMethodExp,            //obj.meth(3,suh)  -> MethodExp
+                NameToken("obj"),
+                MemberToken(),
+                NameToken("meth"),
                 LeftParenToken(),
                 NumberToken(3),
                 CommaToken(),
@@ -427,12 +433,14 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 RightParenToken()
                 )
              ==
-             ~MethodExp("function",
+             ~MethodExp("obj", "meth",
                       asns(NumberExp(3), VariableExp("suh")))
              );
 
-    REQUIRE( PT(parseMethodStm,            //function(3,suh);  -> MethodStm
-                NameToken("function"),
+    REQUIRE( PT(parseMethodStm,            //obj.meth(3,suh);  -> MethodStm
+                NameToken("obj"),
+                MemberToken(),
+                NameToken("meth"),
                 LeftParenToken(),
                 NumberToken(3),
                 CommaToken(),
@@ -442,7 +450,8 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 )
              ==
              ~MethodStm(
-                 ~MethodExp("function",asns(NumberExp(3), VariableExp("suh"))))
+                 ~MethodExp("obj", "meth",
+                         asns(NumberExp(3), VariableExp("suh"))))
              );
 
     REQUIRE( PT(parseRetStm,        //return 1;  ->  ReturnStm
@@ -542,15 +551,19 @@ TEST_CASE( "Parser works correctly", "[parser]" )
         ParserException
         );
 
-    REQUIRE_THROWS_AS( PT(parseMethodExp,          //function()  ->  missing )
-                NameToken("function"),
+    REQUIRE_THROWS_AS( PT(parseMethodExp,          //obj.meth(  ->  missing )
+                NameToken("obj"),
+                MemberToken(),
+                NameToken("meth"),
                 LeftParenToken()
                 ),
              ParserException
              );
 
-    REQUIRE_THROWS_AS( PT(parseMethodExp,     //function(3,)  -> expected stm after ,
-                NameToken("function"),
+    REQUIRE_THROWS_AS( PT(parseMethodExp,     //obj.meth(3,)  -> expected stm after ,
+                NameToken("obj"),
+                MemberToken(),
+                NameToken("meth"),
                 LeftParenToken(),
                 NumberToken(3),
                 CommaToken(),
