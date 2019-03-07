@@ -233,10 +233,23 @@ ASNPtr Parser::parseMethodExp()
 
     Vector<ASNPtr> exps;
     ASNPtr temp;
+    String object, method;
 
-    PARSE(object, parseName());
-    MATCH_(MemberToken);
-    PARSE(method, parseName());
+    // "this." can be omitted.
+    PARSE(name1, parseName());
+
+    if (match<MemberToken>())
+    {
+        object = name1;
+        PARSE(name2, parseName());
+        method = name2;
+    }
+    else
+    {
+        object = "this";
+        method = name1;
+    }
+
     MATCH_(LeftParenToken);
     temp = parseExp();
     if(temp)

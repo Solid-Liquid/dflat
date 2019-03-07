@@ -406,6 +406,16 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ~MethodExp("obj", "meth",
                       Vector<ASNPtr>{})
              );
+    
+    REQUIRE( PT(parseMethodExp,          //meth()  ->  MethodExp with "this"
+                NameToken("meth"),
+                LeftParenToken(),
+                RightParenToken()
+                )
+             ==
+             ~MethodExp("this", "meth",
+                      Vector<ASNPtr>{})
+             );
 
 
     REQUIRE( PT(parseMethodExp,            //obj.meth(3)  ->  MethodExp
