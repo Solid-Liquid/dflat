@@ -15,6 +15,7 @@ add_library(dflat_common
     src/parser.cpp src/parser.hpp
     src/asn.cpp src/asn.hpp
     src/config.hpp
+    src/typechecker.cpp src/typechecker.hpp
     )
 
 add_executable(dflat
@@ -27,6 +28,7 @@ add_executable(tests
     test/lexer_tests.cpp
     test/parser_tests.cpp
     test/token_helpers.hpp
+    test/typechecker_tests.cpp
     )
 
 

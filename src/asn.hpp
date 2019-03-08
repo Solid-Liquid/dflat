@@ -7,6 +7,8 @@
 #include "string.hpp"
 #include <memory>
 #include "vector.hpp"
+#include <set.hpp>
+#include <map.hpp>
 
 namespace dflat
 {
@@ -19,6 +21,13 @@ enum ASNType { expBinop, expNumber, expVariable, expTypeVariable, expUnop,
 enum OpType { opPlus, opMinus, opMult, opDiv, opNot, opAnd, opOr,
               opLogEq, opLogNotEq };
 
+struct TypeRef
+{
+    //Struct used for Type checking
+    Set<String> types;
+    Map<String,String> variables;
+};
+
 class ASN
 {
 public:
@@ -26,6 +35,7 @@ public:
     virtual String toString() const = 0;
     virtual ASNType getType() const = 0;
     virtual bool cmp(ASN const&) const = 0;
+    virtual String typeCheck(TypeRef const&) const = 0;
 
     bool operator==(ASN const& other) const
     {
@@ -64,13 +74,6 @@ bool operator==(ASNPtr const& a, ASNPtr const& b)
     return *a == *b;
 }
 
-class Program
-{
-    public:
-        Vector<ASNPtr> classes;
-        //TODO might need to add other stuff
-};
-
 class BinopExp: public ASN
 {
     //Example Input: 5 + 6
@@ -81,6 +84,7 @@ class BinopExp: public ASN
         BinopExp(ASNPtr&& _left, OpType _op, ASNPtr&& _right);
         ASNType getType() const { return expBinop; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
 
         bool operator==(BinopExp const& other) const
         {
@@ -101,6 +105,7 @@ class VariableExp : public ASN
         VariableExp(String const&);
         ASNType getType() const { return expVariable; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
 
         bool operator==(VariableExp const& other) const
         {
@@ -120,6 +125,7 @@ class TypeVariableExp : public ASN
         TypeVariableExp(String const&, String const&);
         ASNType getType() const { return expTypeVariable; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
 
         bool operator==(TypeVariableExp const& other) const
         {
@@ -138,6 +144,7 @@ class NumberExp : public ASN
         NumberExp(int);
         ASNType getType() const { return expNumber; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
 
         bool operator==(NumberExp const& other) const
         {
@@ -158,6 +165,7 @@ class UnopExp : public ASN
         UnopExp(ASNPtr&&, OpType);
         ASNType getType() const { return expUnop; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
 
         bool operator==(UnopExp const& other) const
         {
@@ -175,6 +183,7 @@ class Block : public ASN
         Block(Vector<ASNPtr>&&);
         ASNType getType() const { return block; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
 
         bool operator==(Block const& other) const
         {
@@ -195,6 +204,7 @@ class IfStm : public ASN
         IfStm(ASNPtr&&, ASNPtr&&, ASNPtr&&);
         ASNType getType() const { return stmIf; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
 
         bool operator==(IfStm const& other) const
         {
@@ -216,6 +226,7 @@ class WhileStm : public ASN
         WhileStm(ASNPtr&&, ASNPtr&&);
         ASNType getType() const { return stmWhile; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
 
         bool operator==(WhileStm const& other) const
         {
@@ -238,6 +249,7 @@ class MethodDef : public ASN
         MethodDef(String, String, Vector<ASNPtr>&&, ASNPtr&&);
         ASNType getType() const { return defMethod; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
 
         bool operator==(MethodDef const& other) const
         {
@@ -261,6 +273,7 @@ class MethodExp : public ASN
         MethodExp(String, String, Vector<ASNPtr>&&);
         ASNType getType() const { return expMethod; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
 
         bool operator==(MethodExp const& other) const
         {
@@ -281,6 +294,7 @@ class MethodStm : public ASN
         MethodStm(ASNPtr&&);
         ASNType getType() const { return stmMethod; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
 
         bool operator==(MethodStm const& other) const
         {
@@ -301,6 +315,7 @@ class AssignStm : public ASN
         AssignStm(String, ASNPtr&&);
         ASNType getType() const { return stmAssign; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
 
         bool operator==(AssignStm const& other) const
         {
@@ -323,6 +338,7 @@ class MemberAssignStm : public ASN
         MemberAssignStm(String, String, ASNPtr&&);
         ASNType getType() const { return stmMemberAssign; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
 
         bool operator==(MemberAssignStm const& other) const
         {
@@ -346,6 +362,7 @@ class VarDecStm : public ASN
         VarDecStm(String, String, ASNPtr&&);
         ASNType getType() const { return stmVarDef; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
 
         bool operator==(VarDecStm const& other) const
         {
@@ -366,6 +383,7 @@ class RetStm : public ASN
         RetStm(ASNPtr&&);
         ASNType getType() const { return stmRet; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
 
         bool operator==(RetStm const& other) const
         {
@@ -385,6 +403,7 @@ class NewExp : public ASN
         NewExp(String, Vector<ASNPtr>&&);
         ASNType getType() const { return expNew; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
 
         bool operator==(NewExp const& other) const
         {
@@ -409,6 +428,7 @@ class MethodDecl : public ASN
         MethodDecl(String, String, Vector<ASNPtr>&&);
         ASNType getType() const { return declMethod; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
         
         bool operator==(MethodDecl const& other) const
         {
@@ -434,6 +454,7 @@ class ClassDecl : public ASN
         ClassDecl(String, Vector<ASNPtr>&&);
         ASNType getType() const { return declClass; }
         String toString() const;
+        String typeCheck(TypeRef const&) const;
         
         bool operator==(ClassDecl const& other) const
         {

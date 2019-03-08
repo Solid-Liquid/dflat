@@ -41,6 +41,12 @@ String BinopExp::toString() const
             " " + right->toString() + ")";
 }
 
+String BinopExp::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
+}
+
 //VariableExp:
 VariableExp::VariableExp(String const& name_)
     : name(name_)
@@ -50,6 +56,12 @@ VariableExp::VariableExp(String const& name_)
 String VariableExp::toString() const
 {
     return name;
+}
+
+String VariableExp::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
 }
 
 //TypeVariableExp:
@@ -63,6 +75,12 @@ String TypeVariableExp::toString() const
     return type + " " + name;
 }
 
+String TypeVariableExp::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
+}
+
 //NumberExp:
 NumberExp::NumberExp(int value_)
     : value(value_)
@@ -74,6 +92,12 @@ String NumberExp::toString() const
     return to_string(value);
 }
 
+String NumberExp::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
+}
+
 //UnopExp:
 UnopExp::UnopExp(ASNPtr&& _nested, OpType _op)
     : nested(move(_nested)), op(_op)
@@ -83,6 +107,12 @@ UnopExp::UnopExp(ASNPtr&& _nested, OpType _op)
 String UnopExp::toString() const
 {
     return "(" + opString(op) + nested->toString() + ")";
+}
+
+String UnopExp::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
 }
 
 //Block:
@@ -102,6 +132,12 @@ String Block::toString() const
     return s;
 }
 
+String Block::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
+}
+
 //IfBlock:
 IfStm::IfStm(ASNPtr&& _logicExp, ASNPtr&& _trueStatements, ASNPtr&& _falseStatements)
     : logicExp(move(_logicExp))
@@ -119,7 +155,13 @@ String IfStm::toString() const
     return str;
 }
 
-//WhileBlock:
+String IfStm::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
+}
+
+//WhileStm:
 WhileStm::WhileStm(ASNPtr&& _logicExp, ASNPtr&& _statements)
     : logicExp(move(_logicExp)), statements(move(_statements))
 {
@@ -130,6 +172,12 @@ String WhileStm::toString() const
     String str = "while(" + logicExp->toString() + ")\n";
     str += statements->toString();
     return str;
+}
+
+String WhileStm::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
 }
 
 //MethodBlock:
@@ -155,6 +203,12 @@ String MethodDef::toString() const
     return str;
 }
 
+String MethodDef::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
+}
+
 //MethodExp:
 MethodExp::MethodExp(String _object, String _method, Vector<ASNPtr>&& _args)
   : object(_object), method(_method), args(move(_args))
@@ -176,6 +230,12 @@ String MethodExp::toString() const
     return str;
 }
 
+String MethodExp::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
+}
+
 //MethodStm:
 MethodStm::MethodStm(ASNPtr&& methodExp_)
   : methodExp(move(methodExp_))
@@ -185,6 +245,12 @@ MethodStm::MethodStm(ASNPtr&& methodExp_)
 String MethodStm::toString() const
 {
     return methodExp->toString() + ";";
+}
+
+String MethodStm::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
 }
 
 //NewStm:
@@ -208,6 +274,12 @@ String NewExp::toString() const
     return str;
 }
 
+String NewExp::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
+}
+
 //AssignStm:
 AssignStm::AssignStm(String _variable, ASNPtr&& _expression)
   : variable(_variable), expression(move(_expression))
@@ -217,6 +289,12 @@ AssignStm::AssignStm(String _variable, ASNPtr&& _expression)
 String AssignStm::toString() const
 {
     return variable + " = " + expression->toString() + ";";
+}
+
+String AssignStm::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
 }
 
 //MemberAssignStm:
@@ -230,6 +308,12 @@ String MemberAssignStm::toString() const
     return object + "." + member + " = " + expression->toString() + ";";
 }
 
+String MemberAssignStm::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
+}
+
 //DeclarationStm:
 VarDecStm::VarDecStm(String _type, String _name, ASNPtr&& _value)
     : type(_type), name(_name), value(move(_value))
@@ -241,6 +325,14 @@ String VarDecStm::toString() const
     return type + " " + name + " = " + value->toString() + ";";
 }
 
+String VarDecStm::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
+}
+
+
+//RetSTm:
 RetStm::RetStm(ASNPtr&& _value)
     : value(move(_value))
 {
@@ -249,6 +341,12 @@ RetStm::RetStm(ASNPtr&& _value)
 String RetStm::toString() const
 {
     return "return " + value->toString() + ";";
+}
+
+String RetStm::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
 }
 
 // Method Declaration
@@ -272,6 +370,12 @@ String MethodDecl::toString() const
     return str;
 }
 
+String MethodDecl::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
+}
+
 // Class Definition
 ClassDecl::ClassDecl(String _name, Vector<ASNPtr>&& _members)
     : name(_name), members(move(_members))
@@ -285,6 +389,12 @@ String ClassDecl::toString() const
         str += ex->toString() + "\n\n";
     str += "};";
     return str;
+}
+
+String ClassDecl::typeCheck(TypeRef const&) const
+{
+    //TODO
+    return "";
 }
 
 } //namespace dflat

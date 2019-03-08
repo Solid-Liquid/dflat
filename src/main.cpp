@@ -50,9 +50,9 @@ int main(int argc, char* argv[])
             //cout << tokens[i]->toString() << endl;
 
         //Run Parser:
-        Program prog = parse(tokens);
-        for(size_t i=0; i<prog.classes.size(); ++i)
-            cout << prog.classes[i]->toString() << endl << endl;
+        Vector<ASNPtr> program = parse(tokens);
+        for(size_t i=0; i<program.size(); ++i)
+            cout << program[i]->toString() << endl << endl;
     }
     catch(LexerException& e) { cout << e.what() << endl; }
     catch(ParserException& e) { cout << e.what() << endl; }

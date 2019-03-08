@@ -1,4 +1,4 @@
-//Unit tests for the lexer
+//Unit tests for the lexer (lexer base class - LexerCore)
 
 #include "catch2/catch.hpp"
 #include "lexercore.hpp"

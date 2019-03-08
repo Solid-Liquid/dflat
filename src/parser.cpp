@@ -15,7 +15,7 @@ using namespace std;
 #define CANCEL_ROLLBACK rollbacker.disable()
 
 
-Program parse(Vector<TokenPtr> const& tokens)
+Vector<ASNPtr> parse(Vector<TokenPtr> const& tokens)
 {
     Parser p(tokens);
     return p.parseProgram();
@@ -773,10 +773,10 @@ ASNPtr Parser::parseRetStm()
     return make_unique<RetStm>(move(exp));
 }
 
-Program Parser::parseProgram()
+Vector<ASNPtr> Parser::parseProgram()
 {
     TRACE;
-    Program prog;
+    Vector<ASNPtr> prog;
     bool run = true;
     ASNPtr result;
 
@@ -784,7 +784,7 @@ Program Parser::parseProgram()
     {
         if(result = parseClassDecl())
         {
-            prog.classes.push_back(move(result));
+            prog.push_back(move(result));
         }
         else
         {
