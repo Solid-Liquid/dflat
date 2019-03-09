@@ -23,7 +23,7 @@ class Lexer : private LexerCore
 
 LexerException::LexerException(String msg) noexcept
 {
-    message = msg;
+    message = "Lexer Exception:\n" + msg;
 }
 
 const char* LexerException::what() const noexcept
@@ -231,8 +231,9 @@ Vector<TokenPtr> Lexer::tokenize()
 
     if(!at_end()) //If not end, but no valid token was returned above, error.
     {
-        String msg = "Lexer Error: Illegal character: ";
+        String msg = "Illegal character: '";
         msg.push_back(peek());
+        msg += "' at position: " + to_string(getPos());
         throw LexerException(msg);
     }
 

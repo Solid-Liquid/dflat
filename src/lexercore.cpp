@@ -67,4 +67,10 @@ void LexerCore::next()
     }
 }
 
+//Return the current position:
+size_t LexerCore::getPos() const
+{
+    return _pos;
+}
+
 } //namespace dflat

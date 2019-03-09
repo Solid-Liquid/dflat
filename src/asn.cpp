@@ -56,7 +56,9 @@ String TypeVariableExp::toString() const
 
 Type TypeVariableExp::typeCheck(TypeEnv&) const
 {
-    //TODO
+    //TODO add 'name' to the map and look for 'type' in env.type
+    //note this variable only exists in the context of a method.
+    //stack logic??
     return "";
 }
 

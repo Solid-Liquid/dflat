@@ -14,7 +14,8 @@ struct LexerCore
     char get();
     char peek() const;
     char peek_ahead(size_t) const;
-    void next();    
+    void next();
+    size_t getPos() const;
 
     String _input;
     size_t _pos;

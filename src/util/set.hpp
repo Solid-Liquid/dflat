@@ -22,7 +22,7 @@ Optional<K> lookup(Set<K> const& set, K const& key)
     }
     else
     {
-        return Optional<K>(outcome::in_place_type_t<K>(), it->second);
+        return Optional<K>(outcome::in_place_type_t<K>(), *it);
     }
 }
 

@@ -39,9 +39,16 @@ TypeEnv initialTypeEnv()
 TypeEnv typeCheck(Vector<ASNPtr> const& program)
 {
     TypeEnv env = initialTypeEnv();
-    
+
     for (ASNPtr const& class_ : program)
     {
+        //Add current class to the set of types.
+        String className = cast(class_,ClassDecl)->name;
+        if(lookup(env.types,className))
+            throw TypeCheckerException("Redefinition of class: " + className);
+        env.types.insert(className);
+
+        //Check all types in all classes (ASN->typeCheck runs recursively).
         class_->typeCheck(env);
     }
 
@@ -67,7 +74,8 @@ Type lookupType(TypeEnv const& env, String const& name)
     }
     else
     {
-        throw TypeCheckerException("TODO");
+        //TODO more information?
+        throw TypeCheckerException("Invalid reference to unknown type: " + name);
     }
 }
 
@@ -131,23 +139,14 @@ String binopCanonicalName(OpType op, Type const& lhsType, Type const& rhsType)
 
 
 //TypeChecker Exception:
-
 TypeCheckerException::TypeCheckerException(String msg) noexcept
 {
-    message = msg;
+    message = "TypeChecker Exception:\n" + msg;
 }
 
 const char* TypeCheckerException::what() const noexcept
 {
     return message.c_str();
 }
-
-
-//TypeChecker:
-//
-//TypeChecker::TypeChecker(Vector<ASNPtr> const& program_)
-//    : program(program_), typeEnv(initialTypeEnv())
-//{
-//}
 
 } //namespace dflat

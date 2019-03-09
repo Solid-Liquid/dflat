@@ -4,11 +4,10 @@
 #ifndef ASN_HPP
 #define ASN_HPP
 
-#include "string.hpp"
 #include <memory>
+#include "string.hpp"
 #include "vector.hpp"
-#include <set.hpp>
-#include <map.hpp>
+#include "typechecker_tools.hpp"
 
 namespace dflat
 {
@@ -23,28 +22,15 @@ enum OpType { opPlus, opMinus, opMult, opDiv, opNot, opAnd, opOr,
 
 String opString(OpType);
 
-struct TypeEnv
-{
-    //Struct used for Type checking
-    Set<String> types;
-    Map<String,String> variables;
-};
-
-using Type = String;
-
-Type const intType = "int";
-Type const boolType = "bool";
-Type const voidType = "void";
-
-
 class ASN
 {
-public:
+    //Base class for all ASN types
+    public:
     virtual ~ASN();
-    virtual String toString() const = 0;
-    virtual ASNType getType() const = 0;
-    virtual bool cmp(ASN const&) const = 0;
-    virtual Type typeCheck(TypeEnv&) const = 0;
+    virtual String toString() const = 0;        //Converts to printable string
+    virtual ASNType getType() const = 0;        //Returns the ASNType
+    virtual bool cmp(ASN const&) const = 0;     //Compares the ASNType
+    virtual Type typeCheck(TypeEnv&) const = 0; //Used for data type checking
 
     bool operator==(ASN const& other) const
     {

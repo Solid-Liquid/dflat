@@ -7,21 +7,6 @@
 
 using namespace dflat;
 
-// Convenience function for making ASN trees to test against.
-template <typename T>
-ASNPtr operator~(T&& t)
-{
-    return std::make_unique<T>(std::forward<T>(t));
-}
-
-template <typename... Ts>
-Vector<ASNPtr> asns(Ts&&... in)
-{
-    Vector<ASNPtr> out;
-    (out.push_back(std::make_unique<Ts>(in)), ...);
-    return out;
-}
-
 //Parser( tokens(NumberToken(1), PlusToken(), NumberToken(1)) ).parseAdditive()
 #define PT(method, ...) Parser(tokens(__VA_ARGS__)).method()
 
@@ -545,12 +530,14 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ==
              nullptr
             );
+}
 
 
+TEST_CASE( "Parser properly throws exceptions", "[parser]" )
+{
     /*
      * exception is thrown for bad parse:
      */
-
 
     REQUIRE_THROWS_AS( PT(parseExp, // (2 - 5  -> missing )
         LeftParenToken(),

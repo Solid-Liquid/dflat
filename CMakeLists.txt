@@ -16,6 +16,7 @@ add_library(dflat_common
     src/asn.cpp src/asn.hpp
     src/config.hpp
     src/typechecker.cpp src/typechecker.hpp
+    src/typechecker_tools.hpp
     )
 
 add_executable(dflat

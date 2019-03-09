@@ -8,6 +8,8 @@ using namespace dflat;
 
 namespace dflat 
 {
+    //Several helper functions for the tests (further down)
+
     template <typename T>
     bool cmp(TokenPtr const&, TokenPtr const&) = delete;
 
@@ -69,6 +71,7 @@ namespace dflat
         }
     }
 }
+
 
 TEST_CASE( "Lexer produces correct output", "[lexer]" )
 {
@@ -227,7 +230,11 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         DivisionToken(),
         WhileToken()
         ));
+}
 
+
+TEST_CASE( "Lexer properly throws exceptions", "[lexer]" )
+{
     //Tests for bad input:
 
     REQUIRE_THROWS_AS( tokenize("$"), LexerException );
@@ -240,3 +247,4 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
 
     REQUIRE_THROWS_AS( tokenize("var$ == 56"), LexerException );
 }
+

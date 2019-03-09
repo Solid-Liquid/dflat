@@ -5,6 +5,7 @@
 
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "typechecker.hpp"
 
 using namespace std;
 using namespace dflat;
@@ -53,10 +54,14 @@ int main(int argc, char* argv[])
         Vector<ASNPtr> program = parse(tokens);
         for(size_t i=0; i<program.size(); ++i)
             cout << program[i]->toString() << endl << endl;
+
+        //Run TypeChecker:
+        TypeEnv environment = typeCheck(program);
     }
-    catch(LexerException& e) { cout << e.what() << endl; }
-    catch(ParserException& e) { cout << e.what() << endl; }
-    catch(exception& e){ cout << e.what() << endl; }
+    catch(exception& e)
+    {
+        cout << e.what() << endl;
+    }
 
     return 0;
 }

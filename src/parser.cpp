@@ -23,7 +23,7 @@ Vector<ASNPtr> parse(Vector<TokenPtr> const& tokens)
 
 ParserException::ParserException(String msg) noexcept
 {
-    message = msg;
+    message = "Parser Exception:\n" + msg;
 }
 
 const char* ParserException::what() const noexcept
