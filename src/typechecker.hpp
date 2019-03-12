@@ -21,6 +21,7 @@ void assertTypeIs(Type const&, Type const&);
 String funcCanonicalName(String const&, Vector<Type> const&);
 String unopCanonicalName(OpType, Type const&);
 String binopCanonicalName(OpType, Type const&, Type const&);
+TypeEnv initialTypeEnv();
 
 //TypeChecker Exceptions class:
 class TypeCheckerException : public std::exception

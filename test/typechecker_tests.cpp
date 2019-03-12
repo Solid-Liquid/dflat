@@ -9,6 +9,8 @@ using namespace dflat;
 
 Type expType(String const& input)
 {
+    //Helper function that tokenizes a string containing an expression
+    //and calls "typeCheck" on it
     auto tokens = tokenize(input);
     Parser parser(tokens);
     auto asn = parser.parseExp();
@@ -31,6 +33,12 @@ TEST_CASE( "TypeChecker correctly checks types", "[TypeChecker]" )
 
     REQUIRE( expType("1 == 2")
             == boolType );
+
+    REQUIRE( expType("1 != 2")
+             == boolType );
+
+//    REQUIRE( expType("1 && 0")
+//             == boolType );
 }
 
 
@@ -40,13 +48,17 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
      *   Tests for Typechecker throwing exceptions:
      */
 
-    Vector<ASNPtr> program; //Can be used by tests. Clear after using.
-
     //Class redefenition error (two classes named "MyClass"):
-    program.push_back(~ClassDecl("MyClass",Vector<ASNPtr>()));
-    program.push_back(~ClassDecl("MyClass",Vector<ASNPtr>()));
-    REQUIRE_THROWS_AS(typeCheck(program),TypeCheckerException);
-    program.clear();
+    REQUIRE_THROWS_AS(typeCheck(parse(tokenize(
+                            "class MyClass {}; \
+                             class MyClass {};"))),
+                      TypeCheckerException);
 
-    //REQUIRE_THROWS_AS(,TypeCheckerException);
+    //Unkown type error ("junkType" is an invalid type):
+    REQUIRE_THROWS_AS(lookupType(initialTypeEnv(),"junkType"),
+                      TypeCheckerException);
+
+    //Mismatched types. ("int" is not equivalent to "bool"):
+    REQUIRE_THROWS_AS(assertTypeIs(intType, boolType),
+                      TypeCheckerException);
 }

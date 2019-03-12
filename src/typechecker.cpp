@@ -3,7 +3,6 @@
 namespace dflat
 {
 
-static
 TypeEnv initialTypeEnv()
 {
 #define BINOP binopCanonicalName
