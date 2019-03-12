@@ -20,10 +20,17 @@ TypeEnv initialTypeEnv()
         // Predefined symbols
         {
             { BINOP(opPlus,     i, i), i }, // int  +  int  -> int
+            { BINOP(opMinus,     i, i), i }, // int  -  int  -> int
+            { BINOP(opMult,     i, i), i }, // int  *  int  -> int
+            { BINOP(opDiv,     i, i), i }, // int  /  int  -> int
             { BINOP(opLogEq,    i, i), b }, // int  == int  -> bool
             { BINOP(opLogEq,    b, b), b }, // bool == bool -> bool
             { BINOP(opLogNotEq, i, i), b }, // int  != int  -> bool
             { BINOP(opLogNotEq, b, b), b }, // bool != bool -> bool
+            { BINOP(opAnd,     i, i), b }, // int  &&  int  -> bool
+            { BINOP(opAnd,     b, b), b }, // bool  &&  bool  -> bool
+            { BINOP(opOr,     i, i), b }, // int  ||  int  -> bool
+            { BINOP(opOr,     b, b), b }, // bool  ||  bool -> bool
             
             { UNOP(opMinus, i), i }, // -int  -> int
             { UNOP(opNot,   b), b }, // !bool -> bool

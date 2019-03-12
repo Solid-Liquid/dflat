@@ -17,6 +17,16 @@ Type expType(String const& input)
     return typeCheck(asn);
 }
 
+Type stmType(String const& input)
+{
+    //Helper to tokenize a statement
+    //and calls "typeCheck" on it
+    auto tokens = tokenize(input);
+    Parser parser(tokens);
+    auto asn = parser.parseStm();
+    return typeCheck(asn);
+}
+
 
 TEST_CASE( "TypeChecker correctly checks types", "[TypeChecker]" )
 {
@@ -31,14 +41,34 @@ TEST_CASE( "TypeChecker correctly checks types", "[TypeChecker]" )
     REQUIRE( expType("1 + 1")
             == intType );
 
+    REQUIRE( expType("2 - 1")
+             == intType );
+
+    REQUIRE( expType("2 * 2")
+             == intType );
+
+    REQUIRE( expType("2 / 2")
+             == intType );
+
+    REQUIRE( expType("1 + 1 - 2 * 4 / 2")
+            == intType );
+
     REQUIRE( expType("1 == 2")
             == boolType );
 
     REQUIRE( expType("1 != 2")
              == boolType );
 
-//    REQUIRE( expType("1 && 0")
-//             == boolType );
+
+    REQUIRE( expType("1 && 0")
+             == boolType );
+
+    REQUIRE( expType("1 || 0")
+             == boolType );
+
+    // Assignment
+//    REQUIRE( stmType("int x = 5;")
+//             == voidType);
 }
 
 
