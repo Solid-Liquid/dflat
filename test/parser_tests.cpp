@@ -28,6 +28,20 @@ TEST_CASE( "Parser works correctly", "[parser]" )
         ~NumberExp(6)
         );
 
+    REQUIRE( PT(parseBoolTrue, //true -> BoolExp
+        TrueToken()
+        )
+        ==
+        ~BoolExp(true)
+        );
+
+    REQUIRE( PT(parseBoolFalse, //true -> BoolExp
+        FalseToken()
+        )
+        ==
+        ~BoolExp(false)
+        );
+
     REQUIRE( PT(parseExp, //same as above but using parseExp
         NumberToken(6)
         )
@@ -292,6 +306,23 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                     ~Block())
              );
 
+    REQUIRE( PT(parseIfStm,         // if(true){} else{}  ->  If else stm
+                IfToken(),
+                LeftParenToken(),
+                TrueToken(),
+                RightParenToken(),
+                LeftBraceToken(),
+                RightBraceToken(),
+                ElseToken(),
+                LeftBraceToken(),
+                RightBraceToken()
+                )
+             ==
+             ~IfStm(~BoolExp(true),
+                    ~Block(),
+                    ~Block())
+             );
+
     REQUIRE( PT(parseWhileStm,      //while(1){}  ->  while statement
                 WhileToken(),
                 LeftParenToken(),
@@ -302,6 +333,20 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 )
              ==
              ~WhileStm(~NumberExp(1),
+                       ~Block()
+                       )
+             );
+
+    REQUIRE( PT(parseWhileStm,      //while(false){}  ->  while statement
+                WhileToken(),
+                LeftParenToken(),
+                FalseToken(),
+                RightParenToken(),
+                LeftBraceToken(),
+                RightBraceToken()
+                )
+             ==
+             ~WhileStm(~BoolExp(false),
                        ~Block()
                        )
              );
@@ -337,6 +382,17 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 )
              ==
              ~VarDecStm("type", "name", ~NumberExp(1))
+             );
+
+    REQUIRE( PT(parseVarDecl,           //bool name = true;  -> variable declaration with bool
+                NameToken("bool"),
+                NameToken("name"),
+                AssignToken(),
+                TrueToken(),
+                SemiToken()
+                )
+             ==
+             ~VarDecStm("bool", "name", ~BoolExp(true))
              );
 
 

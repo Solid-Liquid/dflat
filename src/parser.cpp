@@ -211,6 +211,22 @@ ASNPtr Parser::parseNumber()
     return make_unique<NumberExp>(num.num);
 }
 
+ASNPtr Parser::parseBoolTrue()
+{
+    TRACE;
+    MATCH_(TrueToken);
+    SUCCESS;
+    return make_unique<BoolExp>(true);
+}
+
+ASNPtr Parser::parseBoolFalse()
+{
+    TRACE;
+    MATCH_(FalseToken);
+    SUCCESS;
+    return make_unique<BoolExp>(false);
+}
+
 ASNPtr Parser::parseUnary()
 {
     TRACE;
@@ -336,6 +352,16 @@ ASNPtr Parser::parsePrimary()
         return result;
     }
     else if (result = parseMethodExp())
+    {
+        SUCCESS;
+        return result;
+    }
+    else if (result = parseBoolTrue())
+    {
+        SUCCESS;
+        return result;
+    }
+    else if (result = parseBoolFalse())
     {
         SUCCESS;
         return result;
@@ -553,7 +579,7 @@ ASNPtr Parser::parseIfStm()
     ENABLE_ROLLBACK;
     MATCH_(IfToken);
     MUST_MATCH_(LeftParenToken);
-    MUST_PARSE(logicExp, parseExp(), "Expected expression in if statement");
+    MUST_PARSE(logicExp, parseExp(), "Expected logical expression in if statement");
     MUST_MATCH_(RightParenToken);
     MUST_PARSE(trueStatements, parseBlock(), "Expected block{} after if statement");
     ASNPtr elseBlock;
@@ -583,7 +609,7 @@ ASNPtr Parser::parseWhileStm()
 
     MATCH_(WhileToken);
     MUST_MATCH_(LeftParenToken);
-    MUST_PARSE(cond, parseExp(), "Expected expression in while statement");
+    MUST_PARSE(cond, parseExp(), "Expected logical expression in while statement");
     MUST_MATCH_(RightParenToken);
     MUST_PARSE(body, parseBlock(), "Expected block{} after while statement");
 

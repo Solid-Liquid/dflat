@@ -12,7 +12,7 @@
 namespace dflat
 {
 
-enum ASNType { expBinop, expNumber, expVariable, expTypeVariable, expUnop,
+enum ASNType { expBinop, expNumber, expBool, expVariable, expTypeVariable, expUnop,
                block, stmIf, defMethod, stmWhile, stmAssign, stmMemberAssign,
                stmMethod, expMethod, stmVarDef, expNew, stmRet, 
                declMethod, declClass };
@@ -125,6 +125,25 @@ class NumberExp : public ASN
         }
 
         DECLARE_CMP(NumberExp)
+};
+
+class BoolExp : public ASN
+{
+    //Example Input: false
+    public:
+        bool value;
+
+        BoolExp(bool);
+        ASNType getType() const { return expBool; }
+        String toString() const;
+        Type typeCheck(TypeEnv&) const;
+
+        bool operator==(BoolExp const& other) const
+        {
+            return value == other.value;
+        }
+
+        DECLARE_CMP(BoolExp)
 };
 
 class BinopExp: public ASN

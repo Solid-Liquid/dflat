@@ -81,6 +81,8 @@ public:
     ASNPtr parseVariable();
     ASNPtr parseTypeVariable();
     ASNPtr parseNumber();
+    ASNPtr parseBoolTrue();
+    ASNPtr parseBoolFalse();
     ASNPtr parseUnary();
     ASNPtr parseMethodExp();
     ASNPtr parseMethodStm();

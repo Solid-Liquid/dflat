@@ -79,6 +79,26 @@ Type NumberExp::typeCheck(TypeEnv&) const
     return intType;
 }
 
+//BooleanExp:
+BoolExp::BoolExp(bool value_)
+    : value(value_)
+{
+}
+
+String BoolExp::toString() const
+{
+    if(value)
+        return "true";
+    else
+        return "false";
+}
+
+Type BoolExp::typeCheck(TypeEnv&) const
+{
+    // Boolean type is bool.
+    return boolType;
+}
+
 //BinopExp:
 BinopExp::BinopExp(ASNPtr&& _lhs, OpType _op, ASNPtr&& _rhs)
     : lhs(std::move(_lhs))

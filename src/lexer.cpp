@@ -94,6 +94,8 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
         { "if", tokIf },
         { "else", tokElse },
         { "while", tokWhile },
+        { "true", tokTrue },
+        { "false", tokFalse },
         { "new", tokNew },
         { "return", tokReturn },
         { "this", tokThis },
@@ -112,6 +114,8 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
         case tokIf:     return make_unique<IfToken>();
         case tokElse:   return make_unique<ElseToken>();
         case tokWhile:  return make_unique<WhileToken>();
+        case tokTrue:   return make_unique<TrueToken>();
+        case tokFalse:  return make_unique<FalseToken>();
         case tokNew:    return make_unique<NewToken>();
         case tokReturn: return make_unique<ReturnToken>();
         case tokThis:   return make_unique<ThisToken>();
@@ -136,7 +140,7 @@ TokenPtr Lexer::lookupPunct1(char c) const
         case '/':   return make_unique<DivisionToken>();
         case '!':   return make_unique<NotToken>();
         case '.':   return make_unique<MemberToken>();
-        case ';':  return make_unique<SemiToken>();
+        case ';':   return make_unique<SemiToken>();
         default:    return nullptr;
     }
 }

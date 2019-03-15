@@ -44,6 +44,8 @@ namespace dflat
             
             case tokIf:
             case tokElse:
+            case tokTrue:
+            case tokFalse:
             case tokPlus:
             case tokMinus:
             case tokDiv:
@@ -107,6 +109,14 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
 
     REQUIRE ( tokenize("else") == tokens(
         ElseToken()
+        ));
+    
+    REQUIRE ( tokenize("true") == tokens(
+        TrueToken()
+        ));
+    
+    REQUIRE ( tokenize("false") == tokens(
+        FalseToken()
         ));
 
     REQUIRE ( tokenize("new") == tokens(
@@ -220,7 +230,13 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         EqToken(), 
         AssignToken()
         ));
-    
+
+    REQUIRE ( tokenize("var == true") == tokens(
+        NameToken("var"), 
+        EqToken(),
+        TrueToken()
+        ));
+
     REQUIRE ( tokenize("*if+else-/while") == tokens(
         MultiplyToken(),
         IfToken(),
