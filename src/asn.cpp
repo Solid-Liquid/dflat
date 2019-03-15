@@ -40,7 +40,7 @@ String VariableExp::toString() const
 Type VariableExp::typeCheck(TypeEnv& env) const
 {
     // Variable type is the declared type for this name.
-    return lookupType(env, name);
+    return lookupVarType(env, name);
 }
 
 //TypeVariableExp:
@@ -120,7 +120,7 @@ Type BinopExp::typeCheck(TypeEnv& env) const
     Type lhsType = lhs->typeCheck(env);
     Type rhsType = rhs->typeCheck(env);
     String funcName = binopCanonicalName(op, lhsType, rhsType);
-    return lookupType(env, funcName);
+    return lookupRuleType(env, funcName);
 }
 
 //UnopExp:
@@ -140,7 +140,7 @@ Type UnopExp::typeCheck(TypeEnv& env) const
     // e.g. "1 == 2" might be "==(int,int)" with type bool.
     Type rhsType = rhs->typeCheck(env);
     String funcName = unopCanonicalName(op, rhsType);
-    return lookupType(env, funcName);
+    return lookupRuleType(env, funcName);
 }
 
 //Block:
@@ -353,7 +353,7 @@ Type AssignStm::typeCheck(TypeEnv& env) const
 {
     // RHS expression must match declared type of LHS variable.
     // Final type is void.
-    Type lhsType = lookupType(env, variable);
+    Type lhsType = lookupVarType(env, variable);
     Type rhsType = expression->typeCheck(env);
     assertTypeIs(rhsType, lhsType);
     return voidType;

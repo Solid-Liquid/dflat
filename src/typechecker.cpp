@@ -11,14 +11,14 @@ TypeEnv initialTypeEnv()
     Type const b = boolType;
 
     return TypeEnv{
-        // Predefined types
         { 
+            // Predefined types ("types" variable)
             intType, 
             boolType, 
             voidType, 
         },
-        // Predefined symbols
         {
+            // Predefined symbols ("rules" variable)
             { BINOP(opPlus,     i, i), i }, // int  +  int  -> int
             { BINOP(opMinus,     i, i), i }, // int  -  int  -> int
             { BINOP(opMult,     i, i), i }, // int  *  int  -> int
@@ -35,6 +35,12 @@ TypeEnv initialTypeEnv()
             { UNOP(opMinus, i), i }, // -int  -> int
             { UNOP(opNot,   b), b }, // !bool -> bool
         },
+        {
+            // "variables" variable initialized as empty
+        },
+        {
+            "" // "currentClass" variable initialized as empty string
+        }
     };
 
 #undef BINOP
@@ -53,6 +59,7 @@ TypeEnv typeCheck(Vector<ASNPtr> const& program)
         if(lookup(env.types,className))
             throw TypeCheckerException("Redefinition of class: " + className);
         env.types.insert(className);
+        env.currentClass = className;
 
         //Check all types in all classes (ASN->typeCheck runs recursively).
         class_->typeCheck(env);
@@ -68,11 +75,11 @@ Type typeCheck(ASNPtr const& asn)
     return asn->typeCheck(env);
 }
 
-// Look up the type of a name in the environment.
+// Look up the rule for an operator based on cannonical name
 // Throw if not found.
-Type lookupType(TypeEnv const& env, String const& name)
+Type lookupRuleType(TypeEnv const& env, String const& name)
 {
-    Optional<Type> type = lookup(env.variables, name);
+    Optional<Type> type = lookup(env.rules, name);
 
     if (type)
     {
@@ -80,8 +87,91 @@ Type lookupType(TypeEnv const& env, String const& name)
     }
     else
     {
-        //TODO more information?
-        throw TypeCheckerException("Invalid reference to unknown type: " + name);
+        throw TypeCheckerException("Invalid operands to operator: " + name);
+    }
+}
+
+//Lookup the return type/arg type(s) of a method by name in current class.
+//Throw if method does not exist
+Vector<Type> lookupMethodType(TypeEnv const& env, String const& mthd)
+{
+    return lookupMethodTypeByClass(env,mthd,env.currentClass);
+}
+
+
+//Same as lookupMethodType, but with a specified class.
+Vector<Type> lookupMethodTypeByClass(TypeEnv const& env, String const& mthd, String const& clss)
+{
+    Optional<Map<String,Vector<String>>> classVars = lookup(env.variables, clss);
+
+    if(!classVars)
+    {
+        throw TypeCheckerException("Invalid reference to class: " + clss);
+    }
+
+    Optional<Vector<String>> mthdTypes = lookup(*classVars, mthd);
+
+    if(mthdTypes)
+    {
+        return *mthdTypes;
+    }
+    else
+    {
+        throw TypeCheckerException("Invalid reference to method '" + mthd
+                                   + "' in class: " + clss);
+    }
+}
+
+//Lookup the return type/arg type(s) of a variable by name in current class.
+//Throw if method does not exist
+Type lookupVarType(TypeEnv const& env, String const& var)
+{
+    return lookupVarTypeByClass(env,var,env.currentClass);
+}
+
+
+//Same as lookupVarType, but with a specified class.
+Type lookupVarTypeByClass(TypeEnv const& env, String const& var, String const& clss)
+{
+    Optional<Map<String,Vector<String>>> classVars = lookup(env.variables, clss);
+
+    if(!classVars)
+    {
+        throw TypeCheckerException("Invalid reference to class: " + clss);
+    }
+
+    Optional<Vector<String>> varType = lookup(*classVars, var);
+
+    if(varType)
+    {
+        return (*varType)[0];
+    }
+    else
+    {
+        throw TypeCheckerException("Invalid reference to variable '" + var
+                                   + "' in class: " + clss);
+    }
+}
+
+//Check if "type" is a valid type within the set of types.
+//Return true if valid, throw if not valid.
+bool validType(TypeEnv const& env, String const& type)
+{
+    if(env.currentClass == type)
+    {
+        throw TypeCheckerException("Cannot use an instance of a class inside its own definition. Inside class: "
+                                   + env.currentClass);
+    }
+
+    Optional<Type> valid = lookup(env.types, type);
+
+    if (valid)
+    {
+        return true;
+    }
+    else
+    {
+        throw TypeCheckerException("Invalid reference to unknown type: " + type);
     }
 }
 

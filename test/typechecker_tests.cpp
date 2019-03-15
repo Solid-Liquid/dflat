@@ -85,7 +85,7 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
                       TypeCheckerException);
 
     //Unkown type error ("junkType" is an invalid type):
-    REQUIRE_THROWS_AS(lookupType(initialTypeEnv(),"junkType"),
+    REQUIRE_THROWS_AS(validType(initialTypeEnv(),"junkType"),
                       TypeCheckerException);
 
     //Mismatched types. ("int" is not equivalent to "bool"):
