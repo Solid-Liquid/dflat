@@ -15,8 +15,6 @@ Type typeCheck(ASNPtr const&);
 
 //Helper Functions:
 Type lookupType(TypeEnv const&, String const&);
-void pushTypeScope(TypeEnv&);
-void popTypeScope(TypeEnv&);
 void assertTypeIs(Type const&, Type const&);
 String funcCanonicalName(String const&, Vector<Type> const&);
 String unopCanonicalName(OpType, Type const&);

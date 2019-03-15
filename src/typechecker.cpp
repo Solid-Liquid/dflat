@@ -85,18 +85,6 @@ Type lookupType(TypeEnv const& env, String const& name)
     }
 }
 
-// Introduce a new scope to the type environment.
-void pushTypeScope(TypeEnv&)
-{
-    // TODO
-}
-
-// Destroy the current scope in the type environment.
-void popTypeScope(TypeEnv&)
-{
-    // TODO
-}
-
 // Throw if two types aren't equal.
 void assertTypeIs(Type const& test, Type const& against)
 {
