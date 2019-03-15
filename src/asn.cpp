@@ -43,18 +43,18 @@ Type VariableExp::typeCheck(TypeEnv& env) const
     return lookupVarType(env, name);
 }
 
-//TypeVariableExp:
-TypeVariableExp::TypeVariableExp(String const& type_, String const& name_)
+//ArgVarExp:
+ArgVarExp::ArgVarExp(String const& type_, String const& name_)
     : type(type_), name(name_)
 {
 }
 
-String TypeVariableExp::toString() const
+String ArgVarExp::toString() const
 {
     return type + " " + name;
 }
 
-Type TypeVariableExp::typeCheck(TypeEnv&) const
+Type ArgVarExp::typeCheck(TypeEnv&) const
 {
     //TODO add 'name' to the map and look for 'type' in env.type
     //note this variable only exists in the context of a method.

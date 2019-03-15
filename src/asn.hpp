@@ -88,24 +88,24 @@ class VariableExp : public ASN
         DECLARE_CMP(VariableExp)
 };
 
-class TypeVariableExp : public ASN
+class ArgVarExp : public ASN
 {
     //Example Input: int var
     public:
         String type;
         String name;
 
-        TypeVariableExp(String const&, String const&);
+        ArgVarExp(String const&, String const&);
         ASNType getType() const { return expTypeVariable; }
         String toString() const;
         Type typeCheck(TypeEnv&) const;
 
-        bool operator==(TypeVariableExp const& other) const
+        bool operator==(ArgVarExp const& other) const
         {
             return name == other.name && type == other.type;
         }
 
-        DECLARE_CMP(TypeVariableExp)
+        DECLARE_CMP(ArgVarExp)
 };
 
 class NumberExp : public ASN

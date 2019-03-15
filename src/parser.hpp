@@ -79,7 +79,7 @@ public:
     Optional<OpType> parseAdditiveOp();
     Optional<OpType> parseLogicalOp();
     ASNPtr parseVariable();
-    ASNPtr parseTypeVariable();
+    ASNPtr parseArgVarExp();
     ASNPtr parseNumber();
     ASNPtr parseBoolTrue();
     ASNPtr parseBoolFalse();

@@ -192,7 +192,7 @@ ASNPtr Parser::parseVariable()
     return make_unique<VariableExp>(var);
 }
 
-ASNPtr Parser::parseTypeVariable()
+ASNPtr Parser::parseArgVarExp()
 {
     TRACE;
     ENABLE_ROLLBACK;
@@ -200,7 +200,7 @@ ASNPtr Parser::parseTypeVariable()
     PARSE(var, parseName());
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<TypeVariableExp>(type, var);
+    return make_unique<ArgVarExp>(type, var);
 }
 
 ASNPtr Parser::parseNumber()
@@ -713,13 +713,13 @@ ASNPtr Parser::parseMethodDecl()
     PARSE(typeName, parseName());
     PARSE(functionName, parseName());
     MATCH_(LeftParenToken)
-    temp = parseTypeVariable();
+    temp = parseArgVarExp();
     if(temp)
     {
         exps.push_back(move(temp));
         while(match<CommaToken>())
         {
-            MUST_PARSE(temp1, parseTypeVariable(), "Expected type variable after ','");
+            MUST_PARSE(temp1, parseArgVarExp(), "Expected type variable after ','");
             exps.push_back(move(temp1));
         }
     }
