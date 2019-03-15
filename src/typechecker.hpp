@@ -14,7 +14,12 @@ TypeEnv typeCheck(Vector<ASNPtr> const&);
 Type typeCheck(ASNPtr const&);
 
 //Helper Functions:
-Type lookupType(TypeEnv const&, String const&);
+Type lookupRuleType(TypeEnv const&, String const&);
+Vector<Type> lookupMethodType(TypeEnv const&, String const&);
+Vector<Type> lookupMethodTypeByClass(TypeEnv const&, String const&, String const&);
+Type lookupVarType(TypeEnv const&, String const&);
+Type lookupVarTypeByClass(TypeEnv const&, String const&, String const&);
+bool validType(TypeEnv const&, String const&);
 void assertTypeIs(Type const&, Type const&);
 String funcCanonicalName(String const&, Vector<Type> const&);
 String unopCanonicalName(OpType, Type const&);

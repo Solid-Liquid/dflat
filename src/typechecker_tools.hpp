@@ -8,11 +8,22 @@
 namespace dflat
 {
 
-//Struct used for type checking:
 struct TypeEnv
 {
-    Set<String> types;              //set of known types and classes
-    Map<String,String> variables;   //map for variables
+    //Struct used for type checking:
+    //types - Set of valid type names (including classes).
+    //rules - Map of valid rules for how types interact with operators:
+    //  Map: String cannonical name -> String expressions type.
+    //variables - Map of Maps for classes and their relevant variables:
+    //  Map: String class name ->
+    //      Map: String variable/function name -> Vector of types
+    //          0 is var type or return type, 1+ are types for method args.
+    //currentClass - the name of the class that is currently being typechecked.
+
+    Set<String> types;
+    Map<String,String> rules;
+    Map<String,Map<String,Vector<String>>> variables;
+    String currentClass;
 };
 
 
