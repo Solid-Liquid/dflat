@@ -144,14 +144,13 @@ Type Block::typeCheck(TypeEnv& env) const
 {
     // Make sure all statements typecheck (in a new scope).
     // Final type is void.
-    pushTypeScope(env);
+    // TODO: make copy (enter scope) that is just forgotten when leaving this function.
 
     for (ASNPtr const& stm : statements)
     {
         stm->typeCheck(env);
     }
 
-    popTypeScope(env);
     return voidType;
 }
 
@@ -269,6 +268,7 @@ String MethodExp::toString() const
 Type MethodExp::typeCheck(TypeEnv&) const
 {
     //TODO -- Look up canonical name of function.
+
     return "";
 }
 

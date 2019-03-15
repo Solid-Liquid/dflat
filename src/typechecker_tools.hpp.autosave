@@ -12,6 +12,7 @@ namespace dflat
 struct TypeEnv
 {
     Set<String> types;              //set of known types and classes
+    // key: name, value: type
     Map<String,String> variables;   //cononical rules
 };
 
