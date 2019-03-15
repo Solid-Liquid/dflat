@@ -65,6 +65,10 @@ namespace dflat
             case tokNot:
             case tokMember:
             case tokNew:
+            case tokReturn:
+            case tokThis:
+            case tokClass:
+            case tokExtends:
                  return true;
      
             default: 
@@ -167,6 +171,10 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         WhileToken()
         ));
 
+    REQUIRE ( tokenize("extends") == tokens(
+        ExtendsToken()
+        ));
+
     REQUIRE ( tokenize("!") == tokens(
         NotToken()
         ));
@@ -245,6 +253,22 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         MinusToken(),
         DivisionToken(),
         WhileToken()
+        ));
+
+    REQUIRE ( tokenize("true+false+new+return+this+class+extends") == tokens(
+        TrueToken(),
+        PlusToken(),
+        FalseToken(),
+        PlusToken(),
+        NewToken(),
+        PlusToken(),
+        ReturnToken(),
+        PlusToken(),
+        ThisToken(),
+        PlusToken(),
+        ClassToken(),
+        PlusToken(),
+        ExtendsToken()
         ));
 }
 

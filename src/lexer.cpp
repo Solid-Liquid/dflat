@@ -99,7 +99,8 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
         { "new", tokNew },
         { "return", tokReturn },
         { "this", tokThis },
-        { "class", tokClass }
+        { "class", tokClass },
+        { "extends", tokExtends }
     };
 
     auto it = KWS.find(name);
@@ -111,16 +112,17 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
 
     switch (it->second)
     {
-        case tokIf:     return make_unique<IfToken>();
-        case tokElse:   return make_unique<ElseToken>();
-        case tokWhile:  return make_unique<WhileToken>();
-        case tokTrue:   return make_unique<TrueToken>();
-        case tokFalse:  return make_unique<FalseToken>();
-        case tokNew:    return make_unique<NewToken>();
-        case tokReturn: return make_unique<ReturnToken>();
-        case tokThis:   return make_unique<ThisToken>();
-        case tokClass:  return make_unique<ClassToken>();
-        default:        return nullptr;
+        case tokIf:         return make_unique<IfToken>();
+        case tokElse:       return make_unique<ElseToken>();
+        case tokWhile:      return make_unique<WhileToken>();
+        case tokTrue:       return make_unique<TrueToken>();
+        case tokFalse:      return make_unique<FalseToken>();
+        case tokNew:        return make_unique<NewToken>();
+        case tokReturn:     return make_unique<ReturnToken>();
+        case tokThis:       return make_unique<ThisToken>();
+        case tokClass:      return make_unique<ClassToken>();
+        case tokExtends:    return make_unique<ExtendsToken>();
+        default:            return nullptr;
     }
 }
 
