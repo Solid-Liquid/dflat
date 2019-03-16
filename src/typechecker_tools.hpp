@@ -30,7 +30,7 @@ struct TypeEnv
 
     Set<String> types;
     Map<String,String> rules;
-    Map<Type,Map<Type,Vector<Type>>> variables;
+    Map<String,Map<String,Vector<String>>> variables;
     Optional<String> currentClass;
     Optional<String> currentMethod;
 };
