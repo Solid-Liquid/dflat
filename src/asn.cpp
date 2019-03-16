@@ -375,7 +375,7 @@ Type MethodStm::typeCheckPrv(TypeEnv& env)
     return voidType;
 }
 
-//NewStm:
+//NewExp:
 NewExp::NewExp(String _type, Vector<ASNPtr>&& _args)
     : type(_type), args(move(_args))
 {
@@ -396,10 +396,11 @@ String NewExp::toString() const
     return str;
 }
 
-Type NewExp::typeCheckPrv(TypeEnv&)
+Type NewExp::typeCheckPrv(TypeEnv& env)
 {
-    //TODO -- Similar to MethodExp
-    return "";
+    validType(env, type);
+    // TODO: check args against class constructor (contructor coming soon, sit tite!)
+    return type;
 }
 
 //AssignStm:
