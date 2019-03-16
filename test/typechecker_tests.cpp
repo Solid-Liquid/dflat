@@ -67,6 +67,18 @@ TEST_CASE( "TypeChecker correctly checks types", "[TypeChecker]" )
 
     REQUIRE( stmType("int x = 5;")
              == voidType);
+
+    REQUIRE( stmType("bool x = true;")
+             == voidType);
+
+    REQUIRE( stmType("int x = new int();")
+             == voidType);
+
+    REQUIRE( stmType("int x = 2 + -5 * 8;")
+             == voidType);
+
+    REQUIRE( stmType("int x = 5;")
+             == voidType);
 }
 
 
@@ -103,6 +115,25 @@ TEST_CASE( "TypeChecker checks structured code without exceptions","[TypeChecker
             {
                 this.x = 5;
             }
+        };
+
+        )");
+
+    //Method "f" is used as a standalone statement.
+    REQUIRE_TYPECHECKS(R"(
+
+        class MyClass
+        {
+            void f(int y)
+            {
+                y = 1 + 2;
+            }
+
+            void main()
+            {
+                this.f(2);
+            }
+
         };
 
         )");
