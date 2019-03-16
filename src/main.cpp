@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 //        }
 
         //Run Parser:
-//        config::traceParse = true;
+        config::traceParse = true;
         Vector<ASNPtr> program = parse(tokens);
 
 //        for (ASNPtr const& decl : program)

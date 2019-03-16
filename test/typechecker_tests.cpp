@@ -71,6 +71,23 @@ TEST_CASE( "TypeChecker correctly checks types", "[TypeChecker]" )
 //             == voidType);
 }
 
+TEST_CASE( "TypeChecker checks structured code without exceptions",
+        "[TypeChecker]" )
+{
+#define REQUIRE_TYPECHECKS(str) REQUIRE_NOTHROW(typeCheck(parse(tokenize(str))))
+    REQUIRE_TYPECHECKS(R"(
+        class MyClass
+        {
+            int x = 0;
+
+            void f()
+            {
+                this.x = 5;
+            }
+        };
+        )");
+}
+
 
 TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
 {
@@ -93,6 +110,21 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
     REQUIRE_NOTHROW(typeCheck(parse(tokenize(
                             "class JunkClass{}; \
                             class MyClass extends JunkClass{};"))));
+    //Class cannot use instance of itself inside itself:
+    REQUIRE_THROWS_AS(typeCheck(parse(tokenize(
+                              "class MyClass                            \
+                                {                                       \
+                                    MyClass var = new MyClass();        \
+                                };                                      "))),
+                        TypeCheckerException);
+
+    //Variable "var" is type bool. Expected RHS to be "bool" (instead it's int):
+    REQUIRE_THROWS_AS(typeCheck(parse(tokenize(
+                                "class MyClass                            \
+                                  {                                       \
+                                      bool var = new int();               \
+                                  };                                      "))),
+                          TypeCheckerException);
 
     //Unkown type error ("junkType" is an invalid type):
     REQUIRE_THROWS_AS(validType(initialTypeEnv(),"junkType"),
