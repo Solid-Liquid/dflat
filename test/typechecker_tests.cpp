@@ -71,6 +71,23 @@ TEST_CASE( "TypeChecker correctly checks types", "[TypeChecker]" )
 //             == voidType);
 }
 
+TEST_CASE( "TypeChecker checks structured code without exceptions",
+        "[TypeChecker]" )
+{
+#define REQUIRE_TYPECHECKS(str) REQUIRE_NOTHROW(typeCheck(parse(tokenize(str))))
+    REQUIRE_TYPECHECKS(R"(
+        class MyClass
+        {
+            int x;
+
+            void f()
+            {
+                x = 5;
+            }
+        }
+        )");
+}
+
 
 TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
 {
