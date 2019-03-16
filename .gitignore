@@ -3,3 +3,4 @@ local
 CMakeLists.txt.user
 .vs
 .vscode
+compile_commands.json

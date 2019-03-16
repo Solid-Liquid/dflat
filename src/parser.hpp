@@ -3,7 +3,7 @@
 #include "parser.hpp"
 #include "token.hpp"
 #include "vector.hpp"
-#include "result.hpp"
+#include "optional.hpp"
 #include "string.hpp"
 #include "asn.hpp"
 #include "tracer.hpp"
@@ -79,7 +79,7 @@ public:
     Optional<OpType> parseAdditiveOp();
     Optional<OpType> parseLogicalOp();
     ASNPtr parseVariable();
-    ASNPtr parseArgVarExp();
+    Optional<FormalArg> parseFormalArg();
     ASNPtr parseNumber();
     ASNPtr parseBoolTrue();
     ASNPtr parseBoolFalse();

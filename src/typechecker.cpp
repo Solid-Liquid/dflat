@@ -72,7 +72,9 @@ TypeEnv typeCheck(Vector<ASNPtr> const& program)
 Type typeCheck(ASNPtr const& asn)
 {
     TypeEnv env = initialTypeEnv();
-    return asn->typeCheck(env);
+    Type type = asn->typeCheck(env);
+    //TODO set asn's type here 
+    return type;
 }
 
 // Look up the rule for an operator based on cannonical name
@@ -95,7 +97,7 @@ Type lookupRuleType(TypeEnv const& env, String const& name)
 //Throw if method does not exist
 Vector<Type> lookupMethodType(TypeEnv const& env, String const& mthd)
 {
-    return lookupMethodTypeByClass(env,mthd,env.currentClass);
+    return lookupMethodTypeByClass(env,mthd,*env.currentClass);
 }
 
 
@@ -126,7 +128,7 @@ Vector<Type> lookupMethodTypeByClass(TypeEnv const& env, String const& mthd, Str
 //Throw if method does not exist
 Type lookupVarType(TypeEnv const& env, String const& var)
 {
-    return lookupVarTypeByClass(env,var,env.currentClass);
+    return lookupVarTypeByClass(env,var,*env.currentClass);
 }
 
 
@@ -160,7 +162,7 @@ bool validType(TypeEnv const& env, String const& type)
     if(env.currentClass == type)
     {
         throw TypeCheckerException("Cannot use an instance of a class inside its own definition. Inside class: "
-                                   + env.currentClass);
+                                   + *env.currentClass);
     }
 
     Optional<Type> valid = lookup(env.types, type);

@@ -21,6 +21,7 @@ String opString(OpType op)
 
     std::abort(); // Unhandled op.
 }
+
 //ASN:
 ASN::~ASN()
 {
@@ -41,25 +42,6 @@ Type VariableExp::typeCheck(TypeEnv& env) const
 {
     // Variable type is the declared type for this name.
     return lookupVarType(env, name);
-}
-
-//ArgVarExp:
-ArgVarExp::ArgVarExp(String const& type_, String const& name_)
-    : type(type_), name(name_)
-{
-}
-
-String ArgVarExp::toString() const
-{
-    return type + " " + name;
-}
-
-Type ArgVarExp::typeCheck(TypeEnv&) const
-{
-    //TODO add 'name' to the map and look for 'type' in env.type
-    //note this variable only exists in the context of a method.
-    //stack logic??
-    return "";
 }
 
 //NumberExp:
@@ -241,7 +223,7 @@ Type WhileStm::typeCheck(TypeEnv& env) const
 
 //MethodBlock:
 MethodDef::MethodDef(String _type, String _name,
-             Vector<ASNPtr>&& _args, ASNPtr&& _statements)
+             Vector<FormalArg>&& _args, ASNPtr&& _statements)
     : type(_type),name(_name),args(move(_args)), statements(move(_statements))
 {
 }
@@ -254,7 +236,7 @@ String MethodDef::toString() const
     {
         if(track > 0)
             str += ", ";
-        str += ar->toString();
+        str += ar.type + " " + ar.name;
         ++track;
     }
     str += ")\n";
@@ -264,8 +246,17 @@ String MethodDef::toString() const
 
 Type MethodDef::typeCheck(TypeEnv&) const
 {
-    // TODO open new scope for args
-    //TODO
+
+    // TODO
+//        String type;
+//        String name;
+//        Vector<ASNPtr> args;
+//        ASNPtr statements;
+    //  Declare func name in env
+    //  Set return type in env?
+    //  Copy env
+    //  Declare arg names in env
+    //  Typecheck block 
     return "";
 }
 

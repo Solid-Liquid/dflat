@@ -1,6 +1,6 @@
 #pragma once
 
-#include "result.hpp"
+#include "optional.hpp"
 #include <unordered_map>
 #include <utility>
 
@@ -13,12 +13,11 @@ template <typename K, typename V>
 Optional<V> lookup(Map<K,V> const& map, K const& key) {
     auto it = map.find(key);
 
-    // Have to be explicit here. Optional<any> didn't work.
     if (it == map.end()) {
-        return Optional<V>(outcome::in_place_type_t<Fail>());
+        return nullopt;
     }
     else {
-        return Optional<V>(outcome::in_place_type_t<V>(), it->second);
+        return it->second;
     }
 }
 
