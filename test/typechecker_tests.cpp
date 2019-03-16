@@ -89,6 +89,22 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
                               "class MyClass extends JunkClass{}; "))),
                         TypeCheckerException);
 
+    //Class cannot use instance of itself inside itself:
+    REQUIRE_THROWS_AS(typeCheck(parse(tokenize(
+                              "class MyClass                            \
+                                {                                       \
+                                    MyClass var = new MyClass();        \
+                                };                                      "))),
+                        TypeCheckerException);
+
+    //Variable "var" is type bool. Expected RHS to be "bool" (instead it's int):
+    REQUIRE_THROWS_AS(typeCheck(parse(tokenize(
+                                "class MyClass                            \
+                                  {                                       \
+                                      bool var = new int();               \
+                                  };                                      "))),
+                          TypeCheckerException);
+
     //Unkown type error ("junkType" is an invalid type):
     REQUIRE_THROWS_AS(validType(initialTypeEnv(),"junkType"),
                       TypeCheckerException);
