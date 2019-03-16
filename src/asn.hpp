@@ -56,7 +56,7 @@ class ASN
             return cmp(other);
         }
 
-        Type type;
+        Type asnType;
     
     private:
         virtual Type typeCheckPrv(TypeEnv&) = 0;
@@ -428,32 +428,6 @@ class NewExp : public ASN
         }
 
         DECLARE_CMP(NewExp)
-};
-
-class MethodDecl : public ASN
-{
-    //TODO: Delete? This is currently unused. Parser method 'parseMethodDecl()'
-    //actually makes an instance of MethodDef. Method declaration currently must
-    //include the definition of the method.
-
-    public:
-        String type;
-        String name;
-        Vector<ASNPtr> exps;
-
-        MethodDecl(String, String, Vector<ASNPtr>&&);
-        ASNType getType() const { return declMethod; }
-        String toString() const;
-        Type typeCheckPrv(TypeEnv&);
-        
-        bool operator==(MethodDecl const& other) const
-        {
-            return type     == other.type
-                && name     == other.name
-                && exps     == other.exps;
-        }
-        
-        DECLARE_CMP(MethodDecl)
 };
 
 class ClassDecl : public ASN

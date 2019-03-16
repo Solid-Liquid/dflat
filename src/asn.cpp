@@ -31,15 +31,16 @@ ASN::~ASN()
 
 Type ASN::typeCheck(TypeEnv& env)
 {
-    Type t = typeCheckPrv(env);
-    this->type = t;
+    Type type = typeCheckPrv(env);
+    asnType = type;
 
     if (config::traceTypeCheck)
     {
-        std::cout << toString() << " : " << (t.empty() ? "?" : t) << "\n";
+        std::cout << toString() << " : " 
+            << (type.empty() ? "?" : type) << "\n";
     }
 
-    return t;
+    return type;
 }
 
 //VariableExp:
@@ -441,33 +442,6 @@ Type RetStm::typeCheckPrv(TypeEnv&)
     return "";
 }
 
-// Method Declaration
-MethodDecl::MethodDecl(String _type, String _name, Vector<ASNPtr>&& _exps)
-    : type(_type), name(_name), exps(move(_exps))
-{
-}
-
-String MethodDecl::toString() const
-{
-    String str = type + " " + name + "(";
-    size_t track = 0;
-    for(auto&& ex : exps)
-    {
-        if(track > 0)
-            str += ", ";
-        str += ex -> toString();
-        ++track;
-    }
-    str += ");";
-    return str;
-}
-
-Type MethodDecl::typeCheckPrv(TypeEnv&)
-{
-    //TODO -- Final type should be the return type.
-    return "";
-}
-
 // Class Definition
 ClassDecl::ClassDecl(String _name, Vector<ASNPtr>&& _members, bool _extends, String _baseClass)
     : name(_name), members(move(_members)), extends(_extends), baseClass(_baseClass)
@@ -489,11 +463,15 @@ String ClassDecl::toString() const
 Type ClassDecl::typeCheckPrv(TypeEnv& env)
 {
     //TODO more stuff needs doing.
+    env.currentClass = name;
     
     for (ASNPtr& member : members)
     {
         member->typeCheck(env);
     }
+    
+    // No longer in a class.
+    env.currentClass = nullopt;
     
     // Final type is just the class name.
     return name;
