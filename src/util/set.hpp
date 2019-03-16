@@ -1,6 +1,6 @@
 #pragma once
 
-#include "result.hpp"
+#include "optional.hpp"
 #include <unordered_set>
 #include <utility>
 
@@ -15,14 +15,13 @@ Optional<K> lookup(Set<K> const& set, K const& key)
 {
     auto it = set.find(key);
 
-    // Have to be explicit here. Optional<any> didn't work.
     if (it == set.end())
     {
-        return Optional<K>(outcome::in_place_type_t<Fail>());
+        return nullopt;
     }
     else
     {
-        return Optional<K>(outcome::in_place_type_t<K>(), *it);
+        return *it;
     }
 }
 

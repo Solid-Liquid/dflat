@@ -61,7 +61,7 @@ void Parser::next()
 // Matches the current token against a given token type.
 //  On success, var is a reference to the current token,
 //              and the current token advances.
-//  On failure, the present function returns early with nullptr:
+//  On nullopt, the present function returns early with nullptr:
 #define MATCH(var, type) \
     type const* var##__ = match<type>(); \
     if (!var##__) { FAILURE; return nullptr; } \
@@ -104,10 +104,10 @@ decltype(auto) deref(T& t)
 
 // Calls <parser> and stores the result in <var>.
 //  On success, var holds the result.
-//  On failure, the present function returns early with nullptr:
+//  On nullopt, the present function returns early with nullptr:
 #define PARSE(var, parser) \
     auto var##__ = parser; \
-    if (!var##__) { FAILURE; return nullptr; } \
+    if (!var##__) { FAILURE; return {}; } \
     decltype(auto) var = deref(var##__)
     /*end PARSE*/
 
@@ -132,7 +132,7 @@ Optional<String> Parser::parseName()
     else
     {
         FAILURE;
-        return failure;
+        return nullopt;
     }
 }
 
@@ -143,7 +143,7 @@ Optional<OpType> Parser::parseUnaryOp()
     {
         case tokNot:    SUCCESS; next(); return opNot;
         case tokMinus:  SUCCESS; next(); return opMinus;
-        default:        FAILURE; return failure;
+        default:        FAILURE; return nullopt;
     }
 }
 
@@ -154,7 +154,7 @@ Optional<OpType> Parser::parseMultiveOp()
     {
         case tokMult:   SUCCESS; next(); return opMult;
         case tokDiv:    SUCCESS; next(); return opDiv;
-        default:        FAILURE; return failure;
+        default:        FAILURE; return nullopt;
     }
 }
 
@@ -165,7 +165,7 @@ Optional<OpType> Parser::parseAdditiveOp()
     {
         case tokPlus:   SUCCESS; next(); return opPlus;
         case tokMinus:  SUCCESS; next(); return opMinus;
-        default:        FAILURE; return failure;
+        default:        FAILURE; return nullopt;
     }
 }
 
@@ -178,7 +178,7 @@ Optional<OpType> Parser::parseLogicalOp()
         case tokOr:     SUCCESS; next(); return opOr;
         case tokEq:     SUCCESS; next(); return opLogEq;
         case tokNotEq:  SUCCESS; next(); return opLogNotEq;
-        default:        FAILURE; return failure;
+        default:        FAILURE; return nullopt;
     }
 }
 
@@ -192,7 +192,7 @@ ASNPtr Parser::parseVariable()
     return make_unique<VariableExp>(var);
 }
 
-ASNPtr Parser::parseArgVarExp()
+Optional<FormalArg> Parser::parseFormalArg()
 {
     TRACE;
     ENABLE_ROLLBACK;
@@ -200,7 +200,7 @@ ASNPtr Parser::parseArgVarExp()
     PARSE(var, parseName());
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<ArgVarExp>(type, var);
+    return FormalArg{type, var};
 }
 
 ASNPtr Parser::parseNumber()
@@ -707,20 +707,20 @@ ASNPtr Parser::parseMethodDecl()
     TRACE;
     ENABLE_ROLLBACK;
 
-    Vector<ASNPtr> exps;
-    ASNPtr temp = nullptr;
+    Vector<FormalArg> exps;
+    Optional<FormalArg> temp;
 
     PARSE(typeName, parseName());
     PARSE(functionName, parseName());
-    MATCH_(LeftParenToken)
-    temp = parseArgVarExp();
+    MATCH_(LeftParenToken);
+    temp = parseFormalArg();
     if(temp)
     {
-        exps.push_back(move(temp));
+        exps.push_back(*temp);
         while(match<CommaToken>())
         {
-            MUST_PARSE(temp1, parseArgVarExp(), "Expected type variable after ','");
-            exps.push_back(move(temp1));
+            MUST_PARSE(temp1, parseFormalArg(), "Expected type variable after ','");
+            exps.push_back(temp1);
         }
     }
     MUST_MATCH_(RightParenToken);

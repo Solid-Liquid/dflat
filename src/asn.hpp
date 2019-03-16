@@ -12,7 +12,7 @@
 namespace dflat
 {
 
-enum ASNType { expBinop, expNumber, expBool, expVariable, expTypeVariable, expUnop,
+enum ASNType { expBinop, expNumber, expBool, expVariable, expUnop,
                block, stmIf, defMethod, stmWhile, stmAssign, stmMemberAssign,
                stmMethod, expMethod, stmVarDef, expNew, stmRet, 
                declMethod, declClass };
@@ -21,6 +21,20 @@ enum OpType { opPlus, opMinus, opMult, opDiv, opNot, opAnd, opOr,
               opLogEq, opLogNotEq };
 
 String opString(OpType);
+
+// Type for method definition arguments.
+struct FormalArg
+{
+    Type type;
+    String name;
+};
+
+inline
+bool operator ==(FormalArg const& a, FormalArg const& b)
+{
+    return a.type == b.type
+        && a.name == b.name;
+}
 
 class ASN
 {
@@ -86,26 +100,6 @@ class VariableExp : public ASN
         }
 
         DECLARE_CMP(VariableExp)
-};
-
-class ArgVarExp : public ASN
-{
-    //Example Input: int var
-    public:
-        String type;
-        String name;
-
-        ArgVarExp(String const&, String const&);
-        ASNType getType() const { return expTypeVariable; }
-        String toString() const;
-        Type typeCheck(TypeEnv&) const;
-
-        bool operator==(ArgVarExp const& other) const
-        {
-            return name == other.name && type == other.type;
-        }
-
-        DECLARE_CMP(ArgVarExp)
 };
 
 class NumberExp : public ASN
@@ -258,10 +252,10 @@ class MethodDef : public ASN
     public:
         String type;
         String name;
-        Vector<ASNPtr> args;
+        Vector<FormalArg> args;
         ASNPtr statements;
 
-        MethodDef(String, String, Vector<ASNPtr>&&, ASNPtr&&);
+        MethodDef(String, String, Vector<FormalArg>&&, ASNPtr&&);
         ASNType getType() const { return defMethod; }
         String toString() const;
         Type typeCheck(TypeEnv&) const;

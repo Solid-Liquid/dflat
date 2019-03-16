@@ -534,7 +534,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 RightBraceToken()
                 )
              ==
-             ~MethodDef("int","func",Vector<ASNPtr>(), ~Block())
+             ~MethodDef("int","func",Vector<FormalArg>(), ~Block())
              );
 
     /*
