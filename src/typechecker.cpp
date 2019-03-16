@@ -223,6 +223,11 @@ String binopCanonicalName(OpType op, Type const& lhsType, Type const& rhsType)
     return funcCanonicalName(opString(op), { lhsType, rhsType });
 }
 
+void mapNameToType(TypeEnv& env, String const& name, Vector<Type> const& type)
+{
+    env.variables[env.currentClass][name] = type;
+}
+
 
 //TypeChecker Exception:
 TypeCheckerException::TypeCheckerException(String msg) noexcept

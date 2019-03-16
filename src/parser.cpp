@@ -555,6 +555,11 @@ ASNPtr Parser::parseMethodStm()
     return make_unique<MethodStm>(move(exp));
 }
 
+//TODO add memberExp
+//TODO add object.member parser
+//TODO add parseThisOrName
+//TODO make object. optional everywhere, defaults to this.
+
 ASNPtr Parser::parseMemberAssignStm()
 {
     TRACE;

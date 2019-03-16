@@ -240,20 +240,33 @@ String MethodDef::toString() const
     return str;
 }
 
-Type MethodDef::typeCheck(TypeEnv&) const
+Type MethodDef::typeCheck(TypeEnv& env) const
 {
+    Vector<Type> argTypes; // Just the arg types.
+    Vector<Type> methodType = { type }; // Proper type list.
+    
+    for (FormalArg const& arg : args)
+    {
+        argTypes.push_back(arg.type);
+        methodType.push_back(arg.type);
+    }
 
-    // TODO
-//        String type;
-//        String name;
-//        Vector<ASNPtr> args;
-//        ASNPtr statements;
-    //  Declare func name in env
-    //  Set return type in env?
-    //  Copy env
-    //  Declare arg names in env
-    //  Typecheck block 
-    return "";
+    String methodName = funcCanonicalName(name, argTypes);
+    mapNameToType(env, methodName, methodType); 
+
+    // Open new scope and declare args in it.
+    TypeEnv methodEnv = env;
+
+    for (FormalArg const& arg : args)
+    {
+        mapNameToType(methodEnv, arg.name, { arg.type });
+    }
+
+    // Typecheck body.
+    statements->typeCheck(methodEnv);
+
+    // This isn't an expression, so return void.
+    return voidType;
 }
 
 //MethodExp:
