@@ -434,10 +434,21 @@ String VarDecStm::toString() const
     return type + " " + name + " = " + value->toString() + ";";
 }
 
-Type VarDecStm::typeCheckPrv(TypeEnv&)
+Type VarDecStm::typeCheckPrv(TypeEnv& env)
 {
-    //TODO -- Like AssignStm but adds a new name->type to the environment.
-    return "";
+    validType(env, type); //make sure that "type" is a valid type
+    Type expType = value->typeCheck(env);
+
+    if(type != expType)
+    {
+        throw TypeCheckerException(
+                "In declaration of variable '" + name + "' of type '" + type +
+                "' inside class '" + *env.currentClass +
+                "':\nRHS expression of type '" + expType +
+                "' does not match the expected type.");
+    }
+
+    return voidType;
 }
 
 
@@ -452,10 +463,21 @@ String RetStm::toString() const
     return "return " + value->toString() + ";";
 }
 
-Type RetStm::typeCheckPrv(TypeEnv&)
+Type RetStm::typeCheckPrv(TypeEnv& env)
 {
-    //TODO -- Somehow check against return type of current method.
-    return "";
+    Type methRet = lookupMethodType(env,*env.currentMethod)[0];
+    Type retStm = value->typeCheck(env);
+    if(methRet == retStm)
+    {
+        return retStm;
+    }
+    else
+    {
+        throw TypeCheckerException(
+                    "Attempting to return type '" + retStm + "' in method '"
+                    + *env.currentMethod + "' which has return type '"
+                    + methRet + "' in class '" + *env.currentClass + "'");
+    }
 }
 
 // Class Definition
@@ -480,6 +502,9 @@ Type ClassDecl::typeCheckPrv(TypeEnv& env)
 {
     //TODO more stuff needs doing.
     env.currentClass = name;
+
+    if(extends)
+        validType(env, baseClass); //check if the base class is valid
     
     for (ASNPtr& member : members)
     {

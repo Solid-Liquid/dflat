@@ -10,6 +10,9 @@
 namespace dflat
 {
 
+//Macro that makes a dynamic cast look like less of a mess:
+#define cast(ptr,type) dynamic_cast<type*>(ptr.get())
+
 //Convenient aliases for known types:
 using Type = String;
 Type const intType = "int";

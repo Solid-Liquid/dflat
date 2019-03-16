@@ -84,6 +84,11 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
                              class MyClass {};"))),
                       TypeCheckerException);
 
+    //Class extends error ("JunkClass" is not defined):
+    REQUIRE_THROWS_AS(typeCheck(parse(tokenize(
+                              "class MyClass extends JunkClass{}; "))),
+                        TypeCheckerException);
+
     //Unkown type error ("junkType" is an invalid type):
     REQUIRE_THROWS_AS(validType(initialTypeEnv(),"junkType"),
                       TypeCheckerException);

@@ -7,8 +7,6 @@
 namespace dflat
 {
 
-#define cast(ptr,type) dynamic_cast<type*>(ptr.get())
-
 //Runner Functions:
 TypeEnv typeCheck(Vector<ASNPtr> const&);
 Type typeCheck(ASNPtr const&);
