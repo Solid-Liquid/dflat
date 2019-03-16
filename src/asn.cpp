@@ -436,10 +436,21 @@ String RetStm::toString() const
     return "return " + value->toString() + ";";
 }
 
-Type RetStm::typeCheckPrv(TypeEnv&)
+Type RetStm::typeCheckPrv(TypeEnv& env)
 {
-    //TODO -- Somehow check against return type of current method.
-    return "";
+    Type methRet = lookupMethodType(env,*env.currentMethod)[0];
+    Type retStm = value->typeCheck(env);
+    if(methRet == retStm)
+    {
+        return retStm;
+    }
+    else
+    {
+        throw TypeCheckerException(
+                    "Attempting to return type '" + retStm + "' in method '"
+                    + *env.currentMethod + "' which has return type '"
+                    + methRet + "' in class '" + *env.currentClass + "'");
+    }
 }
 
 // Class Definition
