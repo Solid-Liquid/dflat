@@ -431,10 +431,21 @@ String VarDecStm::toString() const
     return type + " " + name + " = " + value->toString() + ";";
 }
 
-Type VarDecStm::typeCheckPrv(TypeEnv&)
+Type VarDecStm::typeCheckPrv(TypeEnv& env)
 {
-    //TODO -- Like AssignStm but adds a new name->type to the environment.
-    return "";
+    validType(env, type); //make sure that "type" is a valid type
+    Type expType = value->typeCheck(env);
+
+    if(type != expType)
+    {
+        throw TypeCheckerException(
+                "In declaration of variable '" + name + "' of type '" + type +
+                "' inside class '" + *env.currentClass +
+                "':\nRHS expression of type '" + expType +
+                "' does not match the expected type.");
+    }
+
+    return voidType;
 }
 
 
@@ -488,6 +499,9 @@ Type ClassDecl::typeCheckPrv(TypeEnv& env)
 {
     //TODO more stuff needs doing.
     env.currentClass = name;
+
+    if(extends)
+        validType(env, baseClass); //check if the base class is valid
     
     for (ASNPtr& member : members)
     {
