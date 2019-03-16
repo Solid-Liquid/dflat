@@ -13,7 +13,8 @@ int main(int argc, char** argv)
     Catch::Session session;
 
     auto cli = session.cli() // Modify the included Catch CLI parser
-        | Opt([&](bool) { config::traceParse = true; })
+        | Opt([&](bool) { config::traceParse = true; 
+                          config::traceTypeCheck = true; })
           ["--trace"]
           ("print parser trace output");
 

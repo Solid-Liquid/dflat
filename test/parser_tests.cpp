@@ -7,8 +7,17 @@
 
 using namespace dflat;
 
+ASNPtr passPrint(ASNPtr&& asn)
+{
+    if (asn) 
+    {
+        asn->toString();
+    }
+    return move(asn);
+}
+
 //Parser( tokens(NumberToken(1), PlusToken(), NumberToken(1)) ).parseAdditive()
-#define PT(method, ...) Parser(tokens(__VA_ARGS__)).method()
+#define PT(method, ...) passPrint(Parser(tokens(__VA_ARGS__)).method())
 
 TEST_CASE( "Parser works correctly", "[parser]" )
 {
