@@ -213,9 +213,10 @@ class IfStm : public ASN
     public:
         ASNPtr logicExp;
         ASNPtr trueStatements;
+        bool hasFalse;          //check if there is an else{} block
         ASNPtr falseStatements;
 
-        IfStm(ASNPtr&&, ASNPtr&&, ASNPtr&&);
+        IfStm(ASNPtr&&, ASNPtr&&, bool, ASNPtr&&);
         ASNType getType() const { return stmIf; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -224,6 +225,7 @@ class IfStm : public ASN
         {
             return logicExp        == other.logicExp
                 && trueStatements  == other.trueStatements
+                && hasFalse        == other.hasFalse
                 && falseStatements == other.falseStatements;
         }
 
@@ -457,15 +459,18 @@ class MethodDecl : public ASN
 class ClassDecl : public ASN
 {
     /*
-    class name {
+    class name              (optional): extends baseClass
+    {
         block
-    }\n
+    };
     */
     public:
         String name;
         Vector<ASNPtr> members;
+        bool extends;
+        String baseClass;
 
-        ClassDecl(String, Vector<ASNPtr>&&);
+        ClassDecl(String, Vector<ASNPtr>&&, bool = false, String = "");
         ASNType getType() const { return declClass; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -473,7 +478,9 @@ class ClassDecl : public ASN
         bool operator==(ClassDecl const& other) const
         {
             return name   == other.name
-                && members == other.members;
+                && members == other.members
+                && extends == other.extends
+                && baseClass == other.baseClass;
         }
         
         DECLARE_CMP(ClassDecl)

@@ -164,9 +164,10 @@ Type Block::typeCheckPrv(TypeEnv& env)
 }
 
 //IfBlock:
-IfStm::IfStm(ASNPtr&& _logicExp, ASNPtr&& _trueStatements, ASNPtr&& _falseStatements)
+IfStm::IfStm(ASNPtr&& _logicExp, ASNPtr&& _trueStatements, bool _hasFalse, ASNPtr&& _falseStatements)
     : logicExp(move(_logicExp))
     , trueStatements(move(_trueStatements))
+    , hasFalse(_hasFalse)
     , falseStatements(move(_falseStatements))
 {
 }
@@ -175,8 +176,11 @@ String IfStm::toString() const
 {
     String str = "if(" + logicExp->toString() + ")\n";
     str += trueStatements->toString();
-    str += "\nelse\n";
-    str += falseStatements->toString();
+    if(hasFalse)
+    {
+        str += "\nelse\n";
+        str += falseStatements->toString();
+    }
     return str;
 }
 
@@ -451,14 +455,17 @@ Type MethodDecl::typeCheckPrv(TypeEnv&)
 }
 
 // Class Definition
-ClassDecl::ClassDecl(String _name, Vector<ASNPtr>&& _members)
-    : name(_name), members(move(_members))
+ClassDecl::ClassDecl(String _name, Vector<ASNPtr>&& _members, bool _extends, String _baseClass)
+    : name(_name), members(move(_members)), extends(_extends), baseClass(_baseClass)
 {
 }
 
 String ClassDecl::toString() const
 {
-    String str = "class " + name + "\n{\n";
+    String str = "class " + name;
+    if(extends)
+        str += " extends " + baseClass;
+    str += "\n{\n";
     for(auto&& ex : members)
         str += ex->toString() + "\n\n";
     str += "};";
