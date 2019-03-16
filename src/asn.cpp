@@ -449,6 +449,10 @@ Type VarDecStm::typeCheckPrv(TypeEnv& env)
                 "' does not match the expected type.");
     }
 
+    Vector<Type> typeVect;
+    typeVect.push_back(type);
+    mapNameToType(env, name, typeVect);
+
     return voidType;
 }
 
