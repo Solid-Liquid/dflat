@@ -270,6 +270,10 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         PlusToken(),
         ExtendsToken()
         ));
+
+//    REQUIRE ( tokenize("// This is a comment") == tokens(
+//        NumberToken(0)
+//        ));
 }
 
 

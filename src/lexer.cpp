@@ -16,6 +16,7 @@ class Lexer : private LexerCore
         TokenPtr tryTokenizePunct();
         //TokenPtr singleToken();
         void skipWhitespace();
+        void skipComment();
         TokenPtr lookupKeyword(String const&) const;
         TokenPtr lookupPunct1(char c) const;
         TokenPtr lookupPunct2(char c1, char c2) const;
@@ -204,10 +205,23 @@ void Lexer::skipWhitespace()
     }
 }
 
+void Lexer::skipComment()
+{
+    char c = peek();
+
+    while (c != '\n' && !at_end()) {
+        next();
+        c = peek();
+    }
+}
+
 TokenPtr Lexer::singleToken(){
     TokenPtr tok = nullptr;
 
-    if ((tok = tryTokenizeName()))
+    if(peek_ahead(0) == '/' && peek_ahead(1) == '/'){
+        skipComment();
+    }
+    else if ((tok = tryTokenizeName()))
     {
         return tok;
     } 

@@ -150,8 +150,17 @@ TEST_CASE( "Monolith", "[TypeChecker]" )
                                         class Bastard extends Father{ \
                                             int pickle = 0; \
                                             void dickle(){ \
-                                                pickle = 5; \
+                                                this.pickle = 5; \
                                             } \
                                         };"))));
+
+//    REQUIRE_NOTHROW(typeCheck(parse(tokenize(
+//                                        "class Father{}; \
+//                                        class Bastard extends Father{ \
+//                                            int pickle = 0; \
+//                                            void dickle(){ \
+//                                                pickle = 5; \
+//                                            } \
+//                                        };"))));
 
 }
