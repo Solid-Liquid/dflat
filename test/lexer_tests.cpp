@@ -81,7 +81,16 @@ namespace dflat
 
 TEST_CASE( "Lexer produces correct output", "[lexer]" )
 {
-    //Tests for single tokens getting tokenized properly:
+    // Exercise token printing
+    {
+        Vector<TokenPtr> ts = tokenize("a b(c,d)");
+        to_string(ts);
+
+        TokenPtr t = std::make_unique<NameToken>("hi");
+        to_string(t);
+    }
+    
+    //Tests for single tokens getting tokenized properly
     
     REQUIRE ( tokens(NumberToken(1)) == tokens(
         NumberToken(1)

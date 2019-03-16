@@ -107,6 +107,38 @@ TEST_CASE( "TypeChecker checks structured code without exceptions",
         )");
     
     REQUIRE_TYPECHECKS(R"(
+        class MyClass
+        {
+            void main()
+            {
+                int x = 0;
+
+                while (x != 10)
+                {
+                    x = x - -1;
+                }
+            }
+        };
+        )");
+    
+    REQUIRE_TYPECHECKS(R"(
+        class MyClass
+        {
+            bool f(int x)
+            {
+                if (x == 0)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        };
+        )");
+    
+    REQUIRE_TYPECHECKS(R"(
         class A
         {
             int x = 0;
@@ -138,6 +170,7 @@ TEST_CASE( "TypeChecker checks structured code without exceptions",
 
 TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
 {
+#define REQUIRE_DOESNT_TYPECHECK(str) REQUIRE_THROWS_AS(typeCheck(parse(tokenize(str))),TypeCheckerException)
     /*
      *   Tests for Typechecker throwing exceptions:
      */
@@ -147,6 +180,17 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
                             "class MyClass {}; \
                              class MyClass {};"))),
                       TypeCheckerException);
+    
+    //Bad return type:
+    REQUIRE_DOESNT_TYPECHECK(R"(
+        class MyClass
+        {
+            int f()
+            {
+                return true;
+            }
+        };
+        )");
 
     //Class extends error ("JunkClass" is not defined):
     REQUIRE_THROWS_AS(typeCheck(parse(tokenize(
