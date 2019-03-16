@@ -191,12 +191,21 @@ ASNPtr Parser::parseVariable()
 
     if (match<ThisToken>())
     {
-        // this.something
-        MATCH_(MemberToken);
-        PARSE(member, parseName());
-        CANCEL_ROLLBACK;
-        SUCCESS;
-        return make_unique<VariableExp>(String("this"), member);
+        if (match<MemberToken>())
+        {
+            // this.something
+            PARSE(member, parseName());
+            CANCEL_ROLLBACK;
+            SUCCESS;
+            return make_unique<VariableExp>("this", member);
+        }
+        else
+        {
+            // just this
+            CANCEL_ROLLBACK;
+            SUCCESS;
+            return make_unique<VariableExp>("this");
+        }
     }
     else
     {

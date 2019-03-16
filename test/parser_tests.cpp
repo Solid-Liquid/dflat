@@ -58,6 +58,22 @@ TEST_CASE( "Parser works correctly", "[parser]" )
         ~NumberExp(6)
         );
 
+    REQUIRE (PT(parseVariable, // "this" as a single token
+        ThisToken()
+        )
+        ==
+        ~VariableExp("this")
+        );
+    
+    REQUIRE (PT(parseVariable, // this.x -> VariableExp
+        ThisToken(),
+        MemberToken(),
+        NameToken("x")
+        )
+        ==
+        ~VariableExp("this", "x")
+        );
+
     REQUIRE( PT(parseVariable, //fun -> VariableExp
         NameToken("fun")
         )
