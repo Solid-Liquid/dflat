@@ -72,9 +72,7 @@ TypeEnv typeCheck(Vector<ASNPtr> const& program)
 Type typeCheck(ASNPtr const& asn)
 {
     TypeEnv env = initialTypeEnv();
-    Type type = asn->typeCheck(env);
-    //TODO set asn's type here 
-    return type;
+    return asn->typeCheck(env);
 }
 
 // Look up the rule for an operator based on cannonical name
