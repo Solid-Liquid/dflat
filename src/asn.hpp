@@ -13,7 +13,7 @@ namespace dflat
 {
 
 enum ASNType { expBinop, expNumber, expBool, expVariable, expUnop,
-               block, stmIf, defMethod, stmWhile, stmAssign, stmMemberAssign,
+               block, stmIf, defMethod, stmWhile, stmAssign,
                stmMethod, expMethod, stmVarDef, expNew, stmRet, 
                declMethod, declClass, expThis };
 
@@ -34,6 +34,20 @@ bool operator ==(FormalArg const& a, FormalArg const& b)
 {
     return a.type == b.type
         && a.name == b.name;
+}
+
+// Type for object.member expressions.
+struct ObjectMember
+{
+    String object;
+    String member;
+};
+
+inline
+bool operator ==(ObjectMember const& a, ObjectMember const& b)
+{
+    return a.object == b.object
+        && a.member == b.member;
 }
 
 class ASN
@@ -92,16 +106,19 @@ class VariableExp : public ASN
 {
     //Example Input: var
     public:
+        Optional<String> object;
         String name;
 
-        VariableExp(String const&);
+        VariableExp(String const&); // var or implicit this.member
+        VariableExp(String const&, String const&); // object, member
         ASNType getType() const { return expVariable; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
 
         bool operator==(VariableExp const& other) const
         {
-            return name == other.name;
+            return object == other.object
+                && name == other.name;
         }
 
         DECLARE_CMP(VariableExp)
@@ -282,19 +299,17 @@ class MethodExp : public ASN
 {
     //Example Input: func(var, 1)
     public:
-        String object;
-        String method;
+        ASNPtr method;
         Vector<ASNPtr> args;
 
-        MethodExp(String, String, Vector<ASNPtr>&&);
+        MethodExp(ASNPtr&&, Vector<ASNPtr>&&);
         ASNType getType() const { return expMethod; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
 
         bool operator==(MethodExp const& other) const
         {
-            return object == other.object
-                && method == other.method
+            return method == other.method
                 && args   == other.args;
         }
 
@@ -324,46 +339,22 @@ class AssignStm : public ASN
 {
     //Example Input: x = 1 + y
     public:
-        String variable;
-        ASNPtr expression;
+        ASNPtr lhs;
+        ASNPtr rhs;
 
         // first: variable name, second: Expression
-        AssignStm(String, ASNPtr&&);
+        AssignStm(ASNPtr&&, ASNPtr&&);
         ASNType getType() const { return stmAssign; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
 
         bool operator==(AssignStm const& other) const
         {
-            return variable   == other.variable
-                && expression == other.expression;
+            return lhs == other.lhs
+                && rhs == other.rhs;
         }
 
         DECLARE_CMP(AssignStm)
-};
-
-class MemberAssignStm : public ASN
-{
-    //Example Input: x = 1 + y
-    public:
-        String object;
-        String member;
-        ASNPtr expression;
-
-        // first: variable name, second: Expression
-        MemberAssignStm(String, String, ASNPtr&&);
-        ASNType getType() const { return stmMemberAssign; }
-        String toString() const;
-        Type typeCheckPrv(TypeEnv&);
-
-        bool operator==(MemberAssignStm const& other) const
-        {
-            return object     == other.object
-                && member     == other.member
-                && expression == other.expression;
-        }
-
-        DECLARE_CMP(MemberAssignStm)
 };
 
 class VarDecStm : public ASN

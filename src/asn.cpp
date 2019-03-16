@@ -49,9 +49,21 @@ VariableExp::VariableExp(String const& name_)
 {
 }
 
+VariableExp::VariableExp(String const& object_, String const& member_)
+    : object(object_), name(member_)
+{
+}
+
 String VariableExp::toString() const
 {
-    return name;
+    if (object)
+    {
+        return *object + "." + name;
+    }
+    else
+    {
+        return name;
+    }
 }
 
 Type VariableExp::typeCheckPrv(TypeEnv& env)
@@ -296,14 +308,14 @@ Type MethodDef::typeCheckPrv(TypeEnv& env)
 }
 
 //MethodExp:
-MethodExp::MethodExp(String _object, String _method, Vector<ASNPtr>&& _args)
-  : object(_object), method(_method), args(move(_args))
+MethodExp::MethodExp(ASNPtr&& _method, Vector<ASNPtr>&& _args)
+  : method(move(_method)), args(move(_args))
 {
 }
 
 String MethodExp::toString() const
 {
-    String str = object + "." + method + "(";
+    String str = method->toString();
     int track = 0;
     for(auto&& ar : args)
     {
@@ -318,8 +330,16 @@ String MethodExp::toString() const
 
 Type MethodExp::typeCheckPrv(TypeEnv& env)
 {
+    auto varExp = dynamic_cast<VariableExp const*>(method.get());
+
+    if (!varExp) {
+        throw TypeCheckerException("INTERNAL ERROR: bad MethodExp method");
+    }
+        
+    String objectName = (varExp->object ? *varExp->object : "this");
+        
     // Get class type of method.
-    Type objectType = lookupVarType(env, object);
+    Type objectType = lookupVarType(env, objectName);
 
     // Make overload name.
     Vector<Type> argTypes;
@@ -330,7 +350,7 @@ Type MethodExp::typeCheckPrv(TypeEnv& env)
         argTypes.push_back(argType);
     }
 
-    String methodName = funcCanonicalName(method, argTypes);
+    String methodName = funcCanonicalName(varExp->name, argTypes);
     
     // Make sure this overload exists and return return-type.
     return lookupVarTypeByClass(env, objectType, methodName);
@@ -383,41 +403,24 @@ Type NewExp::typeCheckPrv(TypeEnv&)
 }
 
 //AssignStm:
-AssignStm::AssignStm(String _variable, ASNPtr&& _expression)
-  : variable(_variable), expression(move(_expression))
+AssignStm::AssignStm(ASNPtr&& _lhs, ASNPtr&& _rhs)
+  : lhs(move(_lhs)), rhs(move(_rhs))
 {
 }
 
 String AssignStm::toString() const
 {
-    return variable + " = " + expression->toString() + ";";
+    return lhs->toString() + " = " + rhs->toString() + ";";
 }
 
 Type AssignStm::typeCheckPrv(TypeEnv& env)
 {
     // RHS expression must match declared type of LHS variable.
     // Final type is void.
-    Type lhsType = lookupVarType(env, variable);
-    Type rhsType = expression->typeCheck(env);
+    Type lhsType = lhs->typeCheck(env);
+    Type rhsType = rhs->typeCheck(env);
     assertTypeIs(rhsType, lhsType);
     return voidType;
-}
-
-//MemberAssignStm:
-MemberAssignStm::MemberAssignStm(String _object, String _member, ASNPtr&& _expression)
-  : object(_object), member(_member), expression(move(_expression))
-{
-}
-
-String MemberAssignStm::toString() const
-{
-    return object + "." + member + " = " + expression->toString() + ";";
-}
-
-Type MemberAssignStm::typeCheckPrv(TypeEnv&)
-{
-    //TODO -- Need to look up object.member's type.
-    return "";
 }
 
 //VarDecStm:

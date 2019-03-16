@@ -84,6 +84,7 @@ public:
     ASNPtr parseBoolTrue();
     ASNPtr parseBoolFalse();
     ASNPtr parseUnary();
+    ASNPtr parseMemberExp();
     ASNPtr parseMethodExp();
     ASNPtr parseMethodStm();
     ASNPtr parseNew();
@@ -98,7 +99,6 @@ public:
     ASNPtr parseExp();
     ASNPtr parseVarDecl();
     ASNPtr parseAssignStm();
-    ASNPtr parseMemberAssignStm();
     ASNPtr parseIfStm();
     ASNPtr parseWhileStm();
     ASNPtr parseStm();

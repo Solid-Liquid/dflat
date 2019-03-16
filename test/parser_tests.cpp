@@ -361,10 +361,10 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 SemiToken()
                 )
              ==
-             ~AssignStm("name", ~NumberExp(1))
+             ~AssignStm(~VariableExp("name"), ~NumberExp(1))
              );
 
-    REQUIRE( PT(parseMemberAssignStm,   //myobj.x = 1;
+    REQUIRE( PT(parseAssignStm,         //myobj.x = 1;
                 NameToken("myobj"),
                 MemberToken(),
                 NameToken("x"),
@@ -373,7 +373,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 SemiToken()
                 )
              ==
-             ~MemberAssignStm("myobj", "x", ~NumberExp(1))
+             ~AssignStm(~VariableExp("myobj", "x"), ~NumberExp(1))
              );
 
     REQUIRE( PT(parseVarDecl,           //type name = 1;  -> variable declaration
@@ -447,8 +447,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 RightParenToken()
                 )
              ==
-             ~MethodExp("obj", "meth",
-                      Vector<ASNPtr>{})
+             ~MethodExp(~VariableExp("obj", "meth"), Vector<ASNPtr>{})
              );
     
     REQUIRE( PT(parseMethodExp,          //meth()  ->  MethodExp with "this"
@@ -457,8 +456,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 RightParenToken()
                 )
              ==
-             ~MethodExp("this", "meth",
-                      Vector<ASNPtr>{})
+             ~MethodExp(~VariableExp("meth"), Vector<ASNPtr>{})
              );
 
 
@@ -471,8 +469,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 RightParenToken()
                 )
              ==
-             ~MethodExp("obj", "meth",
-                      asns(NumberExp(3)))
+             ~MethodExp(~VariableExp("obj", "meth"), asns(NumberExp(3)))
              );
 
 
@@ -487,7 +484,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 RightParenToken()
                 )
              ==
-             ~MethodExp("obj", "meth",
+             ~MethodExp(~VariableExp("obj", "meth"),
                       asns(NumberExp(3), VariableExp("suh")))
              );
 
@@ -504,7 +501,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 )
              ==
              ~MethodStm(
-                 ~MethodExp("obj", "meth",
+                 ~MethodExp(~VariableExp("obj", "meth"),
                          asns(NumberExp(3), VariableExp("suh"))))
              );
 

@@ -64,7 +64,7 @@ void Parser::next()
 //  On nullopt, the present function returns early with nullptr:
 #define MATCH(var, type) \
     type const* var##__ = match<type>(); \
-    if (!var##__) { FAILURE; return nullptr; } \
+    if (!var##__) { FAILURE; return {}; } \
     type const& var = *var##__ \
     /*end MATCH*/
 
@@ -80,7 +80,7 @@ void Parser::next()
 
 // Matches the current token but doesn't store it in a var:
 #define MATCH_(type) \
-    if (!match<type>()) { FAILURE; return nullptr; } \
+    if (!match<type>()) { FAILURE; return {}; } \
     /*end MATCH_*/
 
 //Same as MATCH_, but instead of returning a nullptr, throws an exception:
@@ -187,9 +187,35 @@ Optional<OpType> Parser::parseLogicalOp()
 ASNPtr Parser::parseVariable()
 {
     TRACE;
-    PARSE(var, parseName());
-    SUCCESS;
-    return make_unique<VariableExp>(var);
+    ENABLE_ROLLBACK;
+
+    if (match<ThisToken>())
+    {
+        MATCH_(MemberToken);
+        PARSE(member, parseName());
+        CANCEL_ROLLBACK;
+        SUCCESS;
+        return make_unique<VariableExp>(String("this"), member);
+    }
+    else
+    {
+        PARSE(object, parseName());
+
+        if (match<MemberToken>())
+        {
+            PARSE(member, parseName());
+            CANCEL_ROLLBACK;
+            SUCCESS;
+            return make_unique<VariableExp>(object, member);
+        }
+        else 
+        {
+            // This could be just a variable, or a member with implicit this.
+            CANCEL_ROLLBACK;
+            SUCCESS;
+            return make_unique<VariableExp>(object);
+        }
+    }
 }
 
 Optional<FormalArg> Parser::parseFormalArg()
@@ -249,23 +275,8 @@ ASNPtr Parser::parseMethodExp()
 
     Vector<ASNPtr> exps;
     ASNPtr temp;
-    String object, method;
 
-    // "this." can be omitted.
-    PARSE(name1, parseName());
-
-    if (match<MemberToken>())
-    {
-        object = name1;
-        PARSE(name2, parseName());
-        method = name2;
-    }
-    else
-    {
-        object = "this";
-        method = name1;
-    }
-
+    PARSE(method, parseVariable());
     MATCH_(LeftParenToken);
     temp = parseExp();
     if(temp)
@@ -281,7 +292,7 @@ ASNPtr Parser::parseMethodExp()
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<MethodExp>(object, method, move(exps));
+    return make_unique<MethodExp>(move(method), move(exps));
 }
 
 ASNPtr Parser::parseNew()
@@ -531,14 +542,14 @@ ASNPtr Parser::parseAssignStm()
     TRACE;
     ENABLE_ROLLBACK;
 
-    PARSE(varName, parseName());
+    PARSE(lhs, parseVariable());
     MATCH_(AssignToken);
-    MUST_PARSE(exp, parseExp(), "Expected expression in assignment");
+    MUST_PARSE(rhs, parseExp(), "Expected expression in assignment");
     MUST_MATCH_(SemiToken);
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<AssignStm>(varName, move(exp));
+    return make_unique<AssignStm>(move(lhs), move(rhs));
 }
 
 ASNPtr Parser::parseMethodStm()
@@ -553,28 +564,6 @@ ASNPtr Parser::parseMethodStm()
     CANCEL_ROLLBACK;
     SUCCESS;
     return make_unique<MethodStm>(move(exp));
-}
-
-//TODO add memberExp
-//TODO add object.member parser
-//TODO add parseThisOrName
-//TODO make object. optional everywhere, defaults to this.
-
-ASNPtr Parser::parseMemberAssignStm()
-{
-    TRACE;
-    ENABLE_ROLLBACK;
-
-    PARSE(object, parseName());
-    MATCH_(MemberToken);
-    PARSE(member, parseName());
-    MATCH_(AssignToken);
-    PARSE(value, parseExp());
-    MATCH_(SemiToken);
-
-    CANCEL_ROLLBACK;
-    SUCCESS;
-    return make_unique<MemberAssignStm>(object, member, move(value));
 }
 
 ASNPtr Parser::parseIfStm()
@@ -638,11 +627,6 @@ ASNPtr Parser::parseStm()
         return result;
     }
     else if (result = parseAssignStm())
-    {
-        SUCCESS;
-        return result;
-    }
-    else if (result = parseMemberAssignStm())
     {
         SUCCESS;
         return result;
