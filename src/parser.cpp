@@ -583,14 +583,17 @@ ASNPtr Parser::parseIfStm()
     MUST_MATCH_(RightParenToken);
     MUST_PARSE(trueStatements, parseBlock(), "Expected block{} after if statement");
     ASNPtr elseBlock;
+    bool hasElse;
     if( match<ElseToken>() )
     {
         MUST_PARSE(falseStatements, parseBlock(), "Expected block{} after else statement");
         elseBlock = move(falseStatements);
+        hasElse = true;
     }
     else
     {
         elseBlock = make_unique<Block>(Vector<ASNPtr>{});
+        hasElse = false;
     }
 
     CANCEL_ROLLBACK;
@@ -598,6 +601,7 @@ ASNPtr Parser::parseIfStm()
     return make_unique<IfStm>(
         move(logicExp),
         move(trueStatements),
+        hasElse,
         move(elseBlock)
         );
 }
@@ -746,9 +750,19 @@ ASNPtr Parser::parseClassDecl()
 
     Vector<ASNPtr> stm;
     ASNPtr curstm = nullptr;
+    bool extends = false;
+    String baseClass = "";
 
     MATCH_(ClassToken);
-    MUST_PARSE(className, parseName(), "class name");
+    MUST_PARSE(className, parseName(), "Expected class name");
+
+    if(match<ExtendsToken>())
+    {
+        MUST_PARSE(extName, parseName(), "Expected base class name");
+        extends = true;
+        baseClass = extName;
+    }
+
     MUST_MATCH_(LeftBraceToken)
 
     while(curstm = parseClassStm())
@@ -760,7 +774,7 @@ ASNPtr Parser::parseClassDecl()
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<ClassDecl>(className, move(stm));
+    return make_unique<ClassDecl>(className, move(stm), extends, baseClass);
 }
 
 ASNPtr Parser::parseClassStm()

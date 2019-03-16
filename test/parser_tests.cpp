@@ -286,6 +286,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ==
              ~IfStm(~NumberExp(1),
                       ~Block(),
+                      false,
                       ~Block())
              );
 
@@ -303,6 +304,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ==
              ~IfStm(~NumberExp(1),
                     ~Block(),
+                    true,
                     ~Block())
              );
 
@@ -320,6 +322,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ==
              ~IfStm(~BoolExp(true),
                     ~Block(),
+                    true,
                     ~Block())
              );
 
@@ -522,7 +525,20 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 SemiToken()
                 )
              ==
-             ~ClassDecl("MyClass",Vector<ASNPtr>())
+             ~ClassDecl("MyClass",Vector<ASNPtr>(),false,"")
+            );
+
+    REQUIRE( PT(parseClassDecl, // class MyClass extends BaseClass { };  -> ClassDeclaration
+                ClassToken(),
+                NameToken("MyClass"),
+                ExtendsToken(),
+                NameToken("BaseClass"),
+                LeftBraceToken(),
+                RightBraceToken(),
+                SemiToken()
+                )
+             ==
+             ~ClassDecl("MyClass",Vector<ASNPtr>(),true,"BaseClass")
             );
 
     REQUIRE( PT(parseMethodDecl,            //int func(){ }  -> MethodDef
