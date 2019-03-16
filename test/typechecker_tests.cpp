@@ -32,7 +32,7 @@ TEST_CASE( "TypeChecker correctly checks types", "[TypeChecker]" )
 {
 
     /*
-     *   Tests for Typechecker returning correct type for expressions:
+     *  Tests for Typechecker returning correct type for expressions/statements:
      */
 
     REQUIRE( expType("5")
@@ -59,23 +59,42 @@ TEST_CASE( "TypeChecker correctly checks types", "[TypeChecker]" )
     REQUIRE( expType("1 != 2")
              == boolType );
 
-
     REQUIRE( expType("1 && 0")
              == boolType );
 
     REQUIRE( expType("1 || 0")
              == boolType );
 
-    // Assignment
-//    REQUIRE( stmType("int x = 5;")
-//             == voidType);
+    REQUIRE( stmType("int x = 5;")
+             == voidType);
 }
 
-TEST_CASE( "TypeChecker checks structured code without exceptions",
-        "[TypeChecker]" )
+
+
+TEST_CASE( "TypeChecker checks structured code without exceptions","[TypeChecker]" )
 {
-#define REQUIRE_TYPECHECKS(str) REQUIRE_NOTHROW(typeCheck(parse(tokenize(str))))
+
+    /*
+     *   Tests for Typechecker successfully checking large blocks of code:
+     */
+
+    #define REQUIRE_TYPECHECKS(str) REQUIRE_NOTHROW(typeCheck(parse(tokenize(str))))
+    //Helper macro that makes things less ugly for typecheck tests.
+    //Calls tokenize, parse, and typecheck on a string.
+    //Requires that no exceptions are thrown for test to succeed.
+
+
+    //Class properly extends an existing class
     REQUIRE_TYPECHECKS(R"(
+
+        class BaseClass {};
+        class DerivedClass extends BaseClass{};
+
+        )");
+
+    //Demonstrates successful use and assignment of member variable "x":
+    REQUIRE_TYPECHECKS(R"(
+
         class MyClass
         {
             int x = 0;
@@ -85,9 +104,13 @@ TEST_CASE( "TypeChecker checks structured code without exceptions",
                 this.x = 5;
             }
         };
+
         )");
     
+    //Correct type is returned for method "f" (int):
+    //Method "f" is used in a expression that evaluates to int:
     REQUIRE_TYPECHECKS(R"(
+
         class MyClass
         {
             bool x = true;
@@ -104,9 +127,12 @@ TEST_CASE( "TypeChecker checks structured code without exceptions",
             }
 
         };
+
         )");
     
+    //Demonstrates logical comparison. Also mixed Binop and Unop expression:
     REQUIRE_TYPECHECKS(R"(
+
         class MyClass
         {
             void main()
@@ -119,9 +145,12 @@ TEST_CASE( "TypeChecker checks structured code without exceptions",
                 }
             }
         };
+
         )");
     
+    //Successful typecheck with boolean return type and boolean expression:
     REQUIRE_TYPECHECKS(R"(
+
         class MyClass
         {
             bool f(int x)
@@ -136,9 +165,12 @@ TEST_CASE( "TypeChecker checks structured code without exceptions",
                 }
             }
         };
+
         )");
     
+    //Test of "class B" using members from "class A" in various ways:
     REQUIRE_TYPECHECKS(R"(
+
         class A
         {
             int x = 0;
@@ -164,25 +196,36 @@ TEST_CASE( "TypeChecker checks structured code without exceptions",
                 return a2;
             }
         };
+
         )");
 }
 
 
+
+
 TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
 {
-#define REQUIRE_DOESNT_TYPECHECK(str) REQUIRE_THROWS_AS(typeCheck(parse(tokenize(str))),TypeCheckerException)
     /*
      *   Tests for Typechecker throwing exceptions:
      */
 
+    #define REQUIRE_DOESNT_TYPECHECK(str) REQUIRE_THROWS_AS(typeCheck(parse(tokenize(str))),TypeCheckerException)
+    //Helper macro that makes things less ugly for exception tests.
+    //Calls tokenize, parse, and typecheck on a string.
+    //Requires that a TypeCheckerException be thrown for the test to succeed.
+
+
     //Class redefenition error (two classes named "MyClass"):
-    REQUIRE_THROWS_AS(typeCheck(parse(tokenize(
-                            "class MyClass {}; \
-                             class MyClass {};"))),
-                      TypeCheckerException);
-    
-    //Bad return type:
     REQUIRE_DOESNT_TYPECHECK(R"(
+
+        class MyClass {};
+        class MyClass {};
+
+        )");
+    
+    //Returning boolean for method that returns an int:
+    REQUIRE_DOESNT_TYPECHECK(R"(
+
         class MyClass
         {
             int f()
@@ -190,32 +233,36 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
                 return true;
             }
         };
+
         )");
 
     //Class extends error ("JunkClass" is not defined):
-    REQUIRE_THROWS_AS(typeCheck(parse(tokenize(
-                              "class MyClass extends JunkClass{}; "))),
-                        TypeCheckerException);
+    REQUIRE_DOESNT_TYPECHECK(R"(
 
-    //Class properly extends an existing class ("JunkClass" is not defined):
-    REQUIRE_NOTHROW(typeCheck(parse(tokenize(
-                            "class JunkClass{}; \
-                            class MyClass extends JunkClass{};"))));
+        class MyClass extends JunkClass{};
+
+        )");
+
     //Class cannot use instance of itself inside itself:
-    REQUIRE_THROWS_AS(typeCheck(parse(tokenize(
-                              "class MyClass                            \
-                                {                                       \
-                                    MyClass var = new MyClass();        \
-                                };                                      "))),
-                        TypeCheckerException);
+    REQUIRE_DOESNT_TYPECHECK(R"(
+
+        class MyClass
+        {
+            MyClass var = new MyClass();
+        };
+
+        )");
+
 
     //Variable "var" is type bool. Expected RHS to be "bool" (instead it's int):
-    REQUIRE_THROWS_AS(typeCheck(parse(tokenize(
-                                "class MyClass                            \
-                                  {                                       \
-                                      bool var = new int();               \
-                                  };                                      "))),
-                          TypeCheckerException);
+    REQUIRE_DOESNT_TYPECHECK(R"(
+
+        class MyClass
+        {
+            bool var = new int();
+        };
+
+        )");
 
     //Unkown type error ("junkType" is an invalid type):
     REQUIRE_THROWS_AS(validType(initialTypeEnv(),"junkType"),
@@ -224,34 +271,4 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
     //Mismatched types. ("int" is not equivalent to "bool"):
     REQUIRE_THROWS_AS(assertTypeIs(intType, boolType),
                       TypeCheckerException);
-}
-
-TEST_CASE( "Monolith", "[TypeChecker]" )
-{
-
-    REQUIRE_NOTHROW(typeCheck(parse(tokenize(
-                                        "class Thing { \
-                                            void dickle(){ \
-                                                int pickle = 5; \
-                                            } \
-                                         };"))));
-
-    REQUIRE_NOTHROW(typeCheck(parse(tokenize(
-                                        "class Father{}; \
-                                        class Bastard extends Father{ \
-                                            int pickle = 0; \
-                                            void dickle(){ \
-                                                this.pickle = 5; \
-                                            } \
-                                        };"))));
-
-//    REQUIRE_NOTHROW(typeCheck(parse(tokenize(
-//                                        "class Father{}; \
-//                                        class Bastard extends Father{ \
-//                                            int pickle = 0; \
-//                                            void dickle(){ \
-//                                                pickle = 5; \
-//                                            } \
-//                                        };"))));
-
 }
