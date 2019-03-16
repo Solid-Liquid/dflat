@@ -146,10 +146,10 @@ TEST_CASE( "TypeChecker checks structured code without exceptions","[TypeChecker
         {
             bool x = true;
 
-            int f(int y)
-            {
-                int x = 5;
-                return x;
+            int f(int y)        // Comments
+            {                   // included
+                int x = 5;      // in this
+                return x;       // test.
             }
 
             void main()

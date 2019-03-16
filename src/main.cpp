@@ -22,9 +22,8 @@ int main(int argc, char* argv[])
     }
     else
     {
-        //prompt user for filename in terminal:
-        cout << "Enter the name of a file: ";
-        getline(cin,fileName);
+        cout << "Usage: dflat SOURCEFILE" << endl;
+        return 0;
     }
 
     ifstream file(fileName);

@@ -203,25 +203,33 @@ void Lexer::skipWhitespace()
         next();
         c = peek();
     }
-}
 
-void Lexer::skipComment()
-{
-    char c = peek();
-
-    while (c != '\n' && !at_end()) {
+    // Might have stopped due to a comment.
+    if (c == '/' && peek_ahead(1) == '/')
+    {
+        next();
         next();
         c = peek();
+
+        while (c != '\n' && c != '\0')
+        {
+            next();
+            c = peek();
+        }
+
+        // There's probably some WS left.
+        while (isspace(c))
+        {
+            next();
+            c = peek();
+        }
     }
 }
 
 TokenPtr Lexer::singleToken(){
     TokenPtr tok = nullptr;
 
-    if(peek_ahead(0) == '/' && peek_ahead(1) == '/'){
-        skipComment();
-    }
-    else if ((tok = tryTokenizeName()))
+    if ((tok = tryTokenizeName()))
     {
         return tok;
     } 
