@@ -129,7 +129,14 @@ Vector<Type> lookupMethodTypeByClass(TypeEnv const& env, String const& mthd, Str
 //Throw if method does not exist
 Type lookupVarType(TypeEnv const& env, String const& var)
 {
-    return lookupVarTypeByClass(env,var,*env.currentClass);
+    if (var == "this")
+    {
+        return *env.currentClass;
+    }
+    else
+    {
+        return lookupVarTypeByClass(env,var,*env.currentClass);
+    }
 }
 
 
