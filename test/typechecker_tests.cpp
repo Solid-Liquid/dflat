@@ -295,6 +295,42 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
 
         )");
 
+    //Class B has an object of type class A. Tries to use the object to
+    //call a member variable "fakeMember" that does not exist.
+    REQUIRE_DOESNT_TYPECHECK(R"(
+
+        class A{};
+
+        class B
+        {
+            A obj = new A();
+
+            void func()
+            {
+                obj.fakeMember = 5;
+            }
+        };
+
+        )");
+
+    //Class B has an object of type class A. Tries to use the object to
+    //call a function that does not exist (obj.nonExistantMethod(); )
+    REQUIRE_DOESNT_TYPECHECK(R"(
+
+        class A{};
+
+        class B
+        {
+            A obj = new A();
+
+            void func()
+            {
+                obj.nonExistantMethod();
+            }
+        };
+
+        )");
+
     //Unkown type error ("junkType" is an invalid type):
     REQUIRE_THROWS_AS(validType(initialTypeEnv(),"junkType"),
                       TypeCheckerException);
@@ -302,4 +338,8 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
     //Mismatched types. ("int" is not equivalent to "bool"):
     REQUIRE_THROWS_AS(assertTypeIs(intType, boolType),
                       TypeCheckerException);
+
+    //Invalid operands to operator:
+    REQUIRE_THROWS_AS( expType("true + 5"),
+                       TypeCheckerException);
 }
