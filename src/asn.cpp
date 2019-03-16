@@ -164,11 +164,11 @@ Type Block::typeCheck(TypeEnv& env) const
 {
     // Make sure all statements typecheck (in a new scope).
     // Final type is void.
-    // TODO: make copy (enter scope) that is just forgotten when leaving this function.
+    TypeEnv scopeEnv = env;
 
     for (ASNPtr const& stm : statements)
     {
-        stm->typeCheck(env);
+        stm->typeCheck(scopeEnv);
     }
 
     return voidType;
@@ -260,6 +260,7 @@ String MethodDef::toString() const
 
 Type MethodDef::typeCheck(TypeEnv&) const
 {
+    // TODO open new scope for args
     //TODO
     return "";
 }
