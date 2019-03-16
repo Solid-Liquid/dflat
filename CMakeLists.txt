@@ -106,7 +106,8 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
             -Wnull-dereference
             -Wdouble-promotion
             -Wformat=2
-             -fprofile-arcs -ftest-coverage
+            -fprofile-arcs 
+            -ftest-coverage
         )
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     set(DFLAT_COMPILE_OPTIONS
