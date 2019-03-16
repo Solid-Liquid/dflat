@@ -858,7 +858,7 @@ Parser::Parser(Vector<TokenPtr> const& tokens)
 
 Parser::~Parser()
 {
-    if (config::trace)
+    if (config::traceParse)
     {
         std::cout << "\n";
         _tracer.finalize();

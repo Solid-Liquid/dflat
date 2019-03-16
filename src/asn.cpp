@@ -1,5 +1,7 @@
 #include "asn.hpp"
 #include "typechecker.hpp"
+#include "config.hpp"
+#include <iostream>
 
 namespace dflat
 {
@@ -31,6 +33,12 @@ Type ASN::typeCheck(TypeEnv& env)
 {
     Type t = typeCheckPrv(env);
     this->type = t;
+
+    if (config::traceTypeCheck)
+    {
+        std::cout << toString() << " : " << (t.empty() ? "?" : t) << "\n";
+    }
+
     return t;
 }
 
@@ -265,6 +273,9 @@ Type MethodDef::typeCheckPrv(TypeEnv& env)
     String methodName = funcCanonicalName(name, argTypes);
     mapNameToType(env, methodName, methodType); 
 
+    // Currenly in this method.
+    env.currentMethod = methodName;
+
     // Open new scope and declare args in it.
     TypeEnv methodEnv = env;
 
@@ -275,6 +286,9 @@ Type MethodDef::typeCheckPrv(TypeEnv& env)
 
     // Typecheck body.
     statements->typeCheck(methodEnv);
+
+    // No longer in a method.
+    env.currentMethod = nullopt;
 
     // This isn't an expression, so return void.
     return voidType;
@@ -472,10 +486,17 @@ String ClassDecl::toString() const
     return str;
 }
 
-Type ClassDecl::typeCheckPrv(TypeEnv&)
+Type ClassDecl::typeCheckPrv(TypeEnv& env)
 {
-    //TODO -- Final type should be the class name.
-    return "";
+    //TODO more stuff needs doing.
+    
+    for (ASNPtr& member : members)
+    {
+        member->typeCheck(env);
+    }
+    
+    // Final type is just the class name.
+    return name;
 }
 
 } //namespace dflat

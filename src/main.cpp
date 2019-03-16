@@ -6,6 +6,7 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "typechecker.hpp"
+#include "config.hpp"
 
 using namespace std;
 using namespace dflat;
@@ -47,20 +48,21 @@ int main(int argc, char* argv[])
 
         //Run Lexer:
         Vector<TokenPtr> tokens = tokenize(fileContents);
-        //for (TokenPtr const& token : tokens)
-        //{
-            //cout << token->toString() << endl;
-        //}
+//        for (TokenPtr const& token : tokens)
+//        {
+//            cout << token->toString() << endl;
+//        }
 
         //Run Parser:
         Vector<ASNPtr> program = parse(tokens);
 
-        for (ASNPtr const& decl : program)
-        {
-            cout << decl->toString() << endl << endl;
-        }
+//        for (ASNPtr const& decl : program)
+//        {
+//            cout << decl->toString() << endl << endl;
+//        }
 
         //Run TypeChecker:
+        config::traceTypeCheck = true;
         TypeEnv environment = typeCheck(program);
     }
     catch(exception& e)
