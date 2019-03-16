@@ -316,11 +316,24 @@ String MethodExp::toString() const
     return str;
 }
 
-Type MethodExp::typeCheckPrv(TypeEnv&)
+Type MethodExp::typeCheckPrv(TypeEnv& env)
 {
-    //TODO -- Look up canonical name of function.
+    // Get class type of method.
+    Type objectType = lookupVarType(env, object);
 
-    return "";
+    // Make overload name.
+    Vector<Type> argTypes;
+
+    for (ASNPtr& arg : args)
+    {
+        Type argType = arg->typeCheck(env);
+        argTypes.push_back(argType);
+    }
+
+    String methodName = funcCanonicalName(method, argTypes);
+    
+    // Make sure this overload exists and return return-type.
+    return lookupVarTypeByClass(env, objectType, methodName);
 }
 
 //MethodStm:
