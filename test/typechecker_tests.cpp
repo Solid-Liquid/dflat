@@ -89,6 +89,11 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
                               "class MyClass extends JunkClass{}; "))),
                         TypeCheckerException);
 
+    //Class properly extends an existing class ("JunkClass" is not defined):
+    REQUIRE_NOTHROW(typeCheck(parse(tokenize(
+                            "class JunkClass{}; \
+                            class MyClass extends JunkClass{};"))));
+
     //Unkown type error ("junkType" is an invalid type):
     REQUIRE_THROWS_AS(validType(initialTypeEnv(),"junkType"),
                       TypeCheckerException);
@@ -96,4 +101,25 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
     //Mismatched types. ("int" is not equivalent to "bool"):
     REQUIRE_THROWS_AS(assertTypeIs(intType, boolType),
                       TypeCheckerException);
+}
+
+TEST_CASE( "Monolith", "[TypeChecker]" )
+{
+
+    REQUIRE_NOTHROW(typeCheck(parse(tokenize(
+                                        "class Thing { \
+                                            void dickle(){ \
+                                                int pickle = 5; \
+                                            } \
+                                         };"))));
+
+    REQUIRE_NOTHROW(typeCheck(parse(tokenize(
+                                        "class Father{}; \
+                                        class Bastard extends Father{ \
+                                            int pickle = 0; \
+                                            void dickle(){ \
+                                                pickle = 5; \
+                                            } \
+                                        };"))));
+
 }
