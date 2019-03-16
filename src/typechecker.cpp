@@ -40,6 +40,9 @@ TypeEnv initialTypeEnv()
         },
         {
             "" // "currentClass" variable initialized as empty string
+        },
+        {
+            ""
         }
     };
 
