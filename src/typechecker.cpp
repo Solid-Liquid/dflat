@@ -1,4 +1,5 @@
 #include "typechecker.hpp"
+#include <iostream>
 
 namespace dflat
 {
@@ -62,7 +63,6 @@ TypeEnv typeCheck(Vector<ASNPtr> const& program)
         if(lookup(env.types,className))
             throw TypeCheckerException("Redefinition of class: " + className);
         env.types.insert(className);
-        env.currentClass = className;
 
         //Check all types in all classes (ASN->typeCheck runs recursively).
         class_->typeCheck(env);
@@ -106,6 +106,12 @@ Vector<Type> lookupMethodType(TypeEnv const& env, String const& mthd)
 Vector<Type> lookupMethodTypeByClass(TypeEnv const& env, String const& mthd, String const& clss)
 {
     Optional<Map<String,Vector<String>>> classVars = lookup(env.variables, clss);
+    if (!classVars)
+    {
+        throw std::logic_error(String(__func__) 
+                + ": bad class lookup " + clss);
+    }
+    
     Optional<Vector<String>> mthdTypes = lookup(*classVars, mthd);
 
     if(mthdTypes)
@@ -138,6 +144,13 @@ Type lookupVarType(TypeEnv const& env, String const& var)
 Type lookupVarTypeByClass(TypeEnv const& env, String const& var, String const& clss)
 {
     Optional<Map<String,Vector<String>>> classVars = lookup(env.variables, clss);
+
+    if (!classVars)
+    {
+        throw std::logic_error(String(__func__) 
+                + ": bad class lookup " + clss);
+    }
+
     Optional<Vector<String>> varType = lookup(*classVars, var);
 
     if(varType)

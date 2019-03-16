@@ -515,8 +515,8 @@ String ClassDecl::toString() const
 
 Type ClassDecl::typeCheckPrv(TypeEnv& env)
 {
-    //TODO more stuff needs doing.
     env.currentClass = name;
+    env.variables.insert( {name, {}} );
 
     if(extends)
         validType(env, baseClass); //check if the base class is valid
