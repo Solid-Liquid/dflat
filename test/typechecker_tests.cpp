@@ -59,24 +59,16 @@ TEST_CASE( "TypeChecker correctly checks types", "[TypeChecker]" )
     REQUIRE( expType("1 != 2")
              == boolType );
 
+
     REQUIRE( expType("1 && 0")
              == boolType );
 
     REQUIRE( expType("1 || 0")
              == boolType );
 
-    REQUIRE( expType("(true && true) == (false || true)")
-             == boolType );
-
-    REQUIRE( expType("(5 + 7) == (6 + 6)")
-             == boolType );
-
-    /*
-     *   Tests for Typechecker returning correct type for expressions:
-     */
-
-    REQUIRE( stmType("int x = 5;")
-             == voidType);
+    // Assignment
+//    REQUIRE( stmType("int x = 5;")
+//             == voidType);
 }
 
 TEST_CASE( "TypeChecker checks structured code without exceptions",
@@ -86,13 +78,13 @@ TEST_CASE( "TypeChecker checks structured code without exceptions",
     REQUIRE_TYPECHECKS(R"(
         class MyClass
         {
-            int x;
+            int x = 0;
 
             void f()
             {
-                x = 5;
+                this.x = 5;
             }
-        }
+        };
         )");
 }
 

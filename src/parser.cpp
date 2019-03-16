@@ -191,6 +191,7 @@ ASNPtr Parser::parseVariable()
 
     if (match<ThisToken>())
     {
+        // this.something
         MATCH_(MemberToken);
         PARSE(member, parseName());
         CANCEL_ROLLBACK;
@@ -203,6 +204,7 @@ ASNPtr Parser::parseVariable()
 
         if (match<MemberToken>())
         {
+            // stuff.something
             PARSE(member, parseName());
             CANCEL_ROLLBACK;
             SUCCESS;
@@ -210,6 +212,7 @@ ASNPtr Parser::parseVariable()
         }
         else 
         {
+            // just stuff
             // This could be just a variable, or a member with implicit this.
             CANCEL_ROLLBACK;
             SUCCESS;
