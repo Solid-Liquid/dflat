@@ -69,7 +69,17 @@ String VariableExp::toString() const
 Type VariableExp::typeCheckPrv(TypeEnv& env)
 {
     // Variable type is the declared type for this name.
-    return lookupVarType(env, name);
+    if (object)
+    {
+        // Lookup as a member of object.
+        Type objectType = lookupVarType(env, *object);
+        return lookupVarTypeByClass(env, name, objectType);
+    }
+    else
+    {
+        // Lookup as a local or a member of the current class.
+        return lookupVarType(env, name);
+    }
 }
 
 //NumberExp:
@@ -353,7 +363,7 @@ Type MethodExp::typeCheckPrv(TypeEnv& env)
     String methodName = funcCanonicalName(varExp->name, argTypes);
     
     // Make sure this overload exists and return return-type.
-    return lookupVarTypeByClass(env, objectType, methodName);
+    return lookupVarTypeByClass(env, methodName, objectType);
 }
 
 //MethodStm:
