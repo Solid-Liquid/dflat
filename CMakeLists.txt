@@ -36,10 +36,10 @@ add_executable(tests
 #### PROJECT LINKED LIBRARIES ####
 
 # Uncomment these if there ever are any libs.
-#set(DFLAT_LIBS)
+set(DFLAT_LIBS -lgcov)
 
-#target_link_libraries(dflat_common ${DFLAT_LIBS}
-#    )
+target_link_libraries(dflat_common ${DFLAT_LIBS}
+    )
     
 target_link_libraries(dflat ${DFLAT_LIBS}
     dflat_common
@@ -106,6 +106,8 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
             -Wnull-dereference
             -Wdouble-promotion
             -Wformat=2
+            -fprofile-arcs 
+            -ftest-coverage
         )
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     set(DFLAT_COMPILE_OPTIONS
