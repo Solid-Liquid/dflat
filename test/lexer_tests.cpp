@@ -280,9 +280,9 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         ExtendsToken()
         ));
 
-//    REQUIRE ( tokenize("// This is a comment") == tokens(
-//        NumberToken(0)
-//        ));
+    REQUIRE ( tokenize("0 // This is a comment") == tokens(
+        NumberToken(0)
+        ));
 }
 
 
