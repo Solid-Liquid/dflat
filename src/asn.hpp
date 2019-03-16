@@ -15,7 +15,7 @@ namespace dflat
 enum ASNType { expBinop, expNumber, expBool, expVariable, expUnop,
                block, stmIf, defMethod, stmWhile, stmAssign, stmMemberAssign,
                stmMethod, expMethod, stmVarDef, expNew, stmRet, 
-               declMethod, declClass };
+               declMethod, declClass, expThis };
 
 enum OpType { opPlus, opMinus, opMult, opDiv, opNot, opAnd, opOr,
               opLogEq, opLogNotEq };

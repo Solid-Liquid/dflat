@@ -27,6 +27,7 @@ struct TypeEnv
     //      Map: String variable/function name -> Vector of types
     //          0 is var type or return type, 1+ are types for method args.
     //currentClass - the name of the class that is currently being typechecked.
+    //currentMethod - the canonical name of the method that is currently being typechecked.
 
     Set<String> types;
     Map<String,String> rules;
