@@ -1,0 +1,10 @@
+#!/bin/env bash
+
+rm -rf coverage
+mkdir coverage 
+cd coverage
+lcov -c -i -d ../build -o base.info &&\
+../build/tests &&\
+lcov -c -d ../build -o test.info &&\
+lcov -a base.info -a test.info -o total.info &&\
+genhtml -p /home/b/work/ldc/dflat -o report --demangle-cpp test.info
