@@ -4,9 +4,17 @@
 #include "string.hpp"
 #include "map.hpp"
 #include "set.hpp"
+#include "optional.hpp"
+#include "vector.hpp"
 
 namespace dflat
 {
+
+//Convenient aliases for known types:
+using Type = String;
+Type const intType = "int";
+Type const boolType = "bool";
+Type const voidType = "void";
 
 struct TypeEnv
 {
@@ -22,16 +30,11 @@ struct TypeEnv
 
     Set<String> types;
     Map<String,String> rules;
-    Map<String,Map<String,Vector<String>>> variables;
-    String currentClass;
+    Map<Type,Map<Type,Vector<Type>>> variables;
+    Optional<String> currentClass;
+    Optional<String> currentMethod;
 };
 
-
-//Convenient aliases for known types:
-using Type = String;
-Type const intType = "int";
-Type const boolType = "bool";
-Type const voidType = "void";
 
 } //namespace dflat
 
