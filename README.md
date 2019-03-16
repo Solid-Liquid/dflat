@@ -21,6 +21,9 @@ make
 ./tests
 ```
 
+## Generage Coverage Report
+Run ```gen-coverage``` from the project root. Requires gcov+lcov. Produces a report at coverage/report/index.html.
+
 <h1>Language Design Proposal:</h1>
 <h3>Name: Db (D flat)</h3>
  
