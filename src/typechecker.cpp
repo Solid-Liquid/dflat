@@ -75,9 +75,7 @@ TypeEnv typeCheck(Vector<ASNPtr> const& program)
 Type typeCheck(ASNPtr const& asn)
 {
     TypeEnv env = initialTypeEnv();
-    Type type = asn->typeCheck(env);
-    //TODO set asn's type here 
-    return type;
+    return asn->typeCheck(env);
 }
 
 // Look up the rule for an operator based on cannonical name
@@ -224,6 +222,11 @@ String unopCanonicalName(OpType op, Type const& rhsType)
 String binopCanonicalName(OpType op, Type const& lhsType, Type const& rhsType)
 {
     return funcCanonicalName(opString(op), { lhsType, rhsType });
+}
+
+void mapNameToType(TypeEnv& env, String const& name, Vector<Type> const& type)
+{
+    env.variables[*env.currentClass][name] = type;
 }
 
 

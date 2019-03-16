@@ -47,13 +47,18 @@ int main(int argc, char* argv[])
 
         //Run Lexer:
         Vector<TokenPtr> tokens = tokenize(fileContents);
-        //for(size_t i=0; i<tokens.size(); ++i)
-            //cout << tokens[i]->toString() << endl;
+        //for (TokenPtr const& token : tokens)
+        //{
+            //cout << token->toString() << endl;
+        //}
 
         //Run Parser:
         Vector<ASNPtr> program = parse(tokens);
-        for(size_t i=0; i<program.size(); ++i)
-            cout << program[i]->toString() << endl << endl;
+
+        for (ASNPtr const& decl : program)
+        {
+            cout << decl->toString() << endl << endl;
+        }
 
         //Run TypeChecker:
         TypeEnv environment = typeCheck(program);

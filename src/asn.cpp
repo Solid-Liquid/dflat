@@ -27,6 +27,13 @@ ASN::~ASN()
 {
 }
 
+Type ASN::typeCheck(TypeEnv& env)
+{
+    Type t = typeCheckPrv(env);
+    this->type = t;
+    return t;
+}
+
 //VariableExp:
 VariableExp::VariableExp(String const& name_)
     : name(name_)
@@ -38,7 +45,7 @@ String VariableExp::toString() const
     return name;
 }
 
-Type VariableExp::typeCheck(TypeEnv& env) const
+Type VariableExp::typeCheckPrv(TypeEnv& env)
 {
     // Variable type is the declared type for this name.
     return lookupVarType(env, name);
@@ -55,7 +62,7 @@ String NumberExp::toString() const
     return to_string(value);
 }
 
-Type NumberExp::typeCheck(TypeEnv&) const
+Type NumberExp::typeCheckPrv(TypeEnv&)
 {
     // Number type is int.
     return intType;
@@ -75,7 +82,7 @@ String BoolExp::toString() const
         return "false";
 }
 
-Type BoolExp::typeCheck(TypeEnv&) const
+Type BoolExp::typeCheckPrv(TypeEnv&)
 {
     // Boolean type is bool.
     return boolType;
@@ -95,7 +102,7 @@ String BinopExp::toString() const
             " " + rhs->toString() + ")";
 }
 
-Type BinopExp::typeCheck(TypeEnv& env) const
+Type BinopExp::typeCheckPrv(TypeEnv& env)
 {
     // Look up the type by the canonical name for this operation.
     // e.g. "1 + 2" might be "+(int,int)" with type int.
@@ -116,7 +123,7 @@ String UnopExp::toString() const
     return "(" + opString(op) + rhs->toString() + ")";
 }
 
-Type UnopExp::typeCheck(TypeEnv& env) const
+Type UnopExp::typeCheckPrv(TypeEnv& env)
 {
     // Look up the type by the canonical name for this operation.
     // e.g. "1 == 2" might be "==(int,int)" with type bool.
@@ -142,7 +149,7 @@ String Block::toString() const
     return s;
 }
 
-Type Block::typeCheck(TypeEnv& env) const
+Type Block::typeCheckPrv(TypeEnv& env)
 {
     // Make sure all statements typecheck (in a new scope).
     // Final type is void.
@@ -157,9 +164,10 @@ Type Block::typeCheck(TypeEnv& env) const
 }
 
 //IfBlock:
-IfStm::IfStm(ASNPtr&& _logicExp, ASNPtr&& _trueStatements, ASNPtr&& _falseStatements)
+IfStm::IfStm(ASNPtr&& _logicExp, ASNPtr&& _trueStatements, bool _hasFalse, ASNPtr&& _falseStatements)
     : logicExp(move(_logicExp))
     , trueStatements(move(_trueStatements))
+    , hasFalse(_hasFalse)
     , falseStatements(move(_falseStatements))
 {
 }
@@ -168,12 +176,15 @@ String IfStm::toString() const
 {
     String str = "if(" + logicExp->toString() + ")\n";
     str += trueStatements->toString();
-    str += "\nelse\n";
-    str += falseStatements->toString();
+    if(hasFalse)
+    {
+        str += "\nelse\n";
+        str += falseStatements->toString();
+    }
     return str;
 }
 
-Type IfStm::typeCheck(TypeEnv& env) const
+Type IfStm::typeCheckPrv(TypeEnv& env)
 {
     // Conditional must have bool type.
     // Blocks must typecheck with type void.
@@ -203,7 +214,7 @@ String WhileStm::toString() const
     return str;
 }
 
-Type WhileStm::typeCheck(TypeEnv& env) const
+Type WhileStm::typeCheckPrv(TypeEnv& env)
 {
     // Conditional must have bool type.
     // Body must typecheck with type void.
@@ -240,20 +251,33 @@ String MethodDef::toString() const
     return str;
 }
 
-Type MethodDef::typeCheck(TypeEnv&) const
+Type MethodDef::typeCheckPrv(TypeEnv& env)
 {
+    Vector<Type> argTypes; // Just the arg types.
+    Vector<Type> methodType = { type }; // Proper type list.
+    
+    for (FormalArg const& arg : args)
+    {
+        argTypes.push_back(arg.type);
+        methodType.push_back(arg.type);
+    }
 
-    // TODO
-//        String type;
-//        String name;
-//        Vector<ASNPtr> args;
-//        ASNPtr statements;
-    //  Declare func name in env
-    //  Set return type in env?
-    //  Copy env
-    //  Declare arg names in env
-    //  Typecheck block 
-    return "";
+    String methodName = funcCanonicalName(name, argTypes);
+    mapNameToType(env, methodName, methodType); 
+
+    // Open new scope and declare args in it.
+    TypeEnv methodEnv = env;
+
+    for (FormalArg const& arg : args)
+    {
+        mapNameToType(methodEnv, arg.name, { arg.type });
+    }
+
+    // Typecheck body.
+    statements->typeCheck(methodEnv);
+
+    // This isn't an expression, so return void.
+    return voidType;
 }
 
 //MethodExp:
@@ -277,7 +301,7 @@ String MethodExp::toString() const
     return str;
 }
 
-Type MethodExp::typeCheck(TypeEnv&) const
+Type MethodExp::typeCheckPrv(TypeEnv&)
 {
     //TODO -- Look up canonical name of function.
 
@@ -295,7 +319,7 @@ String MethodStm::toString() const
     return methodExp->toString() + ";";
 }
 
-Type MethodStm::typeCheck(TypeEnv& env) const
+Type MethodStm::typeCheckPrv(TypeEnv& env)
 {
     // Make sure the call typechecks.
     // Final type is void.
@@ -324,7 +348,7 @@ String NewExp::toString() const
     return str;
 }
 
-Type NewExp::typeCheck(TypeEnv&) const
+Type NewExp::typeCheckPrv(TypeEnv&)
 {
     //TODO -- Similar to MethodExp
     return "";
@@ -341,7 +365,7 @@ String AssignStm::toString() const
     return variable + " = " + expression->toString() + ";";
 }
 
-Type AssignStm::typeCheck(TypeEnv& env) const
+Type AssignStm::typeCheckPrv(TypeEnv& env)
 {
     // RHS expression must match declared type of LHS variable.
     // Final type is void.
@@ -362,7 +386,7 @@ String MemberAssignStm::toString() const
     return object + "." + member + " = " + expression->toString() + ";";
 }
 
-Type MemberAssignStm::typeCheck(TypeEnv&) const
+Type MemberAssignStm::typeCheckPrv(TypeEnv&)
 {
     //TODO -- Need to look up object.member's type.
     return "";
@@ -379,7 +403,7 @@ String VarDecStm::toString() const
     return type + " " + name + " = " + value->toString() + ";";
 }
 
-Type VarDecStm::typeCheck(TypeEnv&) const
+Type VarDecStm::typeCheckPrv(TypeEnv&)
 {
     //TODO -- Like AssignStm but adds a new name->type to the environment.
     return "";
@@ -397,7 +421,7 @@ String RetStm::toString() const
     return "return " + value->toString() + ";";
 }
 
-Type RetStm::typeCheck(TypeEnv&) const
+Type RetStm::typeCheckPrv(TypeEnv&)
 {
     //TODO -- Somehow check against return type of current method.
     return "";
@@ -424,28 +448,31 @@ String MethodDecl::toString() const
     return str;
 }
 
-Type MethodDecl::typeCheck(TypeEnv&) const
+Type MethodDecl::typeCheckPrv(TypeEnv&)
 {
     //TODO -- Final type should be the return type.
     return "";
 }
 
 // Class Definition
-ClassDecl::ClassDecl(String _name, Vector<ASNPtr>&& _members)
-    : name(_name), members(move(_members))
+ClassDecl::ClassDecl(String _name, Vector<ASNPtr>&& _members, bool _extends, String _baseClass)
+    : name(_name), members(move(_members)), extends(_extends), baseClass(_baseClass)
 {
 }
 
 String ClassDecl::toString() const
 {
-    String str = "class " + name + "\n{\n";
+    String str = "class " + name;
+    if(extends)
+        str += " extends " + baseClass;
+    str += "\n{\n";
     for(auto&& ex : members)
         str += ex->toString() + "\n\n";
     str += "};";
     return str;
 }
 
-Type ClassDecl::typeCheck(TypeEnv&) const
+Type ClassDecl::typeCheckPrv(TypeEnv&)
 {
     //TODO -- Final type should be the class name.
     return "";
