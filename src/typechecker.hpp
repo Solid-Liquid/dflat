@@ -64,9 +64,7 @@ TypeEnv initialTypeEnv();
 class TypeCheckerException : public std::exception
 {
     public:
-        /**
-         * TypeChecker Exception:
-         */ 
+        /** TypeChecker Exception: */ 
         TypeCheckerException(String msg) noexcept;
         const char* what() const noexcept;
     private:
