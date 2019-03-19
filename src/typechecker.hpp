@@ -63,6 +63,8 @@ String unopCanonicalName(OpType, Type const&);
 /// <param name="rhsType">The variable (a number)</param>
 /// <returns>op({lhsType, rhsType})</returns>
 String binopCanonicalName(OpType, Type const&, Type const&);
+
+
 void mapNameToType(TypeEnv&, String const&, Vector<Type> const&);
 TypeEnv initialTypeEnv();
 
