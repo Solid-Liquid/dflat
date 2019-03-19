@@ -1,5 +1,4 @@
 #include "typechecker.hpp"
-#include <iostream>
 
 namespace dflat
 {
@@ -58,6 +57,7 @@ TypeEnv typeCheck(Vector<ASNPtr> const &program)
         if (lookup(env.types, className))
             throw TypeCheckerException("Redefinition of class: " + className);
         env.types.insert(className);
+        env.currentClass = className;
 
         //Check all types in all classes (ASN->typeCheck runs recursively).
         class_->typeCheck(env);
