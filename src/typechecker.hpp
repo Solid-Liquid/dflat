@@ -35,7 +35,7 @@ Type lookupVarTypeByClass(TypeEnv const&, String const&, String const&);
  * Return true if valid, throw if not valid. */ 
 bool validType(TypeEnv const&, String const&);
 
-/** <summary>Throw if two types aren't equal.</summary> */
+/** @brief Throw if two types aren't equal. */
 void assertTypeIs(Type const&, Type const&);
 
 /// <summary>
@@ -70,12 +70,13 @@ TypeEnv initialTypeEnv();
 
 #pragma endregion
 
-//TypeChecker Exceptions class:
+/// TypeChecker Exceptions class:
 class TypeCheckerException : public std::exception
 {
     public:
         /** TypeChecker Exception */
         TypeCheckerException(String msg) noexcept;
+        /** returns an explanatory string   */
         const char* what() const noexcept;
     private:
         String message;
