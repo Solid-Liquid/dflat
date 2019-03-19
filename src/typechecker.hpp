@@ -44,16 +44,14 @@ bool validType(TypeEnv const&, String const&);
  * Throw if two types aren't equal.
  */ 
 void assertTypeIs(Type const&, Type const&);
-/**
- * This is how a comment should look
- * <summary>
- * Make a canonical name for functions (methods, operators).
- * This name can be used to look up a function's return type.
- * </summary>
- * <param name="name">
- * <param name="argTypes">
- * <returns>String</returns>
- **/
+
+/// <summary>
+/// Make a canonical name for functions (methods, operators).
+/// This name can be used to look up a function's return type.
+/// </summary>
+/// <param name="name">The original function name</param>
+/// <param name="argTypes">The original function's parameters</param>
+/// <returns>name(arg_1, arg_2, ..., arg_n)</returns>
 String funcCanonicalName(String const&, Vector<Type> const&);
 String unopCanonicalName(OpType, Type const&);
 String binopCanonicalName(OpType, Type const&, Type const&);
