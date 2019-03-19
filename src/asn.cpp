@@ -261,7 +261,7 @@ Type WhileStm::typeCheckPrv(TypeEnv& env)
 
 //MethodBlock:
 MethodDef::MethodDef(String _type, String _name,
-             Vector<FormalArg>&& _args, ASNPtr&& _statements)
+            Vector<FormalArg>&& _args, ASNPtr&& _statements)
     : type(_type),name(_name),args(move(_args)), statements(move(_statements))
 {
 }
@@ -319,7 +319,7 @@ Type MethodDef::typeCheckPrv(TypeEnv& env)
 
 //MethodExp:
 MethodExp::MethodExp(ASNPtr&& _method, Vector<ASNPtr>&& _args)
-  : method(move(_method)), args(move(_args))
+    : method(move(_method)), args(move(_args))
 {
 }
 
@@ -368,7 +368,7 @@ Type MethodExp::typeCheckPrv(TypeEnv& env)
 
 //MethodStm:
 MethodStm::MethodStm(ASNPtr&& methodExp_)
-  : methodExp(move(methodExp_))
+    : methodExp(move(methodExp_))
 {
 }
 
@@ -415,7 +415,7 @@ Type NewExp::typeCheckPrv(TypeEnv& env)
 
 //AssignStm:
 AssignStm::AssignStm(ASNPtr&& _lhs, ASNPtr&& _rhs)
-  : lhs(move(_lhs)), rhs(move(_rhs))
+    : lhs(move(_lhs)), rhs(move(_rhs))
 {
 }
 

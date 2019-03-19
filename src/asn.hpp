@@ -13,12 +13,12 @@ namespace dflat
 {
 
 enum ASNType { expBinop, expNumber, expBool, expVariable, expUnop,
-               block, stmIf, defMethod, stmWhile, stmAssign,
-               stmMethod, expMethod, stmVarDef, expNew, stmRet, 
-               declMethod, declClass, expThis };
+                block, stmIf, defMethod, stmWhile, stmAssign,
+                stmMethod, expMethod, stmVarDef, expNew, stmRet, 
+                declMethod, declClass, expThis };
 
 enum OpType { opPlus, opMinus, opMult, opDiv, opNot, opAnd, opOr,
-              opLogEq, opLogNotEq };
+                opLogEq, opLogNotEq };
 
 String opString(OpType);
 
