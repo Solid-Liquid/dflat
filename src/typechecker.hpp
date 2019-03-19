@@ -11,7 +11,7 @@ namespace dflat
 TypeEnv typeCheck(Vector<ASNPtr> const&);
 Type typeCheck(ASNPtr const&);
 
-#pragma region Helper Functions
+#pragma region HelperFunctions
 
 /** Look up the rule for an operator based on cannonical name
  * Throw if not found. */ 
@@ -35,7 +35,7 @@ Type lookupVarTypeByClass(TypeEnv const&, String const&, String const&);
  * Return true if valid, throw if not valid. */ 
 bool validType(TypeEnv const&, String const&);
 
-/** Throw if two types aren't equal. */ 
+/** <summary>Throw if two types aren't equal.</summary> */
 void assertTypeIs(Type const&, Type const&);
 
 /// <summary>
@@ -74,7 +74,7 @@ TypeEnv initialTypeEnv();
 class TypeCheckerException : public std::exception
 {
     public:
-        /** TypeChecker Exception: */ 
+        /** TypeChecker Exception */
         TypeCheckerException(String msg) noexcept;
         const char* what() const noexcept;
     private:

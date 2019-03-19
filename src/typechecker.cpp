@@ -3,7 +3,7 @@
 
 namespace dflat
 {
-[[deprecated]] TypeEnv initialTypeEnv() {
+TypeEnv initialTypeEnv() {
 #define BINOP binopCanonicalName
 #define UNOP unopCanonicalName
     Type const i = intType;
