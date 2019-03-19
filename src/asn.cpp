@@ -36,7 +36,7 @@ Type ASN::typeCheck(TypeEnv& env)
 
     if (config::traceTypeCheck)
     {
-        std::cout << toString() << " : " 
+        std::cout << toString() << " : "
             << (type.empty() ? "?" : type) << "\n";
     }
 
@@ -225,7 +225,7 @@ Type IfStm::typeCheckPrv(TypeEnv& env)
 
     Type trueBlockType = trueStatements->typeCheck(env);
     assertTypeIs(trueBlockType, voidType);
-   
+
     Type falseBlockType = falseStatements->typeCheck(env);
     assertTypeIs(falseBlockType, voidType);
 
@@ -286,7 +286,7 @@ Type MethodDef::typeCheckPrv(TypeEnv& env)
 {
     Vector<Type> argTypes; // Just the arg types.
     Vector<Type> methodType = { type }; // Proper type list.
-    
+
     for (FormalArg const& arg : args)
     {
         argTypes.push_back(arg.type);
@@ -294,7 +294,7 @@ Type MethodDef::typeCheckPrv(TypeEnv& env)
     }
 
     String methodName = funcCanonicalName(name, argTypes);
-    mapNameToType(env, methodName, methodType); 
+    mapNameToType(env, methodName, methodType);
 
     // Currenly in this method.
     env.currentMethod = methodName;
@@ -345,9 +345,9 @@ Type MethodExp::typeCheckPrv(TypeEnv& env)
     if (!varExp) {
         throw TypeCheckerException("INTERNAL ERROR: bad MethodExp method");
     }
-        
+
     String objectName = (varExp->object ? *varExp->object : "this");
-        
+
     // Get class type of method.
     Type objectType = lookupVarType(env, objectName);
 
@@ -361,7 +361,7 @@ Type MethodExp::typeCheckPrv(TypeEnv& env)
     }
 
     String methodName = funcCanonicalName(varExp->name, argTypes);
-    
+
     // Make sure this overload exists and return return-type.
     return lookupVarTypeByClass(env, methodName, objectType);
 }
@@ -515,20 +515,20 @@ String ClassDecl::toString() const
 
 Type ClassDecl::typeCheckPrv(TypeEnv& env)
 {
+    //TODO more stuff needs doing.
     env.currentClass = name;
-    env.variables.insert( {name, {}} );
 
     if(extends)
         validType(env, baseClass); //check if the base class is valid
-    
+
     for (ASNPtr& member : members)
     {
         member->typeCheck(env);
     }
-    
+
     // No longer in a class.
     env.currentClass = nullopt;
-    
+
     // Final type is just the class name.
     return name;
 }
