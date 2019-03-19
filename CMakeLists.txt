@@ -35,8 +35,11 @@ add_executable(tests
 
 #### PROJECT LINKED LIBRARIES ####
 
-# Uncomment these if there ever are any libs.
-set(DFLAT_LIBS -lgcov)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(DFLAT_LIBS -lgcov)
+else ()
+    set(DFLAT_LIBS )
+endif ()
 
 target_link_libraries(dflat_common ${DFLAT_LIBS}
     )
