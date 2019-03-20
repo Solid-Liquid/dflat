@@ -17,23 +17,23 @@ Type typeCheck(ASNPtr const&);
  * Throw if not found. */ 
 Type lookupRuleType(TypeEnv const&, String const&);
 
-/** Lookup the return type/arg type(s) of a method by name in current class.
- * Throw if method does not exist */ 
-Vector<Type> lookupMethodType(TypeEnv const&, String const&);
+/** Lookup the type of a method by name in current class.
+ * Throw if method does not exist or is not a MethodType */ 
+MethodType lookupMethodType(TypeEnv const&, String const&);
 
 /** Same as lookupMethodType, but with a specified class. */ 
-Vector<Type> lookupMethodTypeByClass(TypeEnv const&, String const&, String const&);
+MethodType lookupMethodTypeByClass(TypeEnv const&, String const&, ValueType const&);
 
-/** Lookup the return type/arg type(s) of a variable by name in current class.
- * Throw if method does not exist */ 
-Type lookupVarType(TypeEnv const&, String const&);
+/** Lookup the type of a variable by name in current class.
+ * Throw if variable does not exist or is not a ValueType */ 
+ValueType lookupVarType(TypeEnv const&, String const&);
 
 /** Same as lookupVarType, but with a specified class. */ 
-Type lookupVarTypeByClass(TypeEnv const&, String const&, String const&);
+ValueType lookupVarTypeByClass(TypeEnv const&, String const&, ValueType const&);
 
-/** Check if "type" is a valid type within the set of types.
+/** Check if type has been declared.
  * Return true if valid, throw if not valid. */ 
-bool validType(TypeEnv const&, String const&);
+bool validType(TypeEnv const&, ValueType const&);
 
 /** <summary>Throw if two types aren't equal.</summary> */
 void assertTypeIs(Type const&, Type const&);
@@ -43,15 +43,15 @@ void assertTypeIs(Type const&, Type const&);
 /// This name can be used to look up a function's return type.
 /// </summary>
 /// <param name="name">The original function name</param>
-/// <param name="argTypes">The original function's parameters</param>
+/// <param name="argTypes">The original function's parameter types</param>
 /// <returns>name(arg_1, arg_2, ..., arg_n)</returns>
-String funcCanonicalName(String const&, Vector<Type> const&);
+String funcCanonicalName(String const&, Vector<Type> const& args);
 
 /// <summary>
 /// Turns an operator into a function of the form op(rhsType)
 /// </summary>
 /// <param name="op">The operator (+, -, *, /)</param>
-/// <param name="rhsType">The variable (a number)</param>
+/// <param name="rhsType">Type of operand</param>
 /// <returns>op(rhsType)</returns>
 String unopCanonicalName(OpType, Type const&);
 
@@ -59,13 +59,17 @@ String unopCanonicalName(OpType, Type const&);
 /// Turns an operator into a function of the form op(rhsType)
 /// </summary>
 /// <param name="op">The operator (+, -, *, /)</param>
-/// <param name="lhsType">The variable (a number)</param>
-/// <param name="rhsType">The variable (a number)</param>
+/// <param name="lhsType">Type of left operand</param>
+/// <param name="rhsType">Type of right operand</param>
 /// <returns>op({lhsType, rhsType})</returns>
 String binopCanonicalName(OpType, Type const&, Type const&);
 
+// Registers a name as having the given type (with the current class).
+void mapNameToType(TypeEnv&, String const&, Type const&);
 
-void mapNameToType(TypeEnv&, String const&, Vector<Type> const&);
+// Declares a new type, which can then be instanciated.
+void declareClass(TypeEnv&, ValueType const&);
+
 TypeEnv initialTypeEnv();
 
 #pragma endregion

@@ -15,6 +15,7 @@ add_library(dflat_common
     src/parser.cpp src/parser.hpp
     src/asn.cpp src/asn.hpp
     src/config.hpp
+    src/type.cpp src/type.hpp
     src/typechecker.cpp src/typechecker.hpp
     src/typechecker_tools.hpp
     )

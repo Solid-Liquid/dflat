@@ -1,6 +1,7 @@
 #ifndef TYPECHECKER_TOOLS_HPP
 #define TYPECHECKER_TOOLS_HPP
 
+#include "type.hpp"
 #include "string.hpp"
 #include "map.hpp"
 #include "set.hpp"
@@ -13,11 +14,9 @@ namespace dflat
 //Macro that makes a dynamic cast look like less of a mess:
 #define cast(ptr,type) dynamic_cast<type*>(ptr.get())
 
-//Convenient aliases for known types:
-using Type = String;
-Type const intType = "int";
-Type const boolType = "bool";
-Type const voidType = "void";
+ValueType const intType("int");
+ValueType const boolType("bool");
+ValueType const voidType("void");
 
 struct TypeEnv
 {
@@ -32,10 +31,10 @@ struct TypeEnv
     //currentClass - the name of the class that is currently being typechecked.
     //currentMethod - the canonical name of the method that is currently being typechecked.
 
-    Set<String> types;
-    Map<String,String> rules;
-    Map<String,Map<String,Vector<String>>> variables;
-    Optional<String> currentClass;
+    Set<ValueType> types;
+    Map<String,Type> rules;
+    Map<ValueType, Map<String, Type>> variables;
+    Optional<ValueType> currentClass;
     Optional<String> currentMethod;
 };
 

@@ -36,8 +36,7 @@ Type ASN::typeCheck(TypeEnv& env)
 
     if (config::traceTypeCheck)
     {
-        std::cout << toString() << " : "
-            << (type.empty() ? "?" : type) << "\n";
+        std::cout << toString() << " : " << type.toString() << "\n";
     }
 
     return type;
@@ -72,7 +71,7 @@ Type VariableExp::typeCheckPrv(TypeEnv& env)
     if (object)
     {
         // Lookup as a member of object.
-        Type objectType = lookupVarType(env, *object);
+        ValueType objectType = lookupVarType(env, *object);
         return lookupVarTypeByClass(env, name, objectType);
     }
     else
@@ -157,7 +156,7 @@ String UnopExp::toString() const
 Type UnopExp::typeCheckPrv(TypeEnv& env)
 {
     // Look up the type by the canonical name for this operation.
-    // e.g. "1 == 2" might be "==(int,int)" with type bool.
+    // e.g. "-1" might be "-(int)" with type int.
     Type rhsType = rhs->typeCheck(env);
     String funcName = unopCanonicalName(op, rhsType);
     return lookupRuleType(env, funcName);
@@ -260,21 +259,24 @@ Type WhileStm::typeCheckPrv(TypeEnv& env)
 }
 
 //MethodBlock:
-MethodDef::MethodDef(String _type, String _name,
+MethodDef::MethodDef(String _retTypeName, String _name,
              Vector<FormalArg>&& _args, ASNPtr&& _statements)
-    : type(_type),name(_name),args(move(_args)), statements(move(_statements))
+    : retTypeName(_retTypeName)
+    , name(_name)
+    , args(move(_args))
+    , statements(move(_statements))
 {
 }
 
 String MethodDef::toString() const
 {
-    String str = type + " " + name + "(";
+    String str = retTypeName + " " + name + "(";
     int track = 0;
     for(auto&& ar : args)
     {
         if(track > 0)
             str += ", ";
-        str += ar.type + " " + ar.name;
+        str += ar.typeName + " " + ar.name;
         ++track;
     }
     str += ")\n";
@@ -285,12 +287,13 @@ String MethodDef::toString() const
 Type MethodDef::typeCheckPrv(TypeEnv& env)
 {
     Vector<Type> argTypes; // Just the arg types.
-    Vector<Type> methodType = { type }; // Proper type list.
+    MethodType methodType(ValueType(retTypeName), {});
 
     for (FormalArg const& arg : args)
     {
-        argTypes.push_back(arg.type);
-        methodType.push_back(arg.type);
+        ValueType argType(arg.typeName);
+        argTypes.push_back(argType);
+        methodType.addArgType(argType);
     }
 
     String methodName = funcCanonicalName(name, argTypes);
@@ -304,7 +307,7 @@ Type MethodDef::typeCheckPrv(TypeEnv& env)
 
     for (FormalArg const& arg : args)
     {
-        mapNameToType(methodEnv, arg.name, { arg.type });
+        mapNameToType(methodEnv, arg.name, ValueType(arg.typeName));
     }
 
     // Typecheck body.
@@ -343,13 +346,13 @@ Type MethodExp::typeCheckPrv(TypeEnv& env)
     auto varExp = dynamic_cast<VariableExp const*>(method.get());
 
     if (!varExp) {
-        throw TypeCheckerException("INTERNAL ERROR: bad MethodExp method");
+        throw std::logic_error("INTERNAL ERROR: bad MethodExp method");
     }
 
     String objectName = (varExp->object ? *varExp->object : "this");
 
     // Get class type of method.
-    Type objectType = lookupVarType(env, objectName);
+    ValueType objectType = lookupVarType(env, objectName);
 
     // Make overload name.
     Vector<Type> argTypes;
@@ -360,10 +363,12 @@ Type MethodExp::typeCheckPrv(TypeEnv& env)
         argTypes.push_back(argType);
     }
 
+    // Get name for this overload.
     String methodName = funcCanonicalName(varExp->name, argTypes);
 
-    // Make sure this overload exists and return return-type.
-    return lookupVarTypeByClass(env, methodName, objectType);
+    // Get return type.
+    MethodType methodType = lookupMethodTypeByClass(env, methodName, objectType);
+    return ValueType(methodType.ret());
 }
 
 //MethodStm:
@@ -386,14 +391,14 @@ Type MethodStm::typeCheckPrv(TypeEnv& env)
 }
 
 //NewExp:
-NewExp::NewExp(String _type, Vector<ASNPtr>&& _args)
-    : type(_type), args(move(_args))
+NewExp::NewExp(String _typeName, Vector<ASNPtr>&& _args)
+    : typeName(_typeName), args(move(_args))
 {
 }
 
 String NewExp::toString() const
 {
-    String str = "new " + type + " (";
+    String str = "new " + typeName + " (";
     size_t track = 0;
     for(auto&& ar : args)
     {
@@ -408,6 +413,7 @@ String NewExp::toString() const
 
 Type NewExp::typeCheckPrv(TypeEnv& env)
 {
+    ValueType type(typeName);
     validType(env, type);
     // TODO: check args against class constructor (contructor coming soon, sit tite!)
     return type;
@@ -435,34 +441,33 @@ Type AssignStm::typeCheckPrv(TypeEnv& env)
 }
 
 //VarDecStm:
-VarDecStm::VarDecStm(String _type, String _name, ASNPtr&& _value)
-    : type(_type), name(_name), value(move(_value))
+VarDecStm::VarDecStm(String _typeName, String _name, ASNPtr&& _value)
+    : typeName(_typeName), name(_name), value(move(_value))
 {
 }
 
 String VarDecStm::toString() const
 {
-    return type + " " + name + " = " + value->toString() + ";";
+    return typeName + " " + name + " = " + value->toString() + ";";
 }
 
 Type VarDecStm::typeCheckPrv(TypeEnv& env)
 {
-    validType(env, type); //make sure that "type" is a valid type
-    Type expType = value->typeCheck(env);
+    ValueType lhsType(typeName);
+    validType(env, lhsType); //make sure that "type" is a declared type
+    Type rhsType = value->typeCheck(env);
 
-    if(type != expType)
+    if (Type(lhsType) != rhsType)
     {
         throw TypeCheckerException(
-                "In declaration of variable '" + name + "' of type '" + type +
-                "' inside class '" + *env.currentClass +
-                "':\nRHS expression of type '" + expType +
+                "In declaration of variable '" + name + "' of type '" + 
+                lhsType.toString() +
+                "' inside class '" + env.currentClass->toString() +
+                "':\nRHS expression of type '" + rhsType.toString() +
                 "' does not match the expected type.");
     }
 
-    Vector<Type> typeVect;
-    typeVect.push_back(type);
-    mapNameToType(env, name, typeVect);
-
+    mapNameToType(env, name, lhsType);
     return voidType;
 }
 
@@ -480,18 +485,24 @@ String RetStm::toString() const
 
 Type RetStm::typeCheckPrv(TypeEnv& env)
 {
-    Type methRet = lookupMethodType(env,*env.currentMethod)[0];
-    Type retStm = value->typeCheck(env);
-    if(methRet == retStm)
+    MethodType methodType = lookupMethodType(env, *env.currentMethod);
+
+    // Make a new type consisting only of the return type
+    //   so that it can be correctly compared to mine.
+    Type methodRetType = ValueType(methodType.ret());
+    Type myRetType     = value->typeCheck(env);
+
+    if (methodRetType == myRetType)
     {
-        return retStm;
+        return myRetType;
     }
     else
     {
         throw TypeCheckerException(
-                    "Attempting to return type '" + retStm + "' in method '"
-                    + *env.currentMethod + "' which has return type '"
-                    + methRet + "' in class '" + *env.currentClass + "'");
+                    "Attempting to return type '" + myRetType.toString() + 
+                    "' in method '" + *env.currentMethod 
+                    + "' which has return type '" + methodRetType.toString() +
+                    "' in class '" + env.currentClass->toString() + "'");
     }
 }
 
@@ -515,11 +526,16 @@ String ClassDecl::toString() const
 
 Type ClassDecl::typeCheckPrv(TypeEnv& env)
 {
-    //TODO more stuff needs doing.
-    env.currentClass = name;
+    // Entering new class.
+    ValueType myType(name);
+    ValueType baseType(baseClass);
+    declareClass(env, myType);
+    env.currentClass = myType;
 
-    if(extends)
-        validType(env, baseClass); //check if the base class is valid
+    if (extends)
+    {
+        validType(env, baseType); //check if the base class is valid
+    }
 
     for (ASNPtr& member : members)
     {
@@ -530,7 +546,7 @@ Type ClassDecl::typeCheckPrv(TypeEnv& env)
     env.currentClass = nullopt;
 
     // Final type is just the class name.
-    return name;
+    return myType;
 }
 
 } //namespace dflat
