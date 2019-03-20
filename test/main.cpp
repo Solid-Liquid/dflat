@@ -16,7 +16,15 @@ int main(int argc, char** argv)
         | Opt([&](bool) { config::traceParse = true; 
                           config::traceTypeCheck = true; })
           ["--trace"]
-          ("print parser trace output");
+          ("print all trace output")
+        
+        | Opt([&](bool) { config::traceParse = true; })
+          ["--ptrace"]
+          ("print parser trace output")
+        
+        | Opt([&](bool) { config::traceTypeCheck = true; })
+          ["--ttrace"]
+          ("print typechecker trace output");
 
     session.cli(cli); // Use the new CLI parser.
     auto rc = session.applyCommandLine(argc, argv); // Parse the CLI.

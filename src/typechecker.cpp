@@ -1,48 +1,64 @@
 #include "typechecker.hpp"
+#include "config.hpp"
+#include <iostream>
 
 namespace dflat
 {
 TypeEnv initialTypeEnv() {
-#define BINOP binopCanonicalName
-#define UNOP unopCanonicalName
-    Type const i = intType;
-    Type const b = boolType;
+    TypeEnv env;
 
-    return TypeEnv{
-        {
-            // Predefined types ("types" variable)
-            intType,
-            boolType,
-            voidType,
-        },
-        {
-            // Predefined symbols ("rules" variable)
-            {BINOP(opPlus, i, i), i},     // int  +  int  -> int
-            {BINOP(opMinus, i, i), i},    // int  -  int  -> int
-            {BINOP(opMult, i, i), i},     // int  *  int  -> int
-            {BINOP(opDiv, i, i), i},      // int  /  int  -> int
-            {BINOP(opLogEq, i, i), b},    // int  == int  -> bool
-            {BINOP(opLogEq, b, b), b},    // bool == bool -> bool
-            {BINOP(opLogNotEq, i, i), b}, // int  != int  -> bool
-            {BINOP(opLogNotEq, b, b), b}, // bool != bool -> bool
-            {BINOP(opAnd, i, i), b},      // int  &&  int  -> bool
-            {BINOP(opAnd, b, b), b},      // bool  &&  bool  -> bool
-            {BINOP(opOr, i, i), b},       // int  ||  int  -> bool
-            {BINOP(opOr, b, b), b},       // bool  ||  bool -> bool
+    auto predefined = [&](ValueType const& t)
+    {
+        env.types.insert(t);
+    };
 
-            {UNOP(opMinus, i), i}, // -int  -> int
-            {UNOP(opNot, b), b},   // !bool -> bool
-        },
-        {
-            // "variables" variable initialized as empty
-        },
-        {
-            "" // "currentClass" variable initialized as empty string
-        },
-        {""}};
+    auto binopRule = [&](OpType op, Type const& ret, 
+            Type const& lhs, Type const& rhs)
+    {
+        String name = binopCanonicalName(op, lhs, rhs);
+        env.rules.insert({ name, ret });
+    };
+    
+    auto unopRule = [&](OpType op, Type const& ret, Type const& rhs)
+    {
+        String name = unopCanonicalName(op, rhs);
+        env.rules.insert({ name, ret });
+    };
 
-#undef BINOP
-#undef UNOP
+    ValueType const i = intType;
+    ValueType const b = boolType;
+    ValueType const v = voidType;
+
+    // Initialize the global namespace
+    env.variables.insert({ config::globalClass, {} });
+    
+    // Predefined declarable types. 
+    predefined(i);
+    predefined(b);
+    predefined(v);
+
+    // Predefined function types. 
+    binopRule(opPlus,  i, i, i); // int +(int,int)
+    binopRule(opMinus, i, i, i);
+    binopRule(opMult,  i, i, i);
+    binopRule(opDiv,   i, i, i);
+    
+    binopRule(opLogEq,    b, i, i); // bool ==(int,int)
+    binopRule(opLogNotEq, b, i, i);
+    
+    binopRule(opLogEq,    b, b, b);
+    binopRule(opLogNotEq, b, b, b);
+   
+    binopRule(opAnd,      b, b, b); // bool &&(bool,bool)
+    binopRule(opOr,       b, b, b);
+    
+    binopRule(opAnd,      b, i, i); // bool &&(int,int)
+    binopRule(opOr,       b, i, i);
+
+    unopRule(opMinus, i, i); // int -(int)
+    unopRule(opNot,   b, b); // bool !(bool)
+
+    return env;
 }
 
 // Typecheck entire program, returning final environment.
@@ -52,14 +68,6 @@ TypeEnv typeCheck(Vector<ASNPtr> const &program)
 
     for (ASNPtr const &class_ : program)
     {
-        //Add current class to the set of types.
-        String className = cast(class_, ClassDecl)->name;
-        if (lookup(env.types, className))
-            throw TypeCheckerException("Redefinition of class: " + className);
-        env.types.insert(className);
-        env.currentClass = className;
-
-        //Check all types in all classes (ASN->typeCheck runs recursively).
         class_->typeCheck(env);
     }
 
@@ -75,7 +83,7 @@ Type typeCheck(ASNPtr const &asn)
 
 Type lookupRuleType(TypeEnv const &env, String const &name)
 {
-    Optional<Type> type = lookup(env.rules, name);
+    Type const* type = lookup(env.rules, name);
 
     if (type)
     {
@@ -87,36 +95,43 @@ Type lookupRuleType(TypeEnv const &env, String const &name)
     }
 }
 
-Vector<Type> lookupMethodType(TypeEnv const &env, String const &mthd)
+MethodType lookupMethodType(TypeEnv const &env, String const &mthd)
 {
     return lookupMethodTypeByClass(env, mthd, *env.currentClass);
 }
 
-Vector<Type> lookupMethodTypeByClass(TypeEnv const &env, String const &mthd, String const &clss)
+MethodType lookupMethodTypeByClass(TypeEnv const &env, String const &mthd, ValueType const &clss)
 {
-    Optional<Map<String, Vector<String>>> classVars = lookup(env.variables, clss);
+    Map<String, Type> const* classVars = lookup(env.variables, clss);
+
     if (!classVars)
     {
-        throw std::logic_error(String(__func__) + ": bad class lookup " + clss);
+        throw std::logic_error(String(__func__) + ": bad class lookup " 
+                + clss.toString());
     }
 
-    Optional<Vector<String>> mthdTypes = lookup(*classVars, mthd);
+    Type const* mthdType = lookup(*classVars, mthd);
 
-    if (mthdTypes)
+    if (!mthdType)
     {
-        return *mthdTypes;
+        throw TypeCheckerException("Invalid reference to method '" 
+                + mthd + "' in class: " + clss.toString());
     }
-    else
+    
+    if (!mthdType->isMethod())
     {
-        throw TypeCheckerException("Invalid reference to method '" + mthd + "' in class: " + clss);
+        throw TypeCheckerException("Referenced name '" + mthd
+            + "' in class " + clss.toString() + " is not a method type");
     }
+    
+    return mthdType->method();
 }
 
-Type lookupVarType(TypeEnv const &env, String const &var)
+ValueType lookupVarType(TypeEnv const &env, String const &var)
 {
     if (var == "this")
     {
-        return *env.currentClass;
+        return ValueType(*env.currentClass);
     }
     else
     {
@@ -124,35 +139,41 @@ Type lookupVarType(TypeEnv const &env, String const &var)
     }
 }
 
-Type lookupVarTypeByClass(TypeEnv const &env, String const &var, String const &clss)
+ValueType lookupVarTypeByClass(TypeEnv const &env, String const &var, ValueType const &clss)
 {
-    Optional<Map<String, Vector<String>>> classVars = lookup(env.variables, clss);
+    Map<String, Type> const* classVars = lookup(env.variables, clss);
 
     if (!classVars)
     {
-        throw std::logic_error(String(__func__) + ": bad class lookup " + clss);
+        throw std::logic_error(String(__func__) + ": bad class lookup " 
+                + clss.toString());
     }
 
-    Optional<Vector<String>> varType = lookup(*classVars, var);
+    Type const* varType = lookup(*classVars, var);
 
-    if (varType)
+    if (!varType)
     {
-        return (*varType)[0];
+        throw TypeCheckerException("Invalid reference to variable '" 
+                + var + "' in class: " + clss.toString());
     }
-    else
+    
+    if (!varType->isValue())
     {
-        throw TypeCheckerException("Invalid reference to variable '" + var + "' in class: " + clss);
+        throw TypeCheckerException("Referenced name '" + var
+            + "' in class " + clss.toString() + " is not a variable type");
     }
+
+    return varType->value();
 }
 
-bool validType(TypeEnv const &env, String const &type)
+bool validType(TypeEnv const &env, ValueType const &type)
 {
     if (env.currentClass == type)
     {
-        throw TypeCheckerException("Cannot use an instance of a class inside its own definition. Inside class: " + *env.currentClass);
+        throw TypeCheckerException("Cannot use an instance of a class inside its own definition. Inside class: " + env.currentClass->toString());
     }
 
-    Optional<Type> valid = lookup(env.types, type);
+    ValueType const* valid = lookup(env.types, type);
 
     if (valid)
     {
@@ -160,7 +181,8 @@ bool validType(TypeEnv const &env, String const &type)
     }
     else
     {
-        throw TypeCheckerException("Invalid reference to unknown type: " + type);
+        throw TypeCheckerException("Invalid reference to unknown type: " 
+                + type.toString());
     }
 }
 
@@ -169,10 +191,15 @@ void assertTypeIs(Type const &test, Type const &against)
     if (test != against)
     {
         throw TypeCheckerException(
-            "Type '" + test + "' must be '" + against + "'");
+            "Type '" + test.toString() + 
+            "' must be '" + against.toString() + "'"
+            );
     }
 }
 
+// Note that this function can produce a canonical name for an illegal type.
+// This is for the sake of decent errors. That is, while only ValueTypes
+// are allowed as arguments, this takes any Type.
 String funcCanonicalName(String const &name, Vector<Type> const &argTypes)
 {
     String canonicalName = name + "(";
@@ -189,27 +216,74 @@ String funcCanonicalName(String const &name, Vector<Type> const &argTypes)
             canonicalName += ",";
         }
 
-        canonicalName += argType;
+        canonicalName += argType.toString();
     }
 
     canonicalName += ")";
     return canonicalName;
 }
 
-
 String unopCanonicalName(OpType op, Type const &rhsType)
 {
-    return funcCanonicalName(opString(op), {rhsType});
+    return funcCanonicalName(opString(op), { rhsType });
 }
 
 String binopCanonicalName(OpType op, Type const &lhsType, Type const &rhsType)
 {
-    return funcCanonicalName(opString(op), {lhsType, rhsType});
+    return funcCanonicalName(opString(op), { lhsType, rhsType });
 }
 
-void mapNameToType(TypeEnv &env, String const &name, Vector<Type> const &type)
+void mapNameToType(TypeEnv &env, String const &name, Type const &type)
 {
-    env.variables[*env.currentClass][name] = type;
+    ValueType clss = env.currentClass ? *env.currentClass 
+                                      : config::globalClass;
+
+    Map<String, Type>* classVars = lookup(env.variables, clss);
+
+    if (!classVars)
+    {
+        throw std::logic_error(String(__func__) + ": bad class lookup " 
+                + clss.toString());
+    }
+
+    // Insert OR replace (this might be a new scope).
+    auto it = classVars->find(name);
+
+    if (it == classVars->end())
+    {
+        classVars->insert({ name, type });
+    }
+    else
+    {
+        it->second = type;
+    }
+    
+    if (config::traceTypeCheck)
+    {
+        std::cout << "map " << clss.toString() << "::" 
+            << name << " to " << type.toString() << "\n";
+    }
+}
+
+void declareClass(TypeEnv& env, ValueType const& clss)
+{
+    auto it = env.variables.find(clss);
+
+    if (it == env.variables.end())
+    {
+        env.types.insert(clss);
+        env.variables.insert({ clss, {} });
+
+        if (config::traceTypeCheck)
+        {
+            std::cout << "declare class " << clss.toString() << "\n";
+        }
+    }
+    else
+    {
+        throw TypeCheckerException("Duplicate class declaration " 
+                + clss.toString());
+    }
 }
 
 TypeCheckerException::TypeCheckerException(String msg) noexcept

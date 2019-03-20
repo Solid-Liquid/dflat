@@ -25,15 +25,15 @@ String opString(OpType);
 // Type for method definition arguments.
 struct FormalArg
 {
-    Type type;
+    TypeName typeName;
     String name;
 };
 
 inline
 bool operator ==(FormalArg const& a, FormalArg const& b)
 {
-    return a.type == b.type
-        && a.name == b.name;
+    return a.typeName == b.typeName
+        && a.name     == b.name;
 }
 
 // Type for object.member expressions.
@@ -70,7 +70,7 @@ class ASN
             return cmp(other);
         }
 
-        Type asnType;
+        Optional<Type> asnType;
     
     private:
         virtual Type typeCheckPrv(TypeEnv&) = 0;
@@ -274,7 +274,7 @@ class MethodDef : public ASN
 {
     //Example Input: int func(int x, int y) { statement }
     public:
-        String type;
+        String retTypeName;
         String name;
         Vector<FormalArg> args;
         ASNPtr statements;
@@ -286,7 +286,7 @@ class MethodDef : public ASN
 
         bool operator==(MethodDef const& other) const
         {
-            return type       == other.type
+            return retTypeName == other.retTypeName
                 && name       == other.name
                 && args       == other.args
                 && statements == other.statements;
@@ -361,7 +361,7 @@ class VarDecStm : public ASN
 {
     //Example Input: int x
     public:
-        String type;
+        String typeName;
         String name;
         ASNPtr value;
 
@@ -373,7 +373,7 @@ class VarDecStm : public ASN
 
         bool operator==(VarDecStm const& other) const
         {
-            return type == other.type
+            return typeName == other.typeName
                 && name == other.name
                 && value == other.value;
         }
@@ -404,7 +404,7 @@ class NewExp : public ASN
 {
     //Example Input: new type(exp, exp)
     public:
-        String type;
+        String typeName;
         Vector<ASNPtr> args;
 
         NewExp(String, Vector<ASNPtr>&&);
@@ -414,7 +414,7 @@ class NewExp : public ASN
 
         bool operator==(NewExp const& other) const
         {
-            return type == other.type
+            return typeName == other.typeName
                 && args == other.args;
         }
 
