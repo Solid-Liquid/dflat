@@ -33,7 +33,7 @@ add_executable(tests
     test/parser_tests.cpp
     test/token_helpers.hpp
     test/typechecker_tests.cpp
-    test/exp_code_gen_tests.cpp
+    test/codegenerator_tests.cpp
     )
 
 
