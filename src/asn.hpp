@@ -8,6 +8,7 @@
 #include "string.hpp"
 #include "vector.hpp"
 #include "typechecker_tools.hpp"
+#include "codegenerator_tools.hpp"
 
 namespace dflat
 {

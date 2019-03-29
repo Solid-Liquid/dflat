@@ -20,6 +20,7 @@ add_library(dflat_common
     src/typechecker_tools.hpp
     src/codegenerator.hpp
     src/codegenerator.cpp
+    src/codegenerator_tools.hpp
     )
 
 add_executable(dflat
