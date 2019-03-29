@@ -5,14 +5,14 @@ namespace dflat
 
 String generateCode(Vector<ASNPtr> const& program)
 {
-    String ret = "";
+    GenEnv env;
     for(size_t i = 0; i < program.size(); i++)
     {
 
-//          tree[i]
+          program[i]->codeGenerator(env);
 
     }
-    return "Hello World...";
+    return genEverything(env);
 }
 
 

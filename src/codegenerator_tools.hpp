@@ -10,10 +10,15 @@ struct GenEnv
     //TODO figure out what needs to be here
     int tempDeleteLater;
 
-    String funcDecl = "";
     String structDecl = "";
+    String funcDecl = "";
     String main = "";
 };
+
+String genEverything(GenEnv env)
+{
+    return env.structDecl + env.funcDecl + env.main;
+}
 
 }
 
