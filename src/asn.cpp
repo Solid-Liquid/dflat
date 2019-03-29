@@ -516,6 +516,7 @@ Type NewExp::typeCheckPrv(TypeEnv& env)
 String NewExp::codeGenerator(GenEnv & env)
 {
     // TODO: everything.
+    return "";
 }
 
 //AssignStm:
@@ -666,6 +667,7 @@ Type ClassDecl::typeCheckPrv(TypeEnv& env)
 String ClassDecl::codeGenerator(GenEnv & env)
 {
     // TODO: everything.
+    return "";
 }
 
 } //namespace dflat
