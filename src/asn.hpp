@@ -77,7 +77,7 @@ class ASN
 
         Optional<Type> asnType;
 
-//        virtual String codeGenerator(ASN const&) const = 0;
+        virtual String codeGenerator(ASN const&) const = 0;
     
     private:
         virtual Type typeCheckPrv(TypeEnv&) = 0;
