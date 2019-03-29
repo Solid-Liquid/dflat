@@ -7,7 +7,7 @@
 namespace dflat
 {
 
-String generateCode(Vector<ASNPtr> const& program);
+String codeGenerator(Vector<ASNPtr> const& program);
 
 } // namespace dflat
 
