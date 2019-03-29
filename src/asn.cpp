@@ -81,6 +81,11 @@ Type VariableExp::typeCheckPrv(TypeEnv& env)
     }
 }
 
+String VariableExp::codeGenerator(GenEnv & env)
+{
+    return (object ? *object + ".":"") + name;
+}
+
 //NumberExp:
 NumberExp::NumberExp(int value_)
     : value(value_)
@@ -96,6 +101,11 @@ Type NumberExp::typeCheckPrv(TypeEnv&)
 {
     // Number type is int.
     return intType;
+}
+
+String NumberExp::codeGenerator(GenEnv & env)
+{
+    return to_string(value);
 }
 
 //BooleanExp:
@@ -116,6 +126,11 @@ Type BoolExp::typeCheckPrv(TypeEnv&)
 {
     // Boolean type is bool.
     return boolType;
+}
+
+String BoolExp::codeGenerator(GenEnv & env)
+{
+    return to_string(value);
 }
 
 //BinopExp:
@@ -142,6 +157,11 @@ Type BinopExp::typeCheckPrv(TypeEnv& env)
     return lookupRuleType(env, funcName);
 }
 
+String BinopExp::codeGenerator(GenEnv & env)
+{
+    return "("+lhs->codeGenerator(env) + opString(op) + rhs->codeGenerator(env)+")";
+}
+
 //UnopExp:
 UnopExp::UnopExp(ASNPtr&& _rhs, OpType _op)
     : rhs(move(_rhs)), op(_op)
@@ -160,6 +180,11 @@ Type UnopExp::typeCheckPrv(TypeEnv& env)
     Type rhsType = rhs->typeCheck(env);
     String funcName = unopCanonicalName(op, rhsType);
     return lookupRuleType(env, funcName);
+}
+
+String UnopExp::codeGenerator(GenEnv & env)
+{
+    return "("+opString(op) + rhs->codeGenerator(env)+")";
 }
 
 //Block:
@@ -191,6 +216,17 @@ Type Block::typeCheckPrv(TypeEnv& env)
     }
 
     return voidType;
+}
+
+String Block::codeGenerator(GenEnv & env)
+{
+    String s = "{";
+    for (ASNPtr const& stmt : statements)
+    {
+        s += stmt->codeGenerator(env) + ";";
+    }
+    s += "}";
+    return s;
 }
 
 //IfBlock:
@@ -231,6 +267,18 @@ Type IfStm::typeCheckPrv(TypeEnv& env)
     return voidType;
 }
 
+String IfStm::codeGenerator(GenEnv & env)
+{
+    String str = "if(" + logicExp->codeGenerator(env) + ")";
+    str += trueStatements->codeGenerator(env);
+    if(hasFalse)
+    {
+        str += "else";
+        str += falseStatements->codeGenerator(env);
+    }
+    return str;
+}
+
 //WhileStm:
 WhileStm::WhileStm(ASNPtr&& _logicExp, ASNPtr&& _statements)
     : logicExp(move(_logicExp)), statements(move(_statements))
@@ -256,6 +304,11 @@ Type WhileStm::typeCheckPrv(TypeEnv& env)
     assertTypeIs(bodyType, voidType);
 
     return voidType;
+}
+
+String WhileStm::codeGenerator(GenEnv & env)
+{
+    return "while(" + logicExp->codeGenerator(env) + ")"+ statements->codeGenerator(env);
 }
 
 //MethodBlock:
@@ -320,6 +373,24 @@ Type MethodDef::typeCheckPrv(TypeEnv& env)
     return voidType;
 }
 
+String MethodDef::codeGenerator(GenEnv & env)
+{
+    //TODO: check scope and use connonical/overloaded name.
+    //possible TODO: prototype.
+    String str = retTypeName + " " + name + "(";
+    int track = 0;
+    for(auto&& ar : args)
+    {
+        if(track > 0)
+            str += ", ";
+        str += ar.typeName + " " + ar.name;
+        ++track;
+    }
+    str += ")";
+    str += statements->codeGenerator(env);
+    return str;
+}
+
 //MethodExp:
 MethodExp::MethodExp(ASNPtr&& _method, Vector<ASNPtr>&& _args)
     : method(move(_method)), args(move(_args))
@@ -371,6 +442,22 @@ Type MethodExp::typeCheckPrv(TypeEnv& env)
     return ValueType(methodType.ret());
 }
 
+String MethodExp::codeGenerator(GenEnv & env)
+{
+    // TODO: Scope resolution.
+    String str = method->codeGenerator(env);
+    int track = 0;
+    for(auto&& ar : args)
+    {
+        if(track > 0)
+            str += ",";
+        str += ar->codeGenerator(env);
+        ++track;
+    }
+    str += ")";
+    return str;
+}
+
 //MethodStm:
 MethodStm::MethodStm(ASNPtr&& methodExp_)
     : methodExp(move(methodExp_))
@@ -388,6 +475,13 @@ Type MethodStm::typeCheckPrv(TypeEnv& env)
     // Final type is void.
     methodExp->typeCheck(env);
     return voidType;
+}
+
+String MethodStm::codeGenerator(GenEnv & env)
+{
+    //TODO: check scope and use connonical/overloaded name.
+    //possible TODO: prototype.
+    return methodExp->codeGenerator(env) + ";";
 }
 
 //NewExp:
@@ -419,6 +513,11 @@ Type NewExp::typeCheckPrv(TypeEnv& env)
     return type;
 }
 
+String NewExp::codeGenerator(GenEnv & env)
+{
+    // TODO: everything.
+}
+
 //AssignStm:
 AssignStm::AssignStm(ASNPtr&& _lhs, ASNPtr&& _rhs)
     : lhs(move(_lhs)), rhs(move(_rhs))
@@ -438,6 +537,11 @@ Type AssignStm::typeCheckPrv(TypeEnv& env)
     Type rhsType = rhs->typeCheck(env);
     assertTypeIs(rhsType, lhsType);
     return voidType;
+}
+
+String AssignStm::codeGenerator(GenEnv & env)
+{
+    return lhs->codeGenerator(env) + "=" + rhs->codeGenerator(env) + ";";
 }
 
 //VarDecStm:
@@ -469,6 +573,11 @@ Type VarDecStm::typeCheckPrv(TypeEnv& env)
 
     mapNameToType(env, name, lhsType);
     return voidType;
+}
+
+String VarDecStm::codeGenerator(GenEnv & env)
+{
+    return typeName + " " + name + "=" + value->codeGenerator(env) + ";";
 }
 
 
@@ -504,6 +613,11 @@ Type RetStm::typeCheckPrv(TypeEnv& env)
                     + "' which has return type '" + methodRetType.toString() +
                     "' in class '" + env.currentClass->toString() + "'");
     }
+}
+
+String RetStm::codeGenerator(GenEnv & env)
+{
+    return "return " + value->codeGenerator(env) + ";";
 }
 
 // Class Definition
@@ -547,6 +661,11 @@ Type ClassDecl::typeCheckPrv(TypeEnv& env)
 
     // Final type is just the class name.
     return myType;
+}
+
+String ClassDecl::codeGenerator(GenEnv & env)
+{
+    // TODO: everything.
 }
 
 } //namespace dflat
