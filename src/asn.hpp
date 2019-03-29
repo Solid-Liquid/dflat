@@ -58,6 +58,11 @@ class ASN
         virtual String toString() const = 0;        //Converts to printable string
         virtual ASNType getType() const = 0;        //Returns the ASNType
         virtual bool cmp(ASN const&) const = 0;     //Compares the ASNType
+        /**
+         * @brief Returns the pointer's ASNType enum.
+         * @param TypeEnv
+         * @return Type
+         */
         Type typeCheck(TypeEnv&);
 
         bool operator==(ASN const& other) const
@@ -71,6 +76,8 @@ class ASN
         }
 
         Optional<Type> asnType;
+
+//        virtual String codeGenerator(ASN const&) const = 0;
     
     private:
         virtual Type typeCheckPrv(TypeEnv&) = 0;
