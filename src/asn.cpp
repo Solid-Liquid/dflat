@@ -130,7 +130,7 @@ Type BoolExp::typeCheckPrv(TypeEnv&)
 
 String BoolExp::generateCode(GenEnv & env)
 {
-    return to_string(value);
+    return value ? "1" : "0";
 }
 
 //BinopExp:
@@ -184,7 +184,7 @@ Type UnopExp::typeCheckPrv(TypeEnv& env)
 
 String UnopExp::generateCode(GenEnv & env)
 {
-    return "("+opString(op) + rhs->generateCode(env)+")";
+    return "(" + opString(op) + rhs->generateCode(env) + ")";
 }
 
 //Block:
@@ -220,12 +220,12 @@ Type Block::typeCheckPrv(TypeEnv& env)
 
 String Block::generateCode(GenEnv & env)
 {
-    String s = "{";
+    String s = "{\n";
     for (ASNPtr const& stmt : statements)
     {
-        s += stmt->generateCode(env) + ";";
+        s += stmt->generateCode(env);
     }
-    s += "}";
+    s += "}\n";
     return s;
 }
 
@@ -269,11 +269,11 @@ Type IfStm::typeCheckPrv(TypeEnv& env)
 
 String IfStm::generateCode(GenEnv & env)
 {
-    String str = "if(" + logicExp->generateCode(env) + ")";
+    String str = "if(" + logicExp->generateCode(env) + ")\n";
     str += trueStatements->generateCode(env);
     if(hasFalse)
     {
-        str += "else";
+        str += "else\n";
         str += falseStatements->generateCode(env);
     }
     return str;
@@ -308,7 +308,7 @@ Type WhileStm::typeCheckPrv(TypeEnv& env)
 
 String WhileStm::generateCode(GenEnv & env)
 {
-    return "while(" + logicExp->generateCode(env) + ")"+ statements->generateCode(env);
+    return "while(" + logicExp->generateCode(env) + ")\n" + statements->generateCode(env);
 }
 
 //MethodBlock:
@@ -444,7 +444,7 @@ Type MethodExp::typeCheckPrv(TypeEnv& env)
 
 String MethodExp::generateCode(GenEnv & env)
 {
-    // TODO: Scope resolution.
+    // TODO: Scope resolution. Cannonical name
     String str = method->generateCode(env);
     int track = 0;
     for(auto&& ar : args)
@@ -542,6 +542,7 @@ Type AssignStm::typeCheckPrv(TypeEnv& env)
 
 String AssignStm::generateCode(GenEnv & env)
 {
+    // TODO: check if this works for every case (i.e. rhs is new stm)
     return lhs->generateCode(env) + "=" + rhs->generateCode(env) + ";";
 }
 
@@ -578,6 +579,9 @@ Type VarDecStm::typeCheckPrv(TypeEnv& env)
 
 String VarDecStm::generateCode(GenEnv & env)
 {
+    //TODO: cannonical names
+    //typename could be cannonical name of class or
+    //"int" for int, "int" for bool
     return typeName + " " + name + "=" + value->generateCode(env) + ";";
 }
 
