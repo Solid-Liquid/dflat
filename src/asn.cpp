@@ -689,7 +689,14 @@ Type ClassDecl::typeCheckPrv(TypeEnv& env)
 
 void ClassDecl::generateCode(GenEnv & env)
 {
-    // TODO: everything.
+    //env.curClass = name;
+    //env.write() << "struct " + name + "\n{\n";
+    //if(extends)
+    //    env.write() << baseClass;
+    //for(auto&& ex : members)
+    //    str += ex->toString() + "\n\n";
+    //str += "};";
+    
 }
 
 } //namespace dflat

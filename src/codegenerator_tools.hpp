@@ -4,21 +4,27 @@
 #include "map.hpp"
 #include <sstream>
 #include "optional.hpp"
+#include "vector.hpp"
 
 namespace dflat
 {
 
 struct GenEnv
 {
-    //TODO figure out what needs to be here
-    int tempDeleteLater;
-
     std::stringstream structDef;
     std::stringstream funcDef;
     std::stringstream main;
 
     Optional<String> curClass;
     Optional<String> curFunc;
+
+    struct Members {
+        String type;
+        String name;
+    };
+
+    // ClassName -> [Members]
+    Map<String, Vector<Members>> classMembers;
 
     std::stringstream& write(){
         if(!curClass) {
