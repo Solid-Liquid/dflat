@@ -83,7 +83,7 @@ Type VariableExp::typeCheckPrv(TypeEnv& env)
 
 void VariableExp::generateCode(GenEnv & env)
 {
-    env.write() << (object ? *object + ".":"") << name;
+    env.write() << (object ? *object + "->":"") << name;
 }
 
 //NumberExp:
@@ -528,6 +528,11 @@ Type NewExp::typeCheckPrv(TypeEnv& env)
 void NewExp::generateCode(GenEnv & env)
 {
     // TODO: everything.
+    //  <type>* <name> = (<type>*)malloc(sizeof(<type>));
+    //  theoretically call constructor
+    //
+//        String typeName;
+//        Vector<ASNPtr> args;
     env.write() << "";
 }
 
@@ -556,7 +561,7 @@ void AssignStm::generateCode(GenEnv & env)
 {
     // TODO: check if this works for every case (i.e. rhs is new stm)
     lhs->generateCode(env);
-    env.write() << "=";
+    env.write() << " = ";
     rhs->generateCode(env);
     env.write() << ";";
 }
@@ -697,6 +702,15 @@ void ClassDecl::generateCode(GenEnv & env)
     //    str += ex->toString() + "\n\n";
     //str += "};";
     
+    env.structDef << "struct " << name << "\n"
+                  << "{\n";
+
+    for (ASNPtr& member : members)
+    {
+        member->generateCode(env);
+    }
+
+    env.structDef << "};\n";
 }
 
 } //namespace dflat

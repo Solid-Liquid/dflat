@@ -6,6 +6,7 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "typechecker.hpp"
+#include "codegenerator.hpp"
 #include "config.hpp"
 
 using namespace std;
@@ -58,7 +59,11 @@ int main(int argc, char* argv[])
 
         //Run TypeChecker:
         //config::traceTypeCheck = true;
-        TypeEnv environment = typeCheck(program);
+        TypeEnv typeEnv = typeCheck(program);
+
+        // Run CodeGenerator:
+        String output = codeGenerator(program);
+        std::cout << output << endl;
     }
     catch(exception& e)
     {

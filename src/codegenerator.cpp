@@ -5,7 +5,6 @@ namespace dflat
 
 String codeGenerator(Vector<ASNPtr> const& program)
 {
-    String ret = "";
     GenEnv env;
     for(size_t i = 0; i < program.size(); i++)
     {
@@ -13,7 +12,7 @@ String codeGenerator(Vector<ASNPtr> const& program)
           program[i]->generateCode(env);
 
     }
-    return ret;
+    return env.concat();
 }
 
 GenEnv initialGenEnv()
