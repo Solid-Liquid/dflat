@@ -81,9 +81,9 @@ Type VariableExp::typeCheckPrv(TypeEnv& env)
     }
 }
 
-String VariableExp::generateCode(GenEnv & env)
+void VariableExp::generateCode(GenEnv & env)
 {
-    return (object ? *object + ".":"") + name;
+    env.write() << (object ? *object + ".":"") << name;
 }
 
 //NumberExp:
@@ -103,9 +103,9 @@ Type NumberExp::typeCheckPrv(TypeEnv&)
     return intType;
 }
 
-String NumberExp::generateCode(GenEnv & env)
+void NumberExp::generateCode(GenEnv & env)
 {
-    return to_string(value);
+    env.write() << to_string(value);
 }
 
 //BooleanExp:
@@ -128,9 +128,9 @@ Type BoolExp::typeCheckPrv(TypeEnv&)
     return boolType;
 }
 
-String BoolExp::generateCode(GenEnv & env)
+void BoolExp::generateCode(GenEnv & env)
 {
-    return value ? "1" : "0";
+    env.write() << value ? "1" : "0";
 }
 
 //BinopExp:
@@ -157,9 +157,13 @@ Type BinopExp::typeCheckPrv(TypeEnv& env)
     return lookupRuleType(env, funcName);
 }
 
-String BinopExp::generateCode(GenEnv & env)
+void BinopExp::generateCode(GenEnv & env)
 {
-    return "("+lhs->generateCode(env) + opString(op) + rhs->generateCode(env)+")";
+    env.write() << "(";
+    lhs->generateCode(env);
+    env.write() << opString(op);
+    rhs->generateCode(env);
+    env.write() << ")";
 }
 
 //UnopExp:
@@ -182,9 +186,11 @@ Type UnopExp::typeCheckPrv(TypeEnv& env)
     return lookupRuleType(env, funcName);
 }
 
-String UnopExp::generateCode(GenEnv & env)
+void UnopExp::generateCode(GenEnv & env)
 {
-    return "(" + opString(op) + rhs->generateCode(env) + ")";
+    env.write() << "(" + opString(op);
+    rhs->generateCode(env);
+    env.write() << ")";
 }
 
 //Block:
@@ -218,15 +224,14 @@ Type Block::typeCheckPrv(TypeEnv& env)
     return voidType;
 }
 
-String Block::generateCode(GenEnv & env)
+void Block::generateCode(GenEnv & env)
 {
-    String s = "{\n";
+    env.write() << "{\n";
     for (ASNPtr const& stmt : statements)
     {
-        s += stmt->generateCode(env);
+        stmt->generateCode(env);
     }
-    s += "}\n";
-    return s;
+    env.write() << "}\n";
 }
 
 //IfBlock:
@@ -267,16 +272,17 @@ Type IfStm::typeCheckPrv(TypeEnv& env)
     return voidType;
 }
 
-String IfStm::generateCode(GenEnv & env)
+void IfStm::generateCode(GenEnv & env)
 {
-    String str = "if(" + logicExp->generateCode(env) + ")\n";
-    str += trueStatements->generateCode(env);
+    env.write() << "if(";
+    logicExp->generateCode(env);
+    env.write() << ")\n";
+    trueStatements->generateCode(env);
     if(hasFalse)
     {
-        str += "else\n";
-        str += falseStatements->generateCode(env);
+        env.write() << "else\n";
+        falseStatements->generateCode(env);
     }
-    return str;
 }
 
 //WhileStm:
@@ -306,9 +312,12 @@ Type WhileStm::typeCheckPrv(TypeEnv& env)
     return voidType;
 }
 
-String WhileStm::generateCode(GenEnv & env)
+void WhileStm::generateCode(GenEnv & env)
 {
-    return "while(" + logicExp->generateCode(env) + ")\n" + statements->generateCode(env);
+    env.write() << "while(";
+    logicExp->generateCode(env);
+    env.write() << ")\n";
+    statements->generateCode(env);
 }
 
 //MethodBlock:
@@ -373,22 +382,21 @@ Type MethodDef::typeCheckPrv(TypeEnv& env)
     return voidType;
 }
 
-String MethodDef::generateCode(GenEnv & env)
+void MethodDef::generateCode(GenEnv & env)
 {
     //TODO: check scope and use connonical/overloaded name.
     //possible TODO: prototype.
-    String str = retTypeName + " " + name + "(";
+    env.write() << retTypeName + " " + name + "(";
     int track = 0;
     for(auto&& ar : args)
     {
         if(track > 0)
-            str += ", ";
-        str += ar.typeName + " " + ar.name;
+            env.write() << ", ";
+        env.write() << ar.typeName + " " + ar.name;
         ++track;
     }
-    str += ")";
-    str += statements->generateCode(env);
-    return str;
+    env.write() << ")";
+    statements->generateCode(env);
 }
 
 //MethodExp:
@@ -442,20 +450,20 @@ Type MethodExp::typeCheckPrv(TypeEnv& env)
     return ValueType(methodType.ret());
 }
 
-String MethodExp::generateCode(GenEnv & env)
+void MethodExp::generateCode(GenEnv & env)
 {
     // TODO: Scope resolution. Cannonical name
-    String str = method->generateCode(env);
+    method->generateCode(env);
     int track = 0;
     for(auto&& ar : args)
     {
         if(track > 0)
-            str += ",";
-        str += ar->generateCode(env);
+            env.write() << ",";
+        ar->generateCode(env);
         ++track;
     }
-    str += ")";
-    return str;
+    env.write() <<  ")";
+    //TODO: Possible set env.curFunc to null
 }
 
 //MethodStm:
@@ -477,11 +485,15 @@ Type MethodStm::typeCheckPrv(TypeEnv& env)
     return voidType;
 }
 
-String MethodStm::generateCode(GenEnv & env)
+void MethodStm::generateCode(GenEnv & env)
 {
     //TODO: check scope and use connonical/overloaded name.
     //possible TODO: prototype.
-    return methodExp->generateCode(env) + ";";
+
+    //TODO: set env.func to canonical func name 
+    methodExp->generateCode(env);
+    env.write() << ";";
+    //TODO: set env.func to null
 }
 
 //NewExp:
@@ -513,10 +525,10 @@ Type NewExp::typeCheckPrv(TypeEnv& env)
     return type;
 }
 
-String NewExp::generateCode(GenEnv & env)
+void NewExp::generateCode(GenEnv & env)
 {
     // TODO: everything.
-    return "";
+    env.write() << "";
 }
 
 //AssignStm:
@@ -540,10 +552,13 @@ Type AssignStm::typeCheckPrv(TypeEnv& env)
     return voidType;
 }
 
-String AssignStm::generateCode(GenEnv & env)
+void AssignStm::generateCode(GenEnv & env)
 {
     // TODO: check if this works for every case (i.e. rhs is new stm)
-    return lhs->generateCode(env) + "=" + rhs->generateCode(env) + ";";
+    lhs->generateCode(env);
+    env.write() << "=";
+    rhs->generateCode(env);
+    env.write() << ";";
 }
 
 //VarDecStm:
@@ -577,12 +592,14 @@ Type VarDecStm::typeCheckPrv(TypeEnv& env)
     return voidType;
 }
 
-String VarDecStm::generateCode(GenEnv & env)
+void VarDecStm::generateCode(GenEnv & env)
 {
     //TODO: cannonical names
     //typename could be cannonical name of class or
     //"int" for int, "int" for bool
-    return typeName + " " + name + "=" + value->generateCode(env) + ";";
+    env.write() << typeName + " " + name + "=";
+    value->generateCode(env);
+    env.write() << ";";
 }
 
 
@@ -620,9 +637,11 @@ Type RetStm::typeCheckPrv(TypeEnv& env)
     }
 }
 
-String RetStm::generateCode(GenEnv & env)
+void RetStm::generateCode(GenEnv & env)
 {
-    return "return " + value->generateCode(env) + ";";
+    env.write() << "return ";
+    value->generateCode(env);
+    env.write() << ";";
 }
 
 // Class Definition
@@ -668,10 +687,9 @@ Type ClassDecl::typeCheckPrv(TypeEnv& env)
     return myType;
 }
 
-String ClassDecl::generateCode(GenEnv & env)
+void ClassDecl::generateCode(GenEnv & env)
 {
     // TODO: everything.
-    return "";
 }
 
 } //namespace dflat
