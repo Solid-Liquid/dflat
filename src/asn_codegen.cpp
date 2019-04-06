@@ -150,7 +150,9 @@ void RetStm::generateCode(GenEnv & env)
 
 void ClassDecl::generateCode(GenEnv & env)
 {
-                        /*
+                       
+    env.curClass = name;
+    /*
     // class was already declared.
     if(env.classMembers.count(name)) {
         //Throw Exception, Complain, Die.
@@ -165,7 +167,6 @@ void ClassDecl::generateCode(GenEnv & env)
         member->generateCode(env);
     }
 
-    env.curClass = name;
     env.write() << "struct " + name + "\n{\n";
     if(extends) {
         // base Class has not been declared
@@ -180,7 +181,8 @@ void ClassDecl::generateCode(GenEnv & env)
     }
 
     env.structDef << "};\n";
-    */
+    /**/
+    env.curClass = nullopt;
 }
 
 } //namespace dflat
