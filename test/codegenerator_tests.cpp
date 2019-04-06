@@ -38,6 +38,16 @@ TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
 
     REQUIRE( codeGen("false") == "0");
 
+
+    REQUIRE( codeGen("var") == "var");
+
+    REQUIRE( codeGen("a.var") == "a.var");
+
+    REQUIRE( codeGen("var + 2") == "(var+2)");
+
+    REQUIRE( codeGen("a.var + 2") == "(a.var+2)");
+
+
     REQUIRE( codeGen("1 + 2") == "(1+2)");
 
     REQUIRE( codeGen("1 - 2") == "(1-2)");
@@ -53,4 +63,13 @@ TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
     REQUIRE( codeGen("1 && 2") == "(1&&2)");
 
     REQUIRE( codeGen("1 + 2 + 3") == "(1+(2+3))");
+
+    REQUIRE( codeGen("1 * 2 + 3 * 4 - 7") == "((1*2)+((3*4)-7))");
+
+    REQUIRE( codeGen("true != false") == "(1!=0)");
+
+    // REQUIRE( codeGen("var = 1 + 2;") == "var=(1+2);");
+    // REQUIRE (codeGen("{
+    //     1 + 2;
+    //     };" == ))
 }
