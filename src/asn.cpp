@@ -528,6 +528,11 @@ Type NewExp::typeCheckPrv(TypeEnv& env)
 void NewExp::generateCode(GenEnv & env)
 {
     // TODO: everything.
+    //  <type>* <name> = (<type>*)malloc(sizeof(<type>));
+    //  theoretically call constructor
+    //
+//        String typeName;
+//        Vector<ASNPtr> args;
     env.write() << "";
 }
 
