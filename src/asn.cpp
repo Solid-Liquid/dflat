@@ -516,6 +516,11 @@ Type NewExp::typeCheckPrv(TypeEnv& env)
 String NewExp::generateCode(GenEnv & env)
 {
     // TODO: everything.
+    //  <type>* <name> = (<type>*)malloc(sizeof(<type>));
+    //  theoretically call constructor
+    //
+//        String typeName;
+//        Vector<ASNPtr> args;
     return "";
 }
 
@@ -622,6 +627,10 @@ Type RetStm::typeCheckPrv(TypeEnv& env)
 
 String RetStm::generateCode(GenEnv & env)
 {
+    //TODO
+    // env.emit() << "return ";
+    // value->generateCode(env);
+    // env.emit() ";\n";
     return "return " + value->generateCode(env) + ";";
 }
 
@@ -668,9 +677,20 @@ Type ClassDecl::typeCheckPrv(TypeEnv& env)
     return myType;
 }
 
+
+
 String ClassDecl::generateCode(GenEnv & env)
 {
-    // TODO: everything.
+    //TODO
+    //  env.structDecl << "struct " << name << "\n"
+    //                 << "{\n";
+    //
+    //  for (ASNPtr& member : members)
+    //  {
+    //      member->generateCode(env);
+    //  }
+    //
+    //  env.structDecl << "};\n";
     return "";
 }
 
