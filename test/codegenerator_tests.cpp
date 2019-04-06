@@ -41,11 +41,11 @@ TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
 
     REQUIRE( codeGen("var") == "var");
 
-    REQUIRE( codeGen("a.var") == "a.var");
+    REQUIRE( codeGen("a.var") == "a->var");
 
     REQUIRE( codeGen("var + 2") == "(var+2)");
 
-    REQUIRE( codeGen("a.var + 2") == "(a.var+2)");
+    REQUIRE( codeGen("a.var + 2") == "(a->var+2)");
 
 
     REQUIRE( codeGen("1 + 2") == "(1+2)");
