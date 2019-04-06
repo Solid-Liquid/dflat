@@ -18,6 +18,9 @@ add_library(dflat_common
     src/type.cpp src/type.hpp
     src/typechecker.cpp src/typechecker.hpp
     src/typechecker_tools.hpp
+    src/codegenerator.hpp
+    src/codegenerator.cpp
+    src/codegenerator_tools.hpp
     )
 
 add_executable(dflat
@@ -31,6 +34,7 @@ add_executable(tests
     test/parser_tests.cpp
     test/token_helpers.hpp
     test/typechecker_tests.cpp
+    test/codegenerator_tests.cpp
     )
 
 
