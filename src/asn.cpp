@@ -187,7 +187,7 @@ MethodExp::MethodExp(ASNPtr&& _method, Vector<ASNPtr>&& _args)
 
 String MethodExp::toString() const
 {
-    String str = method->toString();
+    String str = method->toString() + "(";
     int track = 0;
     for(auto&& ar : args)
     {

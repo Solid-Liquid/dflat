@@ -17,7 +17,7 @@ void NumberExp::generateCode(GenEnv & env)
 
 void BoolExp::generateCode(GenEnv & env)
 {
-    env.write() << value ? "1" : "0";
+    env.write() << (value ? "1" : "0");
 }
 
 void BinopExp::generateCode(GenEnv & env)
@@ -80,7 +80,7 @@ void MethodDef::generateCode(GenEnv & env)
         env.write() << ar.typeName + " " + ar.name;
         ++track;
     }
-    env.write() << ")";
+    env.write() << ")\n";
     statements->generateCode(env);
 }
 
@@ -88,6 +88,7 @@ void MethodExp::generateCode(GenEnv & env)
 {
     // TODO: Scope resolution. Cannonical name
     method->generateCode(env);
+    env.write() << "(";
     int track = 0;
     for(auto&& ar : args)
     {
@@ -134,9 +135,12 @@ void AssignStm::generateCode(GenEnv & env)
 void VarDecStm::generateCode(GenEnv & env)
 {
     //TODO: cannonical names
-    //typename could be cannonical name of class or
-    //"int" for int, "int" for bool
-    env.write() << typeName + " " + name + " = ";
+    //typename could be cannonical name of class
+    if(typeName == "bool")
+        env.write() << "int";
+    else
+        env.write() << typeName;
+    env.write() << " " + name + " = ";
     value->generateCode(env);
     env.write() << ";\n";
 }
