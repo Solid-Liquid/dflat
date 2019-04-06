@@ -154,23 +154,37 @@ void RetStm::generateCode(GenEnv & env)
 
 void ClassDecl::generateCode(GenEnv & env)
 {
-    //env.curClass = name;
-    //env.write() << "struct " + name + "\n{\n";
-    //if(extends)
-    //    env.write() << baseClass;
-    //for(auto&& ex : members)
-    //    str += ex->toString() + "\n\n";
-    //str += "};";
-    
-    env.structDef << "struct " << name << "\n"
-                  << "{\n";
+                        /*
+    // class was already declared.
+    if(env.classMembers.count(name)) {
+        //Throw Exception, Complain, Die.
+    }
 
-    for (ASNPtr& member : members)
-    {
+
+    // add this class to the map
+    Vector<Member>& thisClass = env.classMembers[name];
+
+    for(ASNPtr& member : members) {
+        thisClass.push_back(member);
         member->generateCode(env);
     }
 
+    env.curClass = name;
+    env.write() << "struct " + name + "\n{\n";
+    if(extends) {
+        // base Class has not been declared
+        if(!env.classMembers.count(baseClass)) {
+            //Throw Exception, Complain, Die.
+        }
+
+        for(ASNPtr& member : env.classMembers[baseClass]) {
+            thisClass.push_back(member);
+            
+        }
+    }
+
     env.structDef << "};\n";
+    */
 }
 
 } //namespace dflat
