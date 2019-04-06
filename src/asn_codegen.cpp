@@ -182,6 +182,19 @@ void ClassDecl::generateCode(GenEnv & env)
 
     env.structDef << "};\n";
     /**/
+    
+    // Fudged
+    env.structDef << "struct " << name << "\n"
+                  << "{\n";
+
+    for (ASNPtr& member : members)
+    {
+        member->generateCode(env);
+    }
+
+    env.structDef << "};\n";
+    // EndFudged
+
     env.curClass = nullopt;
 }
 
