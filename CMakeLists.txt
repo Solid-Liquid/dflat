@@ -14,6 +14,7 @@ add_library(dflat_common
     src/token.cpp src/token.hpp
     src/parser.cpp src/parser.hpp
     src/asn.cpp src/asn.hpp
+    src/asn_typecheck.cpp src/asn_codegen.cpp
     src/config.hpp
     src/type.cpp src/type.hpp
     src/typechecker.cpp src/typechecker.hpp

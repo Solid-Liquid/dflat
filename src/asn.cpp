@@ -29,19 +29,6 @@ ASN::~ASN()
 {
 }
 
-Type ASN::typeCheck(TypeEnv& env)
-{
-    Type type = typeCheckPrv(env);
-    asnType = type;
-
-    if (config::traceTypeCheck)
-    {
-        std::cout << toString() << " : " << type.toString() << "\n";
-    }
-
-    return type;
-}
-
 //VariableExp:
 VariableExp::VariableExp(String const& name_)
     : name(name_)
@@ -65,27 +52,6 @@ String VariableExp::toString() const
     }
 }
 
-Type VariableExp::typeCheckPrv(TypeEnv& env)
-{
-    // Variable type is the declared type for this name.
-    if (object)
-    {
-        // Lookup as a member of object.
-        ValueType objectType = lookupVarType(env, *object);
-        return lookupVarTypeByClass(env, name, objectType);
-    }
-    else
-    {
-        // Lookup as a local or a member of the current class.
-        return lookupVarType(env, name);
-    }
-}
-
-void VariableExp::generateCode(GenEnv & env)
-{
-    env.write() << (object ? *object + "->":"") << name;
-}
-
 //NumberExp:
 NumberExp::NumberExp(int value_)
     : value(value_)
@@ -95,17 +61,6 @@ NumberExp::NumberExp(int value_)
 String NumberExp::toString() const
 {
     return to_string(value);
-}
-
-Type NumberExp::typeCheckPrv(TypeEnv&)
-{
-    // Number type is int.
-    return intType;
-}
-
-void NumberExp::generateCode(GenEnv & env)
-{
-    env.write() << to_string(value);
 }
 
 //BooleanExp:
@@ -122,17 +77,6 @@ String BoolExp::toString() const
         return "false";
 }
 
-Type BoolExp::typeCheckPrv(TypeEnv&)
-{
-    // Boolean type is bool.
-    return boolType;
-}
-
-void BoolExp::generateCode(GenEnv & env)
-{
-    env.write() << value ? "1" : "0";
-}
-
 //BinopExp:
 BinopExp::BinopExp(ASNPtr&& _lhs, OpType _op, ASNPtr&& _rhs)
     : lhs(std::move(_lhs))
@@ -147,25 +91,6 @@ String BinopExp::toString() const
             " " + rhs->toString() + ")";
 }
 
-Type BinopExp::typeCheckPrv(TypeEnv& env)
-{
-    // Look up the type by the canonical name for this operation.
-    // e.g. "1 + 2" might be "+(int,int)" with type int.
-    Type lhsType = lhs->typeCheck(env);
-    Type rhsType = rhs->typeCheck(env);
-    String funcName = binopCanonicalName(op, lhsType, rhsType);
-    return lookupRuleType(env, funcName);
-}
-
-void BinopExp::generateCode(GenEnv & env)
-{
-    env.write() << "(";
-    lhs->generateCode(env);
-    env.write() << opString(op);
-    rhs->generateCode(env);
-    env.write() << ")";
-}
-
 //UnopExp:
 UnopExp::UnopExp(ASNPtr&& _rhs, OpType _op)
     : rhs(move(_rhs)), op(_op)
@@ -175,22 +100,6 @@ UnopExp::UnopExp(ASNPtr&& _rhs, OpType _op)
 String UnopExp::toString() const
 {
     return "(" + opString(op) + rhs->toString() + ")";
-}
-
-Type UnopExp::typeCheckPrv(TypeEnv& env)
-{
-    // Look up the type by the canonical name for this operation.
-    // e.g. "-1" might be "-(int)" with type int.
-    Type rhsType = rhs->typeCheck(env);
-    String funcName = unopCanonicalName(op, rhsType);
-    return lookupRuleType(env, funcName);
-}
-
-void UnopExp::generateCode(GenEnv & env)
-{
-    env.write() << "(" + opString(op);
-    rhs->generateCode(env);
-    env.write() << ")";
 }
 
 //Block:
@@ -208,30 +117,6 @@ String Block::toString() const
     }
     s += "}";
     return s;
-}
-
-Type Block::typeCheckPrv(TypeEnv& env)
-{
-    // Make sure all statements typecheck (in a new scope).
-    // Final type is void.
-    TypeEnv scopeEnv = env;
-
-    for (ASNPtr const& stm : statements)
-    {
-        stm->typeCheck(scopeEnv);
-    }
-
-    return voidType;
-}
-
-void Block::generateCode(GenEnv & env)
-{
-    env.write() << "{\n";
-    for (ASNPtr const& stmt : statements)
-    {
-        stmt->generateCode(env);
-    }
-    env.write() << "}\n";
 }
 
 //IfBlock:
@@ -255,36 +140,6 @@ String IfStm::toString() const
     return str;
 }
 
-Type IfStm::typeCheckPrv(TypeEnv& env)
-{
-    // Conditional must have bool type.
-    // Blocks must typecheck with type void.
-    // Final type is void.
-    Type condType = logicExp->typeCheck(env);
-    assertTypeIs(condType, boolType);
-
-    Type trueBlockType = trueStatements->typeCheck(env);
-    assertTypeIs(trueBlockType, voidType);
-
-    Type falseBlockType = falseStatements->typeCheck(env);
-    assertTypeIs(falseBlockType, voidType);
-
-    return voidType;
-}
-
-void IfStm::generateCode(GenEnv & env)
-{
-    env.write() << "if(";
-    logicExp->generateCode(env);
-    env.write() << ")\n";
-    trueStatements->generateCode(env);
-    if(hasFalse)
-    {
-        env.write() << "else\n";
-        falseStatements->generateCode(env);
-    }
-}
-
 //WhileStm:
 WhileStm::WhileStm(ASNPtr&& _logicExp, ASNPtr&& _statements)
     : logicExp(move(_logicExp)), statements(move(_statements))
@@ -296,28 +151,6 @@ String WhileStm::toString() const
     String str = "while(" + logicExp->toString() + ")\n";
     str += statements->toString();
     return str;
-}
-
-Type WhileStm::typeCheckPrv(TypeEnv& env)
-{
-    // Conditional must have bool type.
-    // Body must typecheck with type void.
-    // Final type is void.
-    Type condType = logicExp->typeCheck(env);
-    assertTypeIs(condType, boolType);
-
-    Type bodyType = statements->typeCheck(env);
-    assertTypeIs(bodyType, voidType);
-
-    return voidType;
-}
-
-void WhileStm::generateCode(GenEnv & env)
-{
-    env.write() << "while(";
-    logicExp->generateCode(env);
-    env.write() << ")\n";
-    statements->generateCode(env);
 }
 
 //MethodBlock:
@@ -346,59 +179,6 @@ String MethodDef::toString() const
     return str;
 }
 
-Type MethodDef::typeCheckPrv(TypeEnv& env)
-{
-    Vector<Type> argTypes; // Just the arg types.
-    MethodType methodType(ValueType(retTypeName), {});
-
-    for (FormalArg const& arg : args)
-    {
-        ValueType argType(arg.typeName);
-        argTypes.push_back(argType);
-        methodType.addArgType(argType);
-    }
-
-    String methodName = funcCanonicalName(name, argTypes);
-    mapNameToType(env, methodName, methodType);
-
-    // Currenly in this method.
-    env.currentMethod = methodName;
-
-    // Open new scope and declare args in it.
-    TypeEnv methodEnv = env;
-
-    for (FormalArg const& arg : args)
-    {
-        mapNameToType(methodEnv, arg.name, ValueType(arg.typeName));
-    }
-
-    // Typecheck body.
-    statements->typeCheck(methodEnv);
-
-    // No longer in a method.
-    env.currentMethod = nullopt;
-
-    // This isn't an expression, so return void.
-    return voidType;
-}
-
-void MethodDef::generateCode(GenEnv & env)
-{
-    //TODO: check scope and use connonical/overloaded name.
-    //possible TODO: prototype.
-    env.write() << retTypeName + " " + name + "(";
-    int track = 0;
-    for(auto&& ar : args)
-    {
-        if(track > 0)
-            env.write() << ", ";
-        env.write() << ar.typeName + " " + ar.name;
-        ++track;
-    }
-    env.write() << ")";
-    statements->generateCode(env);
-}
-
 //MethodExp:
 MethodExp::MethodExp(ASNPtr&& _method, Vector<ASNPtr>&& _args)
     : method(move(_method)), args(move(_args))
@@ -420,52 +200,6 @@ String MethodExp::toString() const
     return str;
 }
 
-Type MethodExp::typeCheckPrv(TypeEnv& env)
-{
-    auto varExp = dynamic_cast<VariableExp const*>(method.get());
-
-    if (!varExp) {
-        throw std::logic_error("INTERNAL ERROR: bad MethodExp method");
-    }
-
-    String objectName = (varExp->object ? *varExp->object : "this");
-
-    // Get class type of method.
-    ValueType objectType = lookupVarType(env, objectName);
-
-    // Make overload name.
-    Vector<Type> argTypes;
-
-    for (ASNPtr& arg : args)
-    {
-        Type argType = arg->typeCheck(env);
-        argTypes.push_back(argType);
-    }
-
-    // Get name for this overload.
-    String methodName = funcCanonicalName(varExp->name, argTypes);
-
-    // Get return type.
-    MethodType methodType = lookupMethodTypeByClass(env, methodName, objectType);
-    return ValueType(methodType.ret());
-}
-
-void MethodExp::generateCode(GenEnv & env)
-{
-    // TODO: Scope resolution. Cannonical name
-    method->generateCode(env);
-    int track = 0;
-    for(auto&& ar : args)
-    {
-        if(track > 0)
-            env.write() << ",";
-        ar->generateCode(env);
-        ++track;
-    }
-    env.write() <<  ")";
-    //TODO: Possible set env.curFunc to null
-}
-
 //MethodStm:
 MethodStm::MethodStm(ASNPtr&& methodExp_)
     : methodExp(move(methodExp_))
@@ -475,25 +209,6 @@ MethodStm::MethodStm(ASNPtr&& methodExp_)
 String MethodStm::toString() const
 {
     return methodExp->toString() + ";";
-}
-
-Type MethodStm::typeCheckPrv(TypeEnv& env)
-{
-    // Make sure the call typechecks.
-    // Final type is void.
-    methodExp->typeCheck(env);
-    return voidType;
-}
-
-void MethodStm::generateCode(GenEnv & env)
-{
-    //TODO: check scope and use connonical/overloaded name.
-    //possible TODO: prototype.
-
-    //TODO: set env.func to canonical func name 
-    methodExp->generateCode(env);
-    env.write() << ";";
-    //TODO: set env.func to null
 }
 
 //NewExp:
@@ -517,25 +232,6 @@ String NewExp::toString() const
     return str;
 }
 
-Type NewExp::typeCheckPrv(TypeEnv& env)
-{
-    ValueType type(typeName);
-    validType(env, type);
-    // TODO: check args against class constructor (contructor coming soon, sit tite!)
-    return type;
-}
-
-void NewExp::generateCode(GenEnv & env)
-{
-    // TODO: everything.
-    //  <type>* <name> = (<type>*)malloc(sizeof(<type>));
-    //  theoretically call constructor
-    //
-//        String typeName;
-//        Vector<ASNPtr> args;
-    env.write() << "";
-}
-
 //AssignStm:
 AssignStm::AssignStm(ASNPtr&& _lhs, ASNPtr&& _rhs)
     : lhs(move(_lhs)), rhs(move(_rhs))
@@ -545,25 +241,6 @@ AssignStm::AssignStm(ASNPtr&& _lhs, ASNPtr&& _rhs)
 String AssignStm::toString() const
 {
     return lhs->toString() + " = " + rhs->toString() + ";";
-}
-
-Type AssignStm::typeCheckPrv(TypeEnv& env)
-{
-    // RHS expression must match declared type of LHS variable.
-    // Final type is void.
-    Type lhsType = lhs->typeCheck(env);
-    Type rhsType = rhs->typeCheck(env);
-    assertTypeIs(rhsType, lhsType);
-    return voidType;
-}
-
-void AssignStm::generateCode(GenEnv & env)
-{
-    // TODO: check if this works for every case (i.e. rhs is new stm)
-    lhs->generateCode(env);
-    env.write() << " = ";
-    rhs->generateCode(env);
-    env.write() << ";";
 }
 
 //VarDecStm:
@@ -577,37 +254,6 @@ String VarDecStm::toString() const
     return typeName + " " + name + " = " + value->toString() + ";";
 }
 
-Type VarDecStm::typeCheckPrv(TypeEnv& env)
-{
-    ValueType lhsType(typeName);
-    validType(env, lhsType); //make sure that "type" is a declared type
-    Type rhsType = value->typeCheck(env);
-
-    if (Type(lhsType) != rhsType)
-    {
-        throw TypeCheckerException(
-                "In declaration of variable '" + name + "' of type '" + 
-                lhsType.toString() +
-                "' inside class '" + env.currentClass->toString() +
-                "':\nRHS expression of type '" + rhsType.toString() +
-                "' does not match the expected type.");
-    }
-
-    mapNameToType(env, name, lhsType);
-    return voidType;
-}
-
-void VarDecStm::generateCode(GenEnv & env)
-{
-    //TODO: cannonical names
-    //typename could be cannonical name of class or
-    //"int" for int, "int" for bool
-    env.write() << typeName + " " + name + "=";
-    value->generateCode(env);
-    env.write() << ";";
-}
-
-
 //RetStm:
 RetStm::RetStm(ASNPtr&& _value)
     : value(move(_value))
@@ -617,36 +263,6 @@ RetStm::RetStm(ASNPtr&& _value)
 String RetStm::toString() const
 {
     return "return " + value->toString() + ";";
-}
-
-Type RetStm::typeCheckPrv(TypeEnv& env)
-{
-    MethodType methodType = lookupMethodType(env, *env.currentMethod);
-
-    // Make a new type consisting only of the return type
-    //   so that it can be correctly compared to mine.
-    Type methodRetType = ValueType(methodType.ret());
-    Type myRetType     = value->typeCheck(env);
-
-    if (methodRetType == myRetType)
-    {
-        return myRetType;
-    }
-    else
-    {
-        throw TypeCheckerException(
-                    "Attempting to return type '" + myRetType.toString() + 
-                    "' in method '" + *env.currentMethod 
-                    + "' which has return type '" + methodRetType.toString() +
-                    "' in class '" + env.currentClass->toString() + "'");
-    }
-}
-
-void RetStm::generateCode(GenEnv & env)
-{
-    env.write() << "return ";
-    value->generateCode(env);
-    env.write() << ";";
 }
 
 // Class Definition
@@ -665,52 +281,6 @@ String ClassDecl::toString() const
         str += ex->toString() + "\n\n";
     str += "};";
     return str;
-}
-
-Type ClassDecl::typeCheckPrv(TypeEnv& env)
-{
-    // Entering new class.
-    ValueType myType(name);
-    ValueType baseType(baseClass);
-    declareClass(env, myType);
-    env.currentClass = myType;
-
-    if (extends)
-    {
-        validType(env, baseType); //check if the base class is valid
-    }
-
-    for (ASNPtr& member : members)
-    {
-        member->typeCheck(env);
-    }
-
-    // No longer in a class.
-    env.currentClass = nullopt;
-
-    // Final type is just the class name.
-    return myType;
-}
-
-void ClassDecl::generateCode(GenEnv & env)
-{
-    //env.curClass = name;
-    //env.write() << "struct " + name + "\n{\n";
-    //if(extends)
-    //    env.write() << baseClass;
-    //for(auto&& ex : members)
-    //    str += ex->toString() + "\n\n";
-    //str += "};";
-    
-    env.structDef << "struct " << name << "\n"
-                  << "{\n";
-
-    for (ASNPtr& member : members)
-    {
-        member->generateCode(env);
-    }
-
-    env.structDef << "};\n";
 }
 
 } //namespace dflat
