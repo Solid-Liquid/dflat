@@ -30,4 +30,20 @@ TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
     REQUIRE( GENEXP("false") == "0");
 
     REQUIRE( GENEXP("1 + 2") == "(1+2)");
+
+    REQUIRE( GENEXP("1 - 2") == "(1-2)");
+
+    REQUIRE( GENEXP("1 / 2") == "(1/2)");
+
+    REQUIRE( GENEXP("1 * 2") == "(1*2)");
+
+    REQUIRE( GENEXP("1 == 2") == "(1==2)");
+
+    REQUIRE( GENEXP("!2") == "(!2)");
+
+    REQUIRE( GENEXP("1 && 2") == "(1&&2)");
+
+    REQUIRE( GENEXP("1 + 2 + 3") == "(1+(2+3))");
+
+    
 }
