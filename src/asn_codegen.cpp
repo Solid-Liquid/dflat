@@ -107,7 +107,7 @@ void MethodStm::generateCode(GenEnv & env)
 
     //TODO: set env.func to canonical func name 
     methodExp->generateCode(env);
-    env.write() << ";";
+    env.write() << ";\n";
     //TODO: set env.func to null
 }
 
@@ -128,7 +128,7 @@ void AssignStm::generateCode(GenEnv & env)
     lhs->generateCode(env);
     env.write() << " = ";
     rhs->generateCode(env);
-    env.write() << ";";
+    env.write() << ";\n";
 }
 
 void VarDecStm::generateCode(GenEnv & env)
@@ -136,21 +136,21 @@ void VarDecStm::generateCode(GenEnv & env)
     //TODO: cannonical names
     //typename could be cannonical name of class or
     //"int" for int, "int" for bool
-    env.write() << typeName + " " + name + "=";
+    env.write() << typeName + " " + name + " = ";
     value->generateCode(env);
-    env.write() << ";";
+    env.write() << ";\n";
 }
 
 void RetStm::generateCode(GenEnv & env)
 {
     env.write() << "return ";
     value->generateCode(env);
-    env.write() << ";";
+    env.write() << ";\n";
 }
 
 void ClassDecl::generateCode(GenEnv & env)
 {
-    /*
+                        /*
     // class was already declared.
     if(env.classMembers.count(name)) {
         //Throw Exception, Complain, Die.

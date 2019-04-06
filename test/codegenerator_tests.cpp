@@ -7,7 +7,7 @@
 
 using namespace dflat;
 
-String codeGen(String const& input)
+String codeGenExp(String const& input)
 {
     //Helper function that makes testing expression code generation less ugly
     //Takes a string, tokenizes it, passes it a parser instance,
@@ -15,6 +15,21 @@ String codeGen(String const& input)
     String output;
     GenEnv env;
     Parser(tokenize(input)).parseExp()->generateCode(env);
+    output += env.structDef.str()
+            + env.funcDef.str()
+            + env.main.str();
+//    std::cout << output << "\n";
+    return output;
+}
+
+String codeGenStm(String const& input)
+{
+    //Helper function that makes testing statement code generation less ugly
+    //Takes a string, tokenizes it, passes it a parser instance,
+    //calls parseStm() and generateCode().
+    String output;
+    GenEnv env;
+    Parser(tokenize(input)).parseStm()->generateCode(env);
     output += env.structDef.str()
             + env.funcDef.str()
             + env.main.str();
@@ -32,44 +47,56 @@ TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
     //ANY PROBLEMS WOULD BE HANDLED BEFOREHAND
     
 
-    REQUIRE( codeGen("15") == "15");
+    REQUIRE( codeGenExp("15") == "15");
 
-    REQUIRE( codeGen("true") == "1");
+    REQUIRE( codeGenExp("true") == "1");
 
-    REQUIRE( codeGen("false") == "0");
-
-
-    REQUIRE( codeGen("var") == "var");
-
-    REQUIRE( codeGen("a.var") == "a->var");
-
-    REQUIRE( codeGen("var + 2") == "(var+2)");
-
-    REQUIRE( codeGen("a.var + 2") == "(a->var+2)");
+    REQUIRE( codeGenExp("false") == "0");
 
 
-    REQUIRE( codeGen("1 + 2") == "(1+2)");
+    REQUIRE( codeGenExp("var") == "var");
 
-    REQUIRE( codeGen("1 - 2") == "(1-2)");
+    REQUIRE( codeGenExp("a.var") == "a->var");
 
-    REQUIRE( codeGen("1 / 2") == "(1/2)");
+    REQUIRE( codeGenExp("var + 2") == "(var+2)");
 
-    REQUIRE( codeGen("1 * 2") == "(1*2)");
+    REQUIRE( codeGenExp("a.var + 2") == "(a->var+2)");
 
-    REQUIRE( codeGen("1 == 2") == "(1==2)");
 
-    REQUIRE( codeGen("!2") == "(!2)");
+    REQUIRE( codeGenExp("1 + 2") == "(1+2)");
 
-    REQUIRE( codeGen("1 && 2") == "(1&&2)");
+    REQUIRE( codeGenExp("1 - 2") == "(1-2)");
 
-    REQUIRE( codeGen("1 + 2 + 3") == "(1+(2+3))");
+    REQUIRE( codeGenExp("1 / 2") == "(1/2)");
 
-    REQUIRE( codeGen("1 * 2 + 3 * 4 - 7") == "((1*2)+((3*4)-7))");
+    REQUIRE( codeGenExp("1 * 2") == "(1*2)");
 
-    REQUIRE( codeGen("true != false") == "(1!=0)");
+    REQUIRE( codeGenExp("1 == 2") == "(1==2)");
 
-    // REQUIRE( codeGen("var = 1 + 2;") == "var=(1+2);");
-    // REQUIRE (codeGen("{
-    //     1 + 2;
-    //     };" == ))
+    REQUIRE( codeGenExp("!2") == "(!2)");
+
+    REQUIRE( codeGenExp("1 && 2") == "(1&&2)");
+
+    REQUIRE( codeGenExp("1 + 2 + 3") == "(1+(2+3))");
+
+    REQUIRE( codeGenExp("1 * 2 + 3 * 4 - 7") == "((1*2)+((3*4)-7))");
+
+    REQUIRE( codeGenExp("true != false") == "(1!=0)");
+}
+
+TEST_CASE( "Statement Code Generation Tests", "[CodeGenerator]" )
+{
+    REQUIRE( codeGenStm("int var = 1 + 2;") == "int var = (1+2);\n");
+    
+    REQUIRE( codeGenStm("var = 1 + 2;") == "var = (1+2);\n");
+
+    REQUIRE( codeGenStm("if(true == false){var = 1+2;}else{var = 1-2;}") == "if((1==0))\n{\nvar = (1+2);\n}\nelse\n{\nvar = (1-2);\n}\n");
+
+    REQUIRE( codeGenStm("while(true || false){var = 1+2;}") == "while((1||0))\n{\nvar = (1+2);\n}\n");
+
+    REQUIRE( codeGenStm("return 69;") == "return 69;\n");
+
+    REQUIRE( codeGenStm("return var;") == "return var;\n");
+    
+    REQUIRE( codeGenStm("return 1 + 2 + 3;") == "return (1+(2+3));\n");
 }
