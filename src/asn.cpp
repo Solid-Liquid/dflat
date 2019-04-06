@@ -83,7 +83,7 @@ Type VariableExp::typeCheckPrv(TypeEnv& env)
 
 void VariableExp::generateCode(GenEnv & env)
 {
-    env.write() << (object ? *object + ".":"") << name;
+    env.write() << (object ? *object + "->":"") << name;
 }
 
 //NumberExp:
@@ -561,7 +561,7 @@ void AssignStm::generateCode(GenEnv & env)
 {
     // TODO: check if this works for every case (i.e. rhs is new stm)
     lhs->generateCode(env);
-    env.write() << "=";
+    env.write() << " = ";
     rhs->generateCode(env);
     env.write() << ";";
 }
@@ -694,7 +694,15 @@ Type ClassDecl::typeCheckPrv(TypeEnv& env)
 
 void ClassDecl::generateCode(GenEnv & env)
 {
-    // TODO: everything.
+    env.structDef << "struct " << name << "\n"
+                  << "{\n";
+
+    for (ASNPtr& member : members)
+    {
+        member->generateCode(env);
+    }
+
+    env.structDef << "};\n";
 }
 
 } //namespace dflat

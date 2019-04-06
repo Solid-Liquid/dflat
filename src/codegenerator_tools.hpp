@@ -29,6 +29,15 @@ struct GenEnv
             return funcDef;
         }
     }
+
+    String concat()
+    {
+        return structDef.str() 
+             + "\n"
+             + funcDef.str() 
+             + "\n"
+             + main.str();
+    }
 };
 
 }
