@@ -10,7 +10,7 @@ String codeGenerator(Vector<ASNPtr> const& program)
     for(size_t i = 0; i < program.size(); i++)
     {
 
-          ret += program[i]->generateCode(env);
+          program[i]->generateCode(env);
 
     }
     return ret;

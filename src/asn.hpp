@@ -78,7 +78,7 @@ class ASN
 
         Optional<Type> asnType;
 
-        virtual String generateCode(GenEnv &) = 0;
+        virtual void generateCode(GenEnv &) = 0;
     
     private:
         virtual Type typeCheckPrv(TypeEnv&) = 0;
@@ -123,7 +123,7 @@ class VariableExp : public ASN
         ASNType getType() const { return expVariable; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
-        String generateCode(GenEnv &);
+        void generateCode(GenEnv &);
 
         bool operator==(VariableExp const& other) const
         {
@@ -144,7 +144,7 @@ class NumberExp : public ASN
         ASNType getType() const { return expNumber; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
-        String generateCode(GenEnv &);
+        void generateCode(GenEnv &);
 
         bool operator==(NumberExp const& other) const
         {
@@ -164,7 +164,7 @@ class BoolExp : public ASN
         ASNType getType() const { return expBool; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
-        String generateCode(GenEnv &);
+        void generateCode(GenEnv &);
 
         bool operator==(BoolExp const& other) const
         {
@@ -185,7 +185,7 @@ class BinopExp: public ASN
         ASNType getType() const { return expBinop; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
-        String generateCode(GenEnv &);
+        void generateCode(GenEnv &);
 
         bool operator==(BinopExp const& other) const
         {
@@ -209,7 +209,7 @@ class UnopExp : public ASN
         ASNType getType() const { return expUnop; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
-        String generateCode(GenEnv &);
+        void generateCode(GenEnv &);
 
         bool operator==(UnopExp const& other) const
         {
@@ -229,7 +229,7 @@ class Block : public ASN
         ASNType getType() const { return block; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
-        String generateCode(GenEnv &);
+        void generateCode(GenEnv &);
 
         bool operator==(Block const& other) const
         {
@@ -252,7 +252,7 @@ class IfStm : public ASN
         ASNType getType() const { return stmIf; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
-        String generateCode(GenEnv &);
+        void generateCode(GenEnv &);
 
         bool operator==(IfStm const& other) const
         {
@@ -276,7 +276,7 @@ class WhileStm : public ASN
         ASNType getType() const { return stmWhile; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
-        String generateCode(GenEnv &);
+        void generateCode(GenEnv &);
 
         bool operator==(WhileStm const& other) const
         {
@@ -300,7 +300,7 @@ class MethodDef : public ASN
         ASNType getType() const { return defMethod; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
-        String generateCode(GenEnv &);
+        void generateCode(GenEnv &);
 
         bool operator==(MethodDef const& other) const
         {
@@ -324,7 +324,7 @@ class MethodExp : public ASN
         ASNType getType() const { return expMethod; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
-        String generateCode(GenEnv &);
+        void generateCode(GenEnv &);
 
         bool operator==(MethodExp const& other) const
         {
@@ -345,7 +345,7 @@ class MethodStm : public ASN
         ASNType getType() const { return stmMethod; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
-        String generateCode(GenEnv &);
+        void generateCode(GenEnv &);
 
         bool operator==(MethodStm const& other) const
         {
@@ -367,7 +367,7 @@ class AssignStm : public ASN
         ASNType getType() const { return stmAssign; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
-        String generateCode(GenEnv &);
+        void generateCode(GenEnv &);
 
         bool operator==(AssignStm const& other) const
         {
@@ -391,7 +391,7 @@ class VarDecStm : public ASN
         ASNType getType() const { return stmVarDef; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
-        String generateCode(GenEnv &);
+        void generateCode(GenEnv &);
 
         bool operator==(VarDecStm const& other) const
         {
@@ -413,7 +413,7 @@ class RetStm : public ASN
         ASNType getType() const { return stmRet; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
-        String generateCode(GenEnv &);
+        void generateCode(GenEnv &);
 
         bool operator==(RetStm const& other) const
         {
@@ -434,7 +434,7 @@ class NewExp : public ASN
         ASNType getType() const { return expNew; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
-        String generateCode(GenEnv &);
+        void generateCode(GenEnv &);
 
         bool operator==(NewExp const& other) const
         {
@@ -463,7 +463,7 @@ class ClassDecl : public ASN
         ASNType getType() const { return declClass; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
-        String generateCode(GenEnv &);
+        void generateCode(GenEnv &);
         
         bool operator==(ClassDecl const& other) const
         {
