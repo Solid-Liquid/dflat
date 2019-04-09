@@ -18,14 +18,6 @@ struct GenEnv
     Optional<String> curClass;
     Optional<String> curFunc;
 
-    struct Members {
-        String type;
-        String name;
-    };
-
-    // ClassName -> [Members]
-    Map<String, Vector<Members>> classMembers;
-
     std::stringstream& write(){
         if(!curClass) {
             return main;

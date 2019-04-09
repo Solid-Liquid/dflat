@@ -456,10 +456,9 @@ class ClassDecl : public ASN
     public:
         String name;
         Vector<ASNPtr> members;
-        bool extends;
-        String baseClass;
+        ClassDecl* parent;
 
-        ClassDecl(String, Vector<ASNPtr>&&, bool = false, String = "");
+        ClassDecl(String, Vector<ASNPtr>&&, ClassDecl*); 
         ASNType getType() const { return declClass; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -469,8 +468,7 @@ class ClassDecl : public ASN
         {
             return name   == other.name
                 && members == other.members
-                && extends == other.extends
-                && baseClass == other.baseClass;
+                && parent == other.parent;
         }
         
         DECLARE_CMP(ClassDecl)

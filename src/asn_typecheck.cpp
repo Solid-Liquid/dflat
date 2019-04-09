@@ -250,12 +250,12 @@ Type ClassDecl::typeCheckPrv(TypeEnv& env)
 {
     // Entering new class.
     ValueType myType(name);
-    ValueType baseType(baseClass);
     declareClass(env, myType);
     env.currentClass = myType;
 
-    if (extends)
+    if (parent)
     {
+        ValueType baseType(parent->name);
         validType(env, baseType); //check if the base class is valid
     }
 

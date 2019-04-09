@@ -158,13 +158,6 @@ void ClassDecl::generateCode(GenEnv & env)
     env.curClass = name;
     /*
     // class was already declared.
-    if(env.classMembers.count(name)) {
-        //Throw Exception, Complain, Die.
-    }
-
-
-    // add this class to the map
-    Vector<Member>& thisClass = env.classMembers[name];
 
     for(ASNPtr& member : members) {
         thisClass.push_back(member);
@@ -184,7 +177,6 @@ void ClassDecl::generateCode(GenEnv & env)
         }
     }
 
-    env.structDef << "};\n";
     /**/
     
     // Fudged

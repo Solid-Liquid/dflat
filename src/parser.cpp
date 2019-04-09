@@ -751,8 +751,7 @@ ASNPtr Parser::parseClassDecl()
 
     Vector<ASNPtr> stm;
     ASNPtr curstm = nullptr;
-    bool extends = false;
-    String baseClass = "";
+    ClassDecl* parent = nullptr;
 
     MATCH_(ClassToken);
     MUST_PARSE(className, parseName(), "Expected class name");
@@ -760,8 +759,11 @@ ASNPtr Parser::parseClassDecl()
     if(match<ExtendsToken>())
     {
         MUST_PARSE(extName, parseName(), "Expected base class name");
-        extends = true;
-        baseClass = extName;
+        parent = _classes[extName];
+        if(!parent) 
+        {
+            throw ParserException("Undeclared Base class: " + extName);
+        }
     }
 
     MUST_MATCH_(LeftBraceToken)
@@ -775,7 +777,9 @@ ASNPtr Parser::parseClassDecl()
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<ClassDecl>(className, move(stm), extends, baseClass);
+    auto result = make_unique<ClassDecl>(className, move(stm), parent);
+    _classes.insert({className, result.get()});
+    return result;
 }
 
 ASNPtr Parser::parseClassStm()
