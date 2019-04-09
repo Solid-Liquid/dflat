@@ -38,30 +38,32 @@ void UnopExp::generateCode(GenEnv & env)
 
 void Block::generateCode(GenEnv & env)
 {
-    env.write() << "{\n";
+    env.writeTabbed() << "{\n";
+    env.tabs++;
     for (ASNPtr const& stmt : statements)
     {
         stmt->generateCode(env);
     }
-    env.write() << "}\n";
+    env.tabs--;
+    env.writeTabbed() << "}\n";
 }
 
 void IfStm::generateCode(GenEnv & env)
 {
-    env.write() << "if(";
+    env.writeTabbed() << "if(";
     logicExp->generateCode(env);
     env.write() << ")\n";
     trueStatements->generateCode(env);
     if(hasFalse)
     {
-        env.write() << "else\n";
+        env.writeTabbed() << "else\n";
         falseStatements->generateCode(env);
     }
 }
 
 void WhileStm::generateCode(GenEnv & env)
 {
-    env.write() << "while(";
+    env.writeTabbed() << "while(";
     logicExp->generateCode(env);
     env.write() << ")\n";
     statements->generateCode(env);
@@ -71,7 +73,7 @@ void MethodDef::generateCode(GenEnv & env)
 {
     //TODO: check scope and use connonical/overloaded name.
     //possible TODO: prototype.
-    env.write() << retTypeName + " " + name + "(";
+    env.writeTabbed() << retTypeName + " " + name + "(";
     int track = 0;
     for(auto&& ar : args)
     {
@@ -106,6 +108,7 @@ void MethodStm::generateCode(GenEnv & env)
     //TODO: check scope and use connonical/overloaded name.
     //possible TODO: prototype.
 
+    env.writeTabbed();
     //TODO: set env.func to canonical func name 
     methodExp->generateCode(env);
     env.write() << ";\n";
@@ -126,6 +129,7 @@ void NewExp::generateCode(GenEnv & env)
 void AssignStm::generateCode(GenEnv & env)
 {
     // TODO: check if this works for every case (i.e. rhs is new stm)
+    env.writeTabbed();
     lhs->generateCode(env);
     env.write() << " = ";
     rhs->generateCode(env);
@@ -135,6 +139,7 @@ void AssignStm::generateCode(GenEnv & env)
 void VarDecStm::generateCode(GenEnv & env)
 {
     //TODO: cannonical names
+    env.writeTabbed();
     //typename could be cannonical name of class
     if(typeName == "bool")
         env.write() << "int";
@@ -147,7 +152,7 @@ void VarDecStm::generateCode(GenEnv & env)
 
 void RetStm::generateCode(GenEnv & env)
 {
-    env.write() << "return ";
+    env.writeTabbed() << "return ";
     value->generateCode(env);
     env.write() << ";\n";
 }
@@ -156,42 +161,30 @@ void ClassDecl::generateCode(GenEnv & env)
 {
                        
     env.curClass = name;
-    /*
+    
     // class was already declared.
 
-    for(ASNPtr& member : members) {
-        thisClass.push_back(member);
-        member->generateCode(env);
-    }
+    env.writeTabbed() << "struct " + name + "\n{\n";
 
-    env.write() << "struct " + name + "\n{\n";
-    if(extends) {
-        // base Class has not been declared
-        if(!env.classMembers.count(baseClass)) {
-            //Throw Exception, Complain, Die.
-        }
+    env.tabs++;
 
-        for(ASNPtr& member : env.classMembers[baseClass]) {
-            thisClass.push_back(member);
-            
+    if(parent) {
+
+        for(ASNPtr& member : parent->members) {
+            member->generateCode(env);
         }
     }
-
-    /**/
-    
-    // Fudged
-    env.structDef << "struct " << name << "\n"
-                  << "{\n";
 
     for (ASNPtr& member : members)
     {
         member->generateCode(env);
     }
 
-    env.structDef << "};\n";
-    // EndFudged
+    env.tabs--;
 
-    env.curClass = nullopt;
+    env.structDef << "};\n";
+
+    env.curClass = nullopt;    
 }
 
 } //namespace dflat

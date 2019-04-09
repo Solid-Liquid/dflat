@@ -18,6 +18,8 @@ struct GenEnv
     Optional<String> curClass;
     Optional<String> curFunc;
 
+    unsigned tabs = 0;
+
     std::stringstream& write(){
         if(!curClass) {
             return main;
@@ -26,6 +28,12 @@ struct GenEnv
         } else {
             return funcDef;
         }
+    }
+
+    std::stringstream& writeTabbed(){
+        auto& stream = write();
+        stream << String(tabs, '\t');
+        return stream;
     }
 
     String concat()
