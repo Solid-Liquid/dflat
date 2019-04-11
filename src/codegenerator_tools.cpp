@@ -4,7 +4,6 @@
 namespace dflat
 {
 
-static String const dfPrefix     = "";
 static String const typePrefix   = "dfType_";
 static String const varPrefix    = "dfVar_";
 static String const methodPrefix = "dfMethod_";
@@ -54,17 +53,17 @@ String GenEnv::concat()
 
 String GenEnv::mangleTypeName(String const& x)
 {
-    return dfPrefix + typePrefix + x;
+    return typePrefix + x;
 }
 
 String GenEnv::mangleVarName(String const& x)
 {
-    return dfPrefix + varPrefix + x;
+    return varPrefix + x;
 }
 
 String GenEnv::mangleMethodName(String const& x)
 {
-    return dfPrefix + methodPrefix + x;
+    return methodPrefix + x;
 }
 
 GenEnv& GenEnv::operator<<(CodeTypeName const& x)
@@ -99,7 +98,7 @@ GenEnv& GenEnv::operator<<(CodeNumber const& x)
 
 GenEnv& GenEnv::operator<<(CodeParent const&)
 {
-    write() << dfPrefix << parentPrefix;
+    write() << parentPrefix;
     return *this;
 }
 
