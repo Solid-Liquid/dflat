@@ -12,13 +12,9 @@ String codeGenExp(String const& input)
     //Helper function that makes testing expression code generation less ugly
     //Takes a string, tokenizes it, passes it a parser instance,
     //calls parseExp() and generateCode(). (No typchecking)
-    String output;
     GenEnv env;
     Parser(tokenize(input)).parseExp()->generateCode(env);
-    output += env.structDef.str()
-            + env.funcDef.str()
-            + env.main.str();
-    return output;
+    return env.concat();
 }
 
 String codeGenStm(String const& input)
@@ -26,13 +22,9 @@ String codeGenStm(String const& input)
     //Helper function that makes testing statement code generation less ugly
     //Takes a string, tokenizes it, passes it a parser instance,
     //calls parseStm() and generateCode(). (No typchecking)
-    String output;
     GenEnv env;
     Parser(tokenize(input)).parseStm()->generateCode(env);
-    output += env.structDef.str()
-            + env.funcDef.str()
-            + env.main.str();
-    return output;
+    return env.concat();
 }
 
 TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
@@ -53,15 +45,15 @@ TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
 
 
     //Tests for variables:
-    REQUIRE( codeGenExp("var") == "var"); //TODO: Append to variable/obj names
+    REQUIRE( codeGenExp("var") == "dfVar_var"); //TODO: Append to variable/obj names
 
-    REQUIRE( codeGenExp("obj.var") == "obj->var");
+    REQUIRE( codeGenExp("obj.var") == "dfVar_obj->dfVar_var");
 
 
     //Tests for operator expressions:
-    REQUIRE( codeGenExp("var + 2") == "(var+2)");
+    REQUIRE( codeGenExp("var + 2") == "(dfVar_var+2)");
 
-    REQUIRE( codeGenExp("a.var + 2") == "(a->var+2)");
+    REQUIRE( codeGenExp("a.var + 2") == "(dfVar_a->dfVar_var+2)");
 
     REQUIRE( codeGenExp("1 + 2") == "(1+2)");
 
@@ -105,19 +97,19 @@ TEST_CASE( "Statement Code Generation Tests", "[CodeGenerator]" )
      */
 
     //Integer Declaration Statement:
-    REQUIRE( codeGenStm("int var = 1 + 2;") == "int var = (1+2);\n");
+    REQUIRE( codeGenStm("int var = 1 + 2;") == "\tdfType_int dfVar_var = (1+2);\n");
 
-    REQUIRE( codeGenStm("int var = -2;") == "int var = (-2);\n");
+    REQUIRE( codeGenStm("int var = -2;") == "\tdfType_int dfVar_var = (-2);\n");
     
     //Boolean declaration Statement:
-    REQUIRE( codeGenStm("bool var = true;") == "int var = 1;\n"); //no bool in C code
+    REQUIRE( codeGenStm("bool var = true;") == "\tdfType_int dfVar_var = 1;\n"); //no bool in C code
 
-    REQUIRE( codeGenStm("bool var = false;") == "int var = 0;\n"); //no bool in C code
+    REQUIRE( codeGenStm("bool var = false;") == "\tdfType_int dfVar_var = 0;\n"); //no bool in C code
 
     //Return statement:
     REQUIRE( codeGenStm("return 69;") == "return 69;\n");
 
-    REQUIRE( codeGenStm("return var;") == "return var;\n");
+    REQUIRE( codeGenStm("return var;") == "return dfVar_var;\n");
 
     REQUIRE( codeGenStm("return 1 + 2 + 3;") == "return (1+(2+3));\n");
 
@@ -137,7 +129,7 @@ TEST_CASE( "Statement Code Generation Tests", "[CodeGenerator]" )
 
              ==
 
-             "if((1==0))\n{\nvar = (1+2);\n}\nelse\n{\nvar = (1-2);\n}\n"
+             "if ((1==0))\n{\n\tdfVar_var = (1+2);\n}\nelse\n{\n\tdfVar_var = (1-2);\n}\n"
 
              );
 
@@ -153,7 +145,7 @@ TEST_CASE( "Statement Code Generation Tests", "[CodeGenerator]" )
 
              ==
 
-             "while((1||0))\n{\nvar = (1+2);\n}\n"
+             "while ((1||0))\n{\n\tdfVar_var = (1+2);\n}\n"
 
              );
 }

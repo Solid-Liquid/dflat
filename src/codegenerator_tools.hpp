@@ -5,45 +5,53 @@
 #include <sstream>
 #include "optional.hpp"
 #include "vector.hpp"
+#include <memory>
 
 namespace dflat
 {
 
-struct GenEnv
+// Have to forward declare to break include cycle.
+struct ASN;
+using ASNPtr = std::unique_ptr<ASN>; // TODO don't like this code dupe.
+
+struct CodeTypeName     { String value; };
+struct CodeMethodName   { String value; };
+struct CodeVarName      { String value; };
+struct CodeLiteral      { String value; };
+struct CodeNumber       { int value; };
+struct CodeParent       {};
+struct CodeTabs         {};
+struct CodeTabIn        {};
+struct CodeTabOut       {};
+
+class GenEnv
 {
-    std::stringstream structDef;
-    std::stringstream funcDef;
-    std::stringstream main;
+    public:
+        GenEnv& operator<<(CodeTypeName const&);
+        GenEnv& operator<<(CodeVarName const&);
+        GenEnv& operator<<(CodeMethodName const&);
+        GenEnv& operator<<(CodeLiteral const&);
+        GenEnv& operator<<(CodeNumber const&);
+        GenEnv& operator<<(CodeParent const&);
+        GenEnv& operator<<(CodeTabs const&);
+        GenEnv& operator<<(CodeTabIn const&);
+        GenEnv& operator<<(CodeTabOut const&);
+        GenEnv& operator<<(ASNPtr const&);
+        String concat();
+        
+        Optional<String> curClass;
+        Optional<String> curFunc;
 
-    Optional<String> curClass;
-    Optional<String> curFunc;
-
-    unsigned tabs = 0;
-
-    std::stringstream& write(){
-        if(!curClass) {
-            return main;
-        } else if(!curFunc) {
-            return structDef;
-        } else {
-            return funcDef;
-        }
-    }
-
-    std::stringstream& writeTabbed(){
-        auto& stream = write();
-        stream << String(tabs, '\t');
-        return stream;
-    }
-
-    String concat()
-    {
-        return structDef.str() 
-             + "\n"
-             + funcDef.str() 
-             + "\n"
-             + main.str();
-    }
+    private:
+        std::stringstream& write();
+        String mangleTypeName(String const&);
+        String mangleVarName(String const&);
+        String mangleMethodName(String const&);
+        
+        std::stringstream _structDef;
+        std::stringstream _funcDef;
+        std::stringstream _main;
+        unsigned _tabs = 0;
 };
 
 }

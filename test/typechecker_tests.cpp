@@ -26,7 +26,8 @@ Type stmType(String const& input)
     auto asn = parser.parseStm();
     return typeCheck(asn);
 }
-
+    
+//TODO Base b = new Sub(); should typecheck.
 
 TEST_CASE( "TypeChecker correctly checks types", "[TypeChecker]" )
 {

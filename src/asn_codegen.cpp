@@ -5,117 +5,161 @@
 namespace dflat
 {
 
+static CodeVarName    codeVar(String x)     { return { std::move(x) }; }
+static CodeMethodName codeMethod(String x)  { return { std::move(x) }; }
+static CodeTypeName   codeType(String x)    { return { std::move(x) }; }
+static CodeLiteral    codeLiteral(String x) { return { std::move(x) }; }
+static CodeNumber     codeNumber(int x)     { return {x}; }
+
+static CodeParent const codeParent;
+static CodeTabs const   codeTabs;
+static CodeTabIn const  codeTabIn;
+static CodeTabOut const codeTabOut;
+
 void VariableExp::generateCode(GenEnv & env)
 {
-    env.write() << (object ? *object + "->":"") << name;
+    //TODO whose variable? local? member?
+    if (object)
+    {
+        env << codeVar(*object) 
+            << codeLiteral("->");
+    }
+    
+    env << codeVar(name);
 }
 
 void NumberExp::generateCode(GenEnv & env)
 {
-    env.write() << to_string(value);
+    env << codeNumber(value);
 }
 
 void BoolExp::generateCode(GenEnv & env)
 {
-    env.write() << (value ? "1" : "0");
+    env << codeNumber(value ? 1 : 0);
 }
 
 void BinopExp::generateCode(GenEnv & env)
 {
-    env.write() << "(";
-    lhs->generateCode(env);
-    env.write() << opString(op);
-    rhs->generateCode(env);
-    env.write() << ")";
+    env << codeLiteral("(")
+        << lhs
+        << codeLiteral(opString(op))
+        << rhs
+        << codeLiteral(")");
 }
 
 void UnopExp::generateCode(GenEnv & env)
 {
-    env.write() << "(" + opString(op);
-    rhs->generateCode(env);
-    env.write() << ")";
+    env << codeLiteral("(") 
+        << codeLiteral(opString(op))
+        << rhs
+        << codeLiteral(")");
 }
 
 void Block::generateCode(GenEnv & env)
 {
-    env.writeTabbed() << "{\n";
-    env.tabs++;
+    env << codeTabs
+        << codeLiteral("{\n")
+        << codeTabIn;
+
     for (ASNPtr const& stmt : statements)
     {
-        stmt->generateCode(env);
+        env << stmt;
     }
-    env.tabs--;
-    env.writeTabbed() << "}\n";
+
+    env << codeTabOut
+        << codeTabs
+        << codeLiteral("}\n");
 }
 
 void IfStm::generateCode(GenEnv & env)
 {
-    env.writeTabbed() << "if(";
-    logicExp->generateCode(env);
-    env.write() << ")\n";
-    trueStatements->generateCode(env);
-    if(hasFalse)
+    env << codeTabs
+        << codeLiteral("if (")
+        << logicExp
+        << codeLiteral(")\n")
+        << trueStatements;
+
+    if (hasFalse)
     {
-        env.writeTabbed() << "else\n";
-        falseStatements->generateCode(env);
+        env << codeTabs
+            << codeLiteral("else\n")
+            << falseStatements;
     }
 }
 
 void WhileStm::generateCode(GenEnv & env)
 {
-    env.writeTabbed() << "while(";
-    logicExp->generateCode(env);
-    env.write() << ")\n";
-    statements->generateCode(env);
+    env << codeTabs
+        << codeLiteral("while (")
+        << logicExp
+        << codeLiteral(")\n")
+        << statements;
 }
 
 void MethodDef::generateCode(GenEnv & env)
 {
+    env.curFunc = name;
+    
     //TODO: check scope and use connonical/overloaded name.
     //possible TODO: prototype.
-    env.writeTabbed() << retTypeName + " " + name + "(";
+    env << codeTabs
+        << codeType(retTypeName)
+        << codeLiteral(" ")
+        << codeMethod(name)
+        << codeLiteral("(");
+    
     int track = 0;
     for(auto&& ar : args)
     {
         if(track > 0)
-            env.write() << ", ";
-        env.write() << ar.typeName + " " + ar.name;
+        {
+            env << codeLiteral(", ");
+        }
+       
+        env << codeType(ar.typeName)
+            << codeLiteral(" ")
+            << codeVar(ar.name);
+        
         ++track;
     }
-    env.write() << ")\n";
-    statements->generateCode(env);
+
+    env << codeLiteral(")\n")
+        << statements;
+
+    env.curFunc = nullopt;
 }
 
 void MethodExp::generateCode(GenEnv & env)
 {
     // TODO: Scope resolution. Cannonical name
-    method->generateCode(env);
-    env.write() << "(";
+    env << method
+        << codeLiteral("(");
+
     int track = 0;
     for(auto&& ar : args)
     {
         if(track > 0)
-            env.write() << ",";
+        {
+            env << codeLiteral(", ")
+                << ar;
+        }
+        
         ar->generateCode(env);
         ++track;
     }
-    env.write() <<  ")";
+   
+    env << codeLiteral(")");
     //TODO: Possible set env.curFunc to null
 }
 
 void MethodStm::generateCode(GenEnv & env)
 {
-    //TODO: check scope and use connonical/overloaded name.
-    //possible TODO: prototype.
-
-    env.writeTabbed();
-    //TODO: set env.func to canonical func name 
-    methodExp->generateCode(env);
-    env.write() << ";\n";
-    //TODO: set env.func to null
+    env << codeTabs
+        << methodExp
+        << codeLiteral(";\n");
 }
 
-void NewExp::generateCode(GenEnv & env)
+void NewExp::generateCode(GenEnv&)
 {
     // TODO: everything.
     //  <type>* <name> = (<type>*)malloc(sizeof(<type>));
@@ -123,67 +167,70 @@ void NewExp::generateCode(GenEnv & env)
     //
 //        String typeName;
 //        Vector<ASNPtr> args;
-    env.write() << "";
 }
 
-void AssignStm::generateCode(GenEnv & env)
+void AssignStm::generateCode(GenEnv& env)
 {
     // TODO: check if this works for every case (i.e. rhs is new stm)
-    env.writeTabbed();
-    lhs->generateCode(env);
-    env.write() << " = ";
-    rhs->generateCode(env);
-    env.write() << ";\n";
+    env << codeTabs
+        << lhs
+        << codeLiteral(" = ")
+        << rhs
+        << codeLiteral(";\n");
 }
 
-void VarDecStm::generateCode(GenEnv & env)
+void VarDecStm::generateCode(GenEnv& env)
 {
     //TODO: cannonical names
-    env.writeTabbed();
+    env << codeLiteral("\t"); // Hardcoding member vars to 1 tab.
+
     //typename could be cannonical name of class
-    if(typeName == "bool")
-        env.write() << "int";
+    if (typeName == "bool")
+    {
+        env << codeType("int");
+    }
     else
-        env.write() << typeName;
-    env.write() << " " + name + " = ";
-    value->generateCode(env);
-    env.write() << ";\n";
+    {
+        env << codeType(typeName);
+    }
+    
+    env << codeLiteral(" ")
+        << codeVar(name)
+        << codeLiteral(" = ")
+        << value
+        << codeLiteral(";\n");
 }
 
-void RetStm::generateCode(GenEnv & env)
+void RetStm::generateCode(GenEnv& env)
 {
-    env.writeTabbed() << "return ";
-    value->generateCode(env);
-    env.write() << ";\n";
+    env << codeTabs
+        << codeLiteral("return ")
+        << value
+        << codeLiteral(";\n");
 }
 
-void ClassDecl::generateCode(GenEnv & env)
+void ClassDecl::generateCode(GenEnv& env)
 {
                        
     env.curClass = name;
-    
-    // class was already declared.
+    env << codeLiteral("struct ")
+        << codeType(name)
+        << codeLiteral("\n{\n)");
 
-    env.writeTabbed() << "struct " + name + "\n{\n";
-
-    env.tabs++;
-
-    if(parent) {
-
-        for(ASNPtr& member : parent->members) {
-            member->generateCode(env);
-        }
+    if(parent) 
+    {
+        env << codeLiteral("\tstruct ") // Hardcoded to 1 tab
+            << codeType(parent->name)
+            << codeLiteral(" ")
+            << codeParent;
     }
 
     for (ASNPtr& member : members)
     {
-        member->generateCode(env);
+        env << member;
     }
 
-    env.tabs--;
-
-    env.structDef << "};\n";
-
+    env << codeLiteral("};\n");
     env.curClass = nullopt;    
 }
 
