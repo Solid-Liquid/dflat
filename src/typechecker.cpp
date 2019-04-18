@@ -97,7 +97,7 @@ Type lookupRuleType(TypeEnv const &env, String const &name)
 
 MethodType lookupMethodType(TypeEnv const &env, String const &mthd)
 {
-    return lookupMethodTypeByClass(env, mthd, *env.currentClass);
+    return lookupMethodTypeByClass(env, mthd, env.classes.cur()->type);
 }
 
 MethodType lookupMethodTypeByClass(TypeEnv const &env, String const &mthd, ValueType const &clss)
@@ -131,11 +131,11 @@ ValueType lookupVarType(TypeEnv const &env, String const &var)
 {
     if (var == "this")
     {
-        return ValueType(*env.currentClass);
+        return ValueType(env.classes.cur()->type);
     }
     else
     {
-        return lookupVarTypeByClass(env, var, *env.currentClass);
+        return lookupVarTypeByClass(env, var, env.classes.cur()->type);
     }
 }
 
@@ -168,9 +168,9 @@ ValueType lookupVarTypeByClass(TypeEnv const &env, String const &var, ValueType 
 
 bool validType(TypeEnv const &env, ValueType const &type)
 {
-    if (env.currentClass == type)
+    if (env.classes.cur()->type == type)
     {
-        throw TypeCheckerException("Cannot use an instance of a class inside its own definition. Inside class: " + env.currentClass->toString());
+        throw TypeCheckerException("Cannot use an instance of a class inside its own definition. Inside class: " + env.classes.cur()->type.toString());
     }
 
     ValueType const* valid = lookup(env.types, type);
@@ -235,8 +235,8 @@ String binopCanonicalName(OpType op, Type const &lhsType, Type const &rhsType)
 
 void mapNameToType(TypeEnv &env, String const &name, Type const &type)
 {
-    ValueType clss = env.currentClass ? *env.currentClass 
-                                      : config::globalClass;
+    ValueType clss = env.classes.cur() ? env.classes.cur()->type
+                                       : config::globalClass;
 
     Map<String, Type>* classVars = lookup(env.variables, clss);
 

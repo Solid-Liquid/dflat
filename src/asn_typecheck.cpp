@@ -214,7 +214,7 @@ Type VarDecStm::typeCheckPrv(TypeEnv& env)
         throw TypeCheckerException(
                 "In declaration of variable '" + name + "' of type '" + 
                 lhsType.toString() +
-                "' inside class '" + env.currentClass->toString() +
+                "' inside class '" + env.classes.cur()->type.toString() +
                 "':\nRHS expression of type '" + rhsType.toString() +
                 "' does not match the expected type.");
     }
@@ -242,7 +242,7 @@ Type RetStm::typeCheckPrv(TypeEnv& env)
                     "Attempting to return type '" + myRetType.toString() + 
                     "' in method '" + *env.currentMethod 
                     + "' which has return type '" + methodRetType.toString() +
-                    "' in class '" + env.currentClass->toString() + "'");
+                    "' in class '" + env.classes.cur()->type.toString() + "'");
     }
 }
 
@@ -251,7 +251,7 @@ Type ClassDecl::typeCheckPrv(TypeEnv& env)
     // Entering new class.
     ValueType myType(name);
     declareClass(env, myType);
-    env.currentClass = myType;
+    env.classes.enter(myType);
 
     if (parent)
     {
@@ -265,7 +265,7 @@ Type ClassDecl::typeCheckPrv(TypeEnv& env)
     }
 
     // No longer in a class.
-    env.currentClass = nullopt;
+    env.classes.leave();
 
     // Final type is just the class name.
     return myType;

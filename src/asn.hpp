@@ -37,20 +37,6 @@ bool operator ==(FormalArg const& a, FormalArg const& b)
         && a.name     == b.name;
 }
 
-// Type for object.member expressions.
-struct ObjectMember
-{
-    String object;
-    String member;
-};
-
-inline
-bool operator ==(ObjectMember const& a, ObjectMember const& b)
-{
-    return a.object == b.object
-        && a.member == b.member;
-}
-
 class ASN
 {
     //Base class for all ASN types

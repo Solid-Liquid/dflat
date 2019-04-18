@@ -7,6 +7,7 @@
 #include "set.hpp"
 #include "optional.hpp"
 #include "vector.hpp"
+#include "classmeta.hpp"
 
 namespace dflat
 {
@@ -33,11 +34,10 @@ struct TypeEnv
     ///     Map: String variable/function name -> Type
     Map<ValueType, Map<String, Type>> variables;
     
-    /// The type of the class that is currently being typechecked.
-    Optional<ValueType> currentClass;
-    
     /// The canonical name of the method that is currently being typechecked.
     Optional<String> currentMethod;
+
+    ClassMetaMan classes;
 };
 
 

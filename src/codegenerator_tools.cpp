@@ -4,15 +4,26 @@
 namespace dflat
 {
 
-static String const typePrefix   = "dfType_";
-static String const varPrefix    = "dfVar_";
-static String const methodPrefix = "dfMethod_";
-static String const parentPrefix = "dfParent_";
+static String const prolog = R"(
+#define $TYPE(x)   dftype_##x
+#define $VAR(x)    dfvar_##x
+#define $MEMBER(x) dfmember_##x
+#define $PARENT()  dfparent
+#define $METHOD(x) dfmethod_##x
+
+)";
+
+static String const typePrefix   = "$TYPE(";
+static String const varPrefix    = "$VAR(";
+static String const memberPrefix = "$MEMBER(";
+static String const methodPrefix = "$METHOD(";
+static String const parent       = "$PARENT";
+static String const suffix       = ")";
 
 
 std::stringstream& GenEnv::write()
 {
-    if(!curClass) 
+    if (!classes.cur()) 
     {
         return _main;
     } 
@@ -26,7 +37,12 @@ std::stringstream& GenEnv::write()
     }
 }
 
-String GenEnv::concat()
+String GenEnv::prolog() const
+{
+    return dflat::prolog;
+}
+
+String GenEnv::concat() const
 {
     String s;
     String const& sStruct = _structDef.str();
@@ -53,17 +69,22 @@ String GenEnv::concat()
 
 String GenEnv::mangleTypeName(String const& x)
 {
-    return typePrefix + x;
+    return typePrefix + x + suffix;
 }
 
 String GenEnv::mangleVarName(String const& x)
 {
-    return varPrefix + x;
+    return varPrefix + x + suffix;
+}
+
+String GenEnv::mangleMemberName(String const& x)
+{
+    return memberPrefix + x + suffix;
 }
 
 String GenEnv::mangleMethodName(String const& x)
 {
-    return methodPrefix + x;
+    return methodPrefix + x + suffix;
 }
 
 GenEnv& GenEnv::operator<<(CodeTypeName const& x)
@@ -75,6 +96,12 @@ GenEnv& GenEnv::operator<<(CodeTypeName const& x)
 GenEnv& GenEnv::operator<<(CodeVarName const& x)
 {
     write() << mangleVarName(x.value);
+    return *this;
+}
+
+GenEnv& GenEnv::operator<<(CodeMemberName const& x)
+{
+    write() << mangleMemberName(x.value);
     return *this;
 }
 
@@ -98,7 +125,7 @@ GenEnv& GenEnv::operator<<(CodeNumber const& x)
 
 GenEnv& GenEnv::operator<<(CodeParent const&)
 {
-    write() << parentPrefix;
+    write() << parent;
     return *this;
 }
 

@@ -42,7 +42,7 @@ add_executable(tests
 #### PROJECT LINKED LIBRARIES ####
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    set(DFLAT_LIBS -lgcov)
+    set(DFLAT_LIBS -lasan -lgcov)
 else ()
     set(DFLAT_LIBS )
 endif ()
@@ -118,6 +118,9 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
             -fprofile-arcs 
             -ftest-coverage
             -Wno-unknown-pragmas
+            -fsanitize=address
+            -g
+            -ggdb
         )
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     set(DFLAT_COMPILE_OPTIONS
