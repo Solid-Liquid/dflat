@@ -18,7 +18,8 @@ add_library(dflat_common
     src/config.hpp
     src/type.cpp src/type.hpp
     src/typechecker.cpp src/typechecker.hpp
-    src/typechecker_tools.hpp
+    src/typechecker_tools.cpp src/typechecker_tools.hpp
+    src/classmeta.cpp src/classmeta.hpp
     src/codegenerator.hpp
     src/codegenerator.cpp
     src/codegenerator_tools.cpp src/codegenerator_tools.hpp
@@ -42,7 +43,7 @@ add_executable(tests
 #### PROJECT LINKED LIBRARIES ####
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    set(DFLAT_LIBS -lasan -lgcov)
+    set(DFLAT_LIBS -lgcov)
 else ()
     set(DFLAT_LIBS )
 endif ()
@@ -118,9 +119,6 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
             -fprofile-arcs 
             -ftest-coverage
             -Wno-unknown-pragmas
-            -fsanitize=address
-            -g
-            -ggdb
         )
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     set(DFLAT_COMPILE_OPTIONS

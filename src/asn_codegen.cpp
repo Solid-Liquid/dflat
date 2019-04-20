@@ -17,109 +17,16 @@ static CodeTabs const   codeTabs;
 static CodeTabIn const  codeTabIn;
 static CodeTabOut const codeTabOut;
 
-void scope_push(GenEnv& env)
-{
-    env.scopes.push_back({});
-}
-
-void scope_pop(GenEnv& env)
-{
-    env.scopes.pop_back();
-}
-
-void scope_decl(GenEnv& env, String s, Decl d)
-{
-    env.scopes.back().insert({s, d});
-}
-
-void scope_decl_method(GenEnv& env, String s, Type t)
-{
-    Decl d{ DeclType::method, t };
-    scope_decl(env, s, d);
-}
-
-void scope_decl_local(GenEnv& env, String s, Type t)
-{
-    std::cout << "scope_decl_local(" << s << ", " << t.toString() << ")\n";
-    Decl d{ DeclType::local, t };
-    scope_decl(env, s, d);
-}
-
-void scope_print(GenEnv& env)
-{
-    std::cout << "scope_print\n";
-    unsigned tab = 1;
-    for (auto&& s : env.scopes)
-    {
-        for (auto&& [k,v] : s)
-        {
-            std::cout << String(tab*2, ' ') << k << "\n";
-        }
-        ++tab;
-    }
-}
-
-Optional<Decl> scope_lookup(GenEnv& env, String s)
-{
-    auto it = env.scopes.rbegin();
-    auto const end = env.scopes.rend();
-
-    while (it != end)
-    {
-        if (Decl const* d = lookup(*it, s))
-        {
-            return *d;
-        }
-
-        ++it;
-    }
-
-    return nullopt;
-}
-
-static void emitMember(GenEnv& env, ValueType objectType, String member)
-{
-    int depth = env.classes.classHasMember(objectType, member);
-
-    if (depth == 0)
-    {
-        throw std::logic_error("no member '" + member 
-                + "' in '" + objectType.name() + "'");
-    }
-
-    while (depth > 1)
-    {
-        env << codeLiteral("->")
-            << codeParent;
-    }
-
-    env << codeLiteral("->")
-        << codeMember(member);
-}
-
-void emitObject(GenEnv& env, String object, String member)
-{
-    Optional<Decl> decl = scope_lookup(env, object);
-
-    if (!decl)
-    {
-        throw std::logic_error("no object '" + object + "' in scope");
-    }
-
-    env << codeVar(object);
-    emitMember(env, decl->type.value(), member);
-}
-
 void VariableExp::generateCode(GenEnv & env)
 {
     //TODO referencing members of parent classes
     if (object)
     {
-        emitObject(env, *object, name);
+        env.emitObject(*object, name);
     }
     else
     {
-        Optional<Decl> decl = scope_lookup(env, name);
+        Optional<Decl> decl = env.lookupScope(name);
 
         if (decl && decl->declType == DeclType::local)
         {
@@ -129,7 +36,7 @@ void VariableExp::generateCode(GenEnv & env)
         else
         {
             // Must be using implicit this.
-            emitObject(env, "this", name);
+            env.emitObject("this", name);
         }
     }
 }
@@ -163,7 +70,7 @@ void UnopExp::generateCode(GenEnv & env)
 
 void Block::generateCode(GenEnv & env)
 {
-    scope_push(env);
+    env.pushScope();
 
     env << codeTabs
         << codeLiteral("{\n")
@@ -178,7 +85,7 @@ void Block::generateCode(GenEnv & env)
         << codeTabs
         << codeLiteral("}\n");
 
-    scope_pop(env);
+    env.popScope();
 }
 
 void IfStm::generateCode(GenEnv & env)
@@ -212,7 +119,7 @@ void MethodDef::generateCode(GenEnv & env)
     ValueType curClass = env.classes.cur()->type;
     
 //    scope_decl_method(name, *asnType);
-    scope_push(env);
+    env.pushScope();
     
     env << codeTabs
         << codeType(retTypeName)
@@ -224,7 +131,7 @@ void MethodDef::generateCode(GenEnv & env)
         << codeLiteral(" ")
         << codeVar("this");
         
-    scope_decl_local(env, "this", curClass);
+    env.declScopeLocal("this", curClass);
 
     for(auto&& ar : args)
     {
@@ -233,13 +140,13 @@ void MethodDef::generateCode(GenEnv & env)
             << codeLiteral(" ")
             << codeVar(ar.name);
         
-        scope_decl_local(env, ar.name, ValueType(ar.typeName));
+        env.declScopeLocal(ar.name, ValueType(ar.typeName));
     }
 
     env << codeLiteral(")\n")
         << statements;
 
-    scope_pop(env);
+    env.popScope();
     env.curFunc = nullopt;
 }
 
@@ -314,13 +221,18 @@ void VarDecStm::generateCode(GenEnv& env)
         << value
         << codeLiteral(";\n");
 
-    if (env.curFunc)
+    if (!env.classes.cur())
     {
-        scope_decl_local(env, name, ValueType(typeName)); 
+        // TODO needed for testing?
+        env.declScopeLocal(name, ValueType(typeName)); 
+    }
+    else if (env.curFunc)
+    {
+        env.declScopeLocal(name, ValueType(typeName)); 
     }
     else
     {
-        env.classes.cur()->members.insert({ name, ValueType(typeName) });
+        env.classes.addMember(name, ValueType(typeName));
     }
 }
 
@@ -342,8 +254,7 @@ void ClassDecl::generateCode(GenEnv& env)
 
     if(parent) 
     {
-        env.classes.cur()->parent = 
-            env.classes.lookup(ValueType(parent->name));
+        env.classes.setParent(ValueType(parent->name));
 
         env << codeLiteral("\tstruct ") // Hardcoded to 1 tab
             << codeType(parent->name)

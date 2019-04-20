@@ -7,12 +7,23 @@
 
 using namespace dflat;
 
+// Tests use the following symbols.
+void declTestStuff(GenEnv& env)
+{
+    env.classes.enter(ValueType("Object"));
+    env.classes.addMember("member", ValueType("int"));
+    env.classes.leave();
+    env.declScopeLocal("var", ValueType("int"));
+    env.declScopeLocal("obj", ValueType("Object"));
+}
+
 String codeGenExp(String const& input)
 {
     //Helper function that makes testing expression code generation less ugly
     //Takes a string, tokenizes it, passes it a parser instance,
     //calls parseExp() and generateCode(). (No typchecking)
     GenEnv env;
+    declTestStuff(env);
     Parser(tokenize(input)).parseExp()->generateCode(env);
     return env.concat();
 }
@@ -23,6 +34,7 @@ String codeGenStm(String const& input)
     //Takes a string, tokenizes it, passes it a parser instance,
     //calls parseStm() and generateCode(). (No typchecking)
     GenEnv env;
+    declTestStuff(env);
     Parser(tokenize(input)).parseStm()->generateCode(env);
     return env.concat();
 }
@@ -47,13 +59,13 @@ TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
     //Tests for variables:
     REQUIRE( codeGenExp("var") == "$VAR(var)"); //TODO: Append to variable/obj names
 
-    REQUIRE( codeGenExp("obj.var") == "$VAR(obj)->$MEMBER(var)");
+    REQUIRE( codeGenExp("obj.member") == "$VAR(obj)->$MEMBER(member)");
 
 
     //Tests for operator expressions:
     REQUIRE( codeGenExp("var + 2") == "($VAR(var)+2)");
 
-    REQUIRE( codeGenExp("a.var + 2") == "($VAR(a)->$MEMBER(var)+2)");
+    REQUIRE( codeGenExp("obj.member + 2") == "($VAR(obj)->$MEMBER(member)+2)");
 
     REQUIRE( codeGenExp("1 + 2") == "(1+2)");
 

@@ -57,10 +57,19 @@ class GenEnv
         GenEnv& operator<<(ASNPtr const&);
         String prolog() const;
         String concat() const;
+        void pushScope();
+        void popScope();
+        void declScope(String const&, Decl const&);
+        void declScopeMethod(String const&, Type const&);
+        void declScopeLocal(String const&, Type const&);
+        void printScope() const;
+        Optional<Decl> lookupScope(String const&);
        
         ClassMetaMan classes;
-        Vector<Map<String, Decl>> scopes = {{}};
         Optional<String> curFunc;
+
+        void emitMember(ValueType const& objectType, String const& memberName);
+        void emitObject(String const& objectName, String const& memberName);
 
     private:
         std::stringstream& write();
@@ -69,6 +78,7 @@ class GenEnv
         String mangleMemberName(String const&);
         String mangleMethodName(String const&);
         
+        Vector<Map<String, Decl>> _scopes = {{}};
         std::stringstream _structDef;
         std::stringstream _funcDef;
         std::stringstream _main;

@@ -3,6 +3,7 @@
 #include "string.hpp"
 #include "map.hpp"
 #include "type.hpp"
+#include "optional.hpp"
 
 namespace dflat
 {
@@ -10,79 +11,32 @@ namespace dflat
 struct ClassMeta
 {
     ValueType type;
-    ClassMeta const* parent;
+    Optional<ValueType> parent;
     Map<String, Type> members;
     
     ClassMeta(ValueType const& _type)
         : type(_type)
-        , parent(nullptr)
     {}
 };
 
 class ClassMetaMan
 {
     Map<ValueType, ClassMeta> _classes;
-    ClassMeta* _curClass = nullptr;
+    Optional<ValueType> _curClass;
 
     public:
-        void enter(ValueType const& type)
-        {
-            _curClass = declare(type);
-        }
+        void enter(ValueType const& classType);
+        void leave();
+        void declare(ValueType const& classType);
+        ClassMeta const* lookup(ValueType const& classType) const;
+        int classHasMember(ValueType const& classType, 
+                String const& memberName) const;
+        void addMember(String const& memberName, Type const& memberType);
+        void setParent(ValueType const& parentType);
+        ClassMeta const* cur() const;
 
-        void leave()
-        {
-            _curClass = nullptr;
-        }
-
-        ClassMeta* declare(ValueType const& type)
-        {
-            auto it = _classes.find(type);
-
-            if (it == _classes.end())
-            {
-                auto result = _classes.insert({ type, ClassMeta(type) });
-                it = result.first;
-            }
-
-            return &it->second;
-        }
-
-        ClassMeta* lookup(ValueType const& type)
-        {
-            return dflat::lookup(_classes, type);
-        }
-
-        int classHasMember(ValueType const& type, String const& member) const
-        {
-            int depth = 1;
-            ClassMeta const* cm = dflat::lookup(_classes, type);
-
-            while (cm)
-            {
-                if (cm->members.count(member))
-                {
-                    return depth;
-                }
-                else
-                {
-                    ++depth;
-                    cm = cm->parent;
-                }
-            }
-
-            return 0; // Does not have member.
-        }
-
-        ClassMeta* cur()
-        {
-            return _curClass;
-        }
-        
-        ClassMeta const* cur() const
-        {
-            return _curClass;
-        }
+    private:
+        ClassMeta* lookup(ValueType const& classType);
 };
 
 } // namespace dflat

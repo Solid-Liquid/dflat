@@ -1,5 +1,6 @@
 #include "codegenerator_tools.hpp"
 #include "asn.hpp"
+#include <iostream>
 
 namespace dflat
 {
@@ -158,5 +159,96 @@ GenEnv& GenEnv::operator<<(ASNPtr const& x)
     return *this;
 }
 
+void GenEnv::pushScope()
+{
+    _scopes.push_back({});
+}
+
+void GenEnv::popScope()
+{
+    _scopes.pop_back();
+}
+
+void GenEnv::declScope(String const& name, Decl const& decl)
+{
+    _scopes.back().insert({name, decl});
+}
+
+void GenEnv::declScopeMethod(String const& name, Type const& type)
+{
+    Decl decl{ DeclType::method, type };
+    declScope(name, decl);
+}
+
+void GenEnv::declScopeLocal(String const& name, Type const& type)
+{
+    Decl decl{ DeclType::local, type };
+    declScope(name, decl);
+}
+
+void GenEnv::printScope() const
+{
+    std::cout << "scope_print\n";
+    unsigned tab = 1;
+    for (auto&& s : _scopes)
+    {
+        for (auto&& [k,v] : s)
+        {
+            std::cout << String(tab*2, ' ') << k << "\n";
+        }
+        ++tab;
+    }
+}
+
+Optional<Decl> GenEnv::lookupScope(String const& name)
+{
+    auto it = _scopes.rbegin();
+    auto const end = _scopes.rend();
+
+    while (it != end)
+    {
+        if (Decl const* decl = lookup(*it, name))
+        {
+            return *decl;
+        }
+
+        ++it;
+    }
+
+    return nullopt;
+}
+
+void GenEnv::emitMember(ValueType const& objectType, String const& memberName)
+{
+    int depth = classes.classHasMember(objectType, memberName);
+
+    if (depth == 0)
+    {
+        throw std::logic_error("no member '" + memberName 
+                + "' in '" + objectType.name() + "'");
+    }
+
+    while (depth > 1)
+    {
+        *this << CodeLiteral{"->"}
+              << CodeParent{};
+    }
+
+    *this << CodeLiteral{"->"}
+          << CodeMemberName{memberName};
+}
+
+void GenEnv::emitObject(String const& objectName, String const& memberName)
+{
+    Optional<Decl> decl = lookupScope(objectName);
+
+    if (!decl)
+    {
+        throw std::logic_error("no object '" + objectName + "' in scope");
+    }
+
+    *this << CodeVarName{objectName};
+    emitMember(decl->type.value(), memberName);
+}
 
 } // namespace dflat
