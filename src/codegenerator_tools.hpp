@@ -3,6 +3,7 @@
 #include "string.hpp"
 #include "map.hpp"
 #include "classmeta.hpp"
+#include "scopemeta.hpp"
 #include "set.hpp"
 #include <sstream>
 #include "optional.hpp"
@@ -28,19 +29,6 @@ struct CodeTabs         {};
 struct CodeTabIn        {};
 struct CodeTabOut       {};
 
-enum class DeclType
-{
-    local,
-    member,
-    method,
-};
-
-struct Decl
-{
-    DeclType declType;  
-    Type type;
-};
-
 class GenEnv
 {
     public:
@@ -57,14 +45,7 @@ class GenEnv
         GenEnv& operator<<(ASNPtr const&);
         String prolog() const;
         String concat() const;
-        void pushScope();
-        void popScope();
-        void declScope(String const&, Decl const&);
-        void declScopeMethod(String const&, Type const&);
-        void declScopeLocal(String const&, Type const&);
-        void printScope() const;
-        Optional<Decl> lookupScope(String const&);
-       
+        ScopeMetaMan scopes;
         ClassMetaMan classes;
         Optional<String> curFunc;
 
@@ -78,7 +59,6 @@ class GenEnv
         String mangleMemberName(String const&);
         String mangleMethodName(String const&);
         
-        Vector<Map<String, Decl>> _scopes = {{}};
         std::stringstream _structDef;
         std::stringstream _funcDef;
         std::stringstream _main;

@@ -13,8 +13,8 @@ void declTestStuff(GenEnv& env)
     env.classes.enter(ValueType("Object"));
     env.classes.addMember("member", ValueType("int"));
     env.classes.leave();
-    env.declScopeLocal("var", ValueType("int"));
-    env.declScopeLocal("obj", ValueType("Object"));
+    env.scopes.declLocal("var", ValueType("int"));
+    env.scopes.declLocal("obj", ValueType("Object"));
 }
 
 String codeGenExp(String const& input)

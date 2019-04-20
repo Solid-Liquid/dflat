@@ -26,7 +26,7 @@ void VariableExp::generateCode(GenEnv & env)
     }
     else
     {
-        Optional<Decl> decl = env.lookupScope(name);
+        Optional<Decl> decl = env.scopes.lookup(name);
 
         if (decl && decl->declType == DeclType::local)
         {
@@ -70,7 +70,7 @@ void UnopExp::generateCode(GenEnv & env)
 
 void Block::generateCode(GenEnv & env)
 {
-    env.pushScope();
+    env.scopes.push();
 
     env << codeTabs
         << codeLiteral("{\n")
@@ -85,7 +85,7 @@ void Block::generateCode(GenEnv & env)
         << codeTabs
         << codeLiteral("}\n");
 
-    env.popScope();
+    env.scopes.pop();
 }
 
 void IfStm::generateCode(GenEnv & env)
@@ -119,7 +119,7 @@ void MethodDef::generateCode(GenEnv & env)
     ValueType curClass = env.classes.cur()->type;
     
 //    scope_decl_method(name, *asnType);
-    env.pushScope();
+    env.scopes.push();
     
     env << codeTabs
         << codeType(retTypeName)
@@ -131,7 +131,7 @@ void MethodDef::generateCode(GenEnv & env)
         << codeLiteral(" ")
         << codeVar("this");
         
-    env.declScopeLocal("this", curClass);
+    env.scopes.declLocal("this", curClass);
 
     for(auto&& ar : args)
     {
@@ -140,13 +140,13 @@ void MethodDef::generateCode(GenEnv & env)
             << codeLiteral(" ")
             << codeVar(ar.name);
         
-        env.declScopeLocal(ar.name, ValueType(ar.typeName));
+        env.scopes.declLocal(ar.name, ValueType(ar.typeName));
     }
 
     env << codeLiteral(")\n")
         << statements;
 
-    env.popScope();
+    env.scopes.pop();
     env.curFunc = nullopt;
 }
 
@@ -224,11 +224,11 @@ void VarDecStm::generateCode(GenEnv& env)
     if (!env.classes.cur())
     {
         // TODO needed for testing?
-        env.declScopeLocal(name, ValueType(typeName)); 
+        env.scopes.declLocal(name, ValueType(typeName)); 
     }
     else if (env.curFunc)
     {
-        env.declScopeLocal(name, ValueType(typeName)); 
+        env.scopes.declLocal(name, ValueType(typeName)); 
     }
     else
     {
