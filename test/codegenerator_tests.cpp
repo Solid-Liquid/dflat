@@ -7,9 +7,9 @@
 
 using namespace dflat;
 
-// Tests use the following symbols.
 void declTestStuff(GenEnv& env)
 {
+    // Tests use the following symbols. (See the other two functions below).
     env.classes.enter(ValueType("Object"));
     env.classes.addMember("member", ValueType("int"));
     env.classes.leave();
@@ -38,6 +38,18 @@ String codeGenStm(String const& input)
     Parser(tokenize(input)).parseStm()->generateCode(env);
     return env.concat();
 }
+
+
+
+//                   SPECIAL NOTE:
+//
+// Currently you will see things such as $VAR() and $TYPE()
+// in the generated code. We are using these in conjuction
+// with macros in C as part of our naming conventions for
+// variables, etc. We are likely to change this to something
+// less insane looking :)
+// TODO: change this
+
 
 TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
 {
@@ -125,23 +137,49 @@ TEST_CASE( "Statement Code Generation Tests", "[CodeGenerator]" )
 
     REQUIRE( codeGenStm("return 1 + 2 + 3;") == "return (1+(2+3));\n");
 
-    ////If else statement:
+}
+
+TEST_CASE( "Control Stuctures/Block Code Generation Tests", "[CodeGenerator]" )
+{
+    /*
+     *   Tests for properly generating code for control structures/blocks:
+     *   Resulting code is one line to avoid white space that
+     *   shouldn't be there.
+     */
+
+    //If statement:
     REQUIRE( codeGenStm(R"(
 
-                        if(true == false)
+                        if(!true)
                         {
-                            var = 1+2;
-                        }
-                        else
-                        {
-                            var = 1-2;
+                            int var = 1+2;
                         }
 
                         )")
 
              ==
 
-             "if ((1==0))\n{\n\t$VAR(var) = (1+2);\n}\nelse\n{\n\t$VAR(var) = (1-2);\n}\n"
+             "if ((!1))\n{\n$TYPE(int) $VAR(var) = (1+2);\n}\n"
+
+             );
+
+    //If else statement:
+    REQUIRE( codeGenStm(R"(
+
+                        if(true == false)
+                        {
+                            int var = 1+2;
+                        }
+                        else
+                        {
+                            int var = 1-2;
+                        }
+
+                        )")
+
+             ==
+
+             "if ((1==0))\n{\n$TYPE(int) $VAR(var) = (1+2);\n}\nelse\n{\n$TYPE(int) $VAR(var) = (1-2);\n}\n"
 
              );
 
@@ -150,25 +188,14 @@ TEST_CASE( "Statement Code Generation Tests", "[CodeGenerator]" )
 
                         while(true || false)
                         {
-                            var = 1+2;
+                            int var = 1+2;
                         }
 
                         )")
 
              ==
 
-             "while ((1||0))\n{\n\t$VAR(var) = (1+2);\n}\n"
+             "while ((1||0))\n{\n$TYPE(int) $VAR(var) = (1+2);\n}\n"
 
              );
-}
-
-TEST_CASE( "Block Code Generation Tests", "[CodeGenerator]" )
-{
-    /*
-     *   Tests for properly generating code for blocks (only):
-     *   Resulting code is one line to avoid white space that
-     *   shouldn't be there.
-     */
-
-    //TODO: write them tests
 }
