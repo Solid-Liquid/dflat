@@ -16,7 +16,7 @@ void Type::assertValue() const
 {
     if (!isValue())
     {
-        throw std::logic_error("Type is not ValueType");
+        throw std::logic_error("Type '" + toString() + "' is not ValueType");
     }
 }
 
@@ -24,7 +24,7 @@ void Type::assertMethod() const
 {
     if (!isMethod())
     {
-        throw std::logic_error("Type is not MethodType");
+        throw std::logic_error("Type '" + toString() + "' is not MethodType");
     }
 }
 

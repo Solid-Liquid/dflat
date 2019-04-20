@@ -7,12 +7,23 @@
 
 using namespace dflat;
 
+// Tests use the following symbols.
+void declTestStuff(GenEnv& env)
+{
+    env.classes.enter(ValueType("Object"));
+    env.classes.addMember("member", ValueType("int"));
+    env.classes.leave();
+    env.scopes.declLocal("var", ValueType("int"));
+    env.scopes.declLocal("obj", ValueType("Object"));
+}
+
 String codeGenExp(String const& input)
 {
     //Helper function that makes testing expression code generation less ugly
     //Takes a string, tokenizes it, passes it a parser instance,
     //calls parseExp() and generateCode(). (No typchecking)
     GenEnv env;
+    declTestStuff(env);
     Parser(tokenize(input)).parseExp()->generateCode(env);
     return env.concat();
 }
@@ -23,6 +34,7 @@ String codeGenStm(String const& input)
     //Takes a string, tokenizes it, passes it a parser instance,
     //calls parseStm() and generateCode(). (No typchecking)
     GenEnv env;
+    declTestStuff(env);
     Parser(tokenize(input)).parseStm()->generateCode(env);
     return env.concat();
 }
@@ -45,15 +57,15 @@ TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
 
 
     //Tests for variables:
-    REQUIRE( codeGenExp("var") == "dfVar_var"); //TODO: Append to variable/obj names
+    REQUIRE( codeGenExp("var") == "$VAR(var)"); //TODO: Append to variable/obj names
 
-    REQUIRE( codeGenExp("obj.var") == "dfVar_obj->dfVar_var");
+    REQUIRE( codeGenExp("obj.member") == "$VAR(obj)->$MEMBER(member)");
 
 
     //Tests for operator expressions:
-    REQUIRE( codeGenExp("var + 2") == "(dfVar_var+2)");
+    REQUIRE( codeGenExp("var + 2") == "($VAR(var)+2)");
 
-    REQUIRE( codeGenExp("a.var + 2") == "(dfVar_a->dfVar_var+2)");
+    REQUIRE( codeGenExp("obj.member + 2") == "($VAR(obj)->$MEMBER(member)+2)");
 
     REQUIRE( codeGenExp("1 + 2") == "(1+2)");
 
@@ -97,19 +109,19 @@ TEST_CASE( "Statement Code Generation Tests", "[CodeGenerator]" )
      */
 
     //Integer Declaration Statement:
-    REQUIRE( codeGenStm("int var = 1 + 2;") == "dfType_int dfVar_var = (1+2);\n");
+    REQUIRE( codeGenStm("int var = 1 + 2;") == "$TYPE(int) $VAR(var) = (1+2);\n");
 
-    REQUIRE( codeGenStm("int var = -2;") == "dfType_int dfVar_var = (-2);\n");
+    REQUIRE( codeGenStm("int var = -2;") == "$TYPE(int) $VAR(var) = (-2);\n");
     
     //Boolean declaration Statement:
-    REQUIRE( codeGenStm("bool var = true;") == "dfType_int dfVar_var = 1;\n"); //no bool in C code
+    REQUIRE( codeGenStm("bool var = true;") == "$TYPE(int) $VAR(var) = 1;\n"); //no bool in C code
 
-    REQUIRE( codeGenStm("bool var = false;") == "dfType_int dfVar_var = 0;\n"); //no bool in C code
+    REQUIRE( codeGenStm("bool var = false;") == "$TYPE(int) $VAR(var) = 0;\n"); //no bool in C code
 
     //Return statement:
     REQUIRE( codeGenStm("return 69;") == "return 69;\n");
 
-    REQUIRE( codeGenStm("return var;") == "return dfVar_var;\n");
+    REQUIRE( codeGenStm("return var;") == "return $VAR(var);\n");
 
     REQUIRE( codeGenStm("return 1 + 2 + 3;") == "return (1+(2+3));\n");
 
@@ -129,7 +141,7 @@ TEST_CASE( "Statement Code Generation Tests", "[CodeGenerator]" )
 
              ==
 
-             "if ((1==0))\n{\n\tdfVar_var = (1+2);\n}\nelse\n{\n\tdfVar_var = (1-2);\n}\n"
+             "if ((1==0))\n{\n\t$VAR(var) = (1+2);\n}\nelse\n{\n\t$VAR(var) = (1-2);\n}\n"
 
              );
 
@@ -145,7 +157,7 @@ TEST_CASE( "Statement Code Generation Tests", "[CodeGenerator]" )
 
              ==
 
-             "while ((1||0))\n{\n\tdfVar_var = (1+2);\n}\n"
+             "while ((1||0))\n{\n\t$VAR(var) = (1+2);\n}\n"
 
              );
 }

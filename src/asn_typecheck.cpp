@@ -25,13 +25,13 @@ Type VariableExp::typeCheckPrv(TypeEnv& env)
     if (object)
     {
         // Lookup as a member of object.
-        ValueType objectType = lookupVarType(env, *object);
-        return lookupVarTypeByClass(env, name, objectType);
+        ValueType objectType = env.lookupVarType(*object);
+        return env.lookupVarTypeByClass(name, objectType);
     }
     else
     {
         // Lookup as a local or a member of the current class.
-        return lookupVarType(env, name);
+        return env.lookupVarType(name);
     }
 }
 
@@ -54,7 +54,7 @@ Type BinopExp::typeCheckPrv(TypeEnv& env)
     Type lhsType = lhs->typeCheck(env);
     Type rhsType = rhs->typeCheck(env);
     String funcName = binopCanonicalName(op, lhsType, rhsType);
-    return lookupRuleType(env, funcName);
+    return env.lookupRuleType(funcName);
 }
 
 Type UnopExp::typeCheckPrv(TypeEnv& env)
@@ -63,7 +63,7 @@ Type UnopExp::typeCheckPrv(TypeEnv& env)
     // e.g. "-1" might be "-(int)" with type int.
     Type rhsType = rhs->typeCheck(env);
     String funcName = unopCanonicalName(op, rhsType);
-    return lookupRuleType(env, funcName);
+    return env.lookupRuleType(funcName);
 }
 
 Type Block::typeCheckPrv(TypeEnv& env)
@@ -124,24 +124,24 @@ Type MethodDef::typeCheckPrv(TypeEnv& env)
     }
 
     String methodName = funcCanonicalName(name, argTypes);
-    mapNameToType(env, methodName, methodType);
+    env.mapNameToType(methodName, methodType);
 
     // Currenly in this method.
-    env.currentMethod = methodName;
+    env.enterMethod(methodName);
 
     // Open new scope and declare args in it.
     TypeEnv methodEnv = env;
 
     for (FormalArg const& arg : args)
     {
-        mapNameToType(methodEnv, arg.name, ValueType(arg.typeName));
+        methodEnv.mapNameToType(arg.name, ValueType(arg.typeName));
     }
 
     // Typecheck body.
     statements->typeCheck(methodEnv);
 
     // No longer in a method.
-    env.currentMethod = nullopt;
+    env.leaveMethod();
 
     // This isn't an expression, so return void.
     return voidType;
@@ -158,7 +158,7 @@ Type MethodExp::typeCheckPrv(TypeEnv& env)
     String objectName = (varExp->object ? *varExp->object : "this");
 
     // Get class type of method.
-    ValueType objectType = lookupVarType(env, objectName);
+    ValueType objectType = env.lookupVarType(objectName);
 
     // Make overload name.
     Vector<Type> argTypes;
@@ -173,7 +173,7 @@ Type MethodExp::typeCheckPrv(TypeEnv& env)
     String methodName = funcCanonicalName(varExp->name, argTypes);
 
     // Get return type.
-    MethodType methodType = lookupMethodTypeByClass(env, methodName, objectType);
+    MethodType methodType = env.lookupMethodTypeByClass(methodName, objectType);
     return ValueType(methodType.ret());
 }
 
@@ -188,7 +188,7 @@ Type MethodStm::typeCheckPrv(TypeEnv& env)
 Type NewExp::typeCheckPrv(TypeEnv& env)
 {
     ValueType type(typeName);
-    validType(env, type);
+    env.assertValidType(type);
     // TODO: check args against class constructor (contructor coming soon, sit tite!)
     return type;
 }
@@ -223,18 +223,18 @@ Type VarDecAssignStm::typeCheckPrv(TypeEnv& env)
         throw TypeCheckerException(
                 "In declaration of variable '" + name + "' of type '" + 
                 lhsType.toString() +
-                "' inside class '" + env.currentClass->toString() +
+                "' inside class '" + env.curClass()->type.toString() +
                 "':\nRHS expression of type '" + rhsType.toString() +
                 "' does not match the expected type.");
     }
 
-    mapNameToType(env, name, lhsType);
+    env.mapNameToType(name, lhsType);
     return voidType;
 }
 
 Type RetStm::typeCheckPrv(TypeEnv& env)
 {
-    MethodType methodType = lookupMethodType(env, *env.currentMethod);
+    MethodType methodType = env.lookupMethodType(env.curMethod()->name);
 
     // Make a new type consisting only of the return type
     //   so that it can be correctly compared to mine.
@@ -249,9 +249,9 @@ Type RetStm::typeCheckPrv(TypeEnv& env)
     {
         throw TypeCheckerException(
                     "Attempting to return type '" + myRetType.toString() + 
-                    "' in method '" + *env.currentMethod 
+                    "' in method '" + env.curMethod()->name 
                     + "' which has return type '" + methodRetType.toString() +
-                    "' in class '" + env.currentClass->toString() + "'");
+                    "' in class '" + env.curClass()->type.toString() + "'");
     }
 }
 
@@ -259,13 +259,12 @@ Type ClassDecl::typeCheckPrv(TypeEnv& env)
 {
     // Entering new class.
     ValueType myType(name);
-    declareClass(env, myType);
-    env.currentClass = myType;
+    env.enterClass(myType);
 
     if (parent)
     {
         ValueType baseType(parent->name);
-        validType(env, baseType); //check if the base class is valid
+        env.assertValidType(baseType); //check if the base class is valid
     }
 
     for (ASNPtr& member : members)
@@ -274,7 +273,7 @@ Type ClassDecl::typeCheckPrv(TypeEnv& env)
     }
 
     // No longer in a class.
-    env.currentClass = nullopt;
+    env.leaveClass();
 
     // Final type is just the class name.
     return myType;

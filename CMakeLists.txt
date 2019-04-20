@@ -18,7 +18,9 @@ add_library(dflat_common
     src/config.hpp
     src/type.cpp src/type.hpp
     src/typechecker.cpp src/typechecker.hpp
-    src/typechecker_tools.hpp
+    src/typechecker_tools.cpp src/typechecker_tools.hpp
+    src/classmeta.cpp src/classmeta.hpp
+    src/scopemeta.cpp src/scopemeta.hpp
     src/codegenerator.hpp
     src/codegenerator.cpp
     src/codegenerator_tools.cpp src/codegenerator_tools.hpp
