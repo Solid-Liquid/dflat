@@ -219,6 +219,20 @@ void VarDecStm::generateCode(GenEnv& env)
     env << codeLiteral(" ")
         << codeVar(name)
         << codeLiteral(";\n");
+
+    if (!env.classes.cur())
+    {
+        // TODO needed for testing?
+        env.scopes.declLocal(name, ValueType(typeName));
+    }
+    else if (env.curFunc)
+    {
+        env.scopes.declLocal(name, ValueType(typeName));
+    }
+    else
+    {
+        env.classes.addMember(name, ValueType(typeName));
+    }
 }
 
 void VarDecAssignStm::generateCode(GenEnv& env)
