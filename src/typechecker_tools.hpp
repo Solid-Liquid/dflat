@@ -8,6 +8,7 @@
 #include "optional.hpp"
 #include "vector.hpp"
 #include "classmeta.hpp"
+#include "scopemeta.hpp"
 
 namespace dflat
 {
@@ -62,6 +63,7 @@ class TypeEnv
         Map<ValueType, Map<String, Type>> _vars;
     
         ClassMetaMan _classes;
+        ScopeMetaMan _scopes;
     
         /// rules - Map of valid rules for how types interact with operators:
         ///     Map: String canonical name -> String expressions return type.
