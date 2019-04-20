@@ -207,6 +207,15 @@ Type VarDecStm::typeCheckPrv(TypeEnv& env)
 {
     ValueType lhsType(typeName);
     validType(env, lhsType); //make sure that "type" is a declared type
+
+    mapNameToType(env, name, lhsType);
+    return voidType;
+}
+
+Type VarDecAssignStm::typeCheckPrv(TypeEnv& env)
+{
+    ValueType lhsType(typeName);
+    validType(env, lhsType); //make sure that "type" is a declared type
     Type rhsType = value->typeCheck(env);
 
     if (Type(lhsType) != rhsType)

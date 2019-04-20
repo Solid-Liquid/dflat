@@ -15,8 +15,8 @@ namespace dflat
 
 enum ASNType { expBinop, expNumber, expBool, expVariable, expUnop,
                 block, stmIf, defMethod, stmWhile, stmAssign,
-                stmMethod, expMethod, stmVarDef, expNew, stmRet, 
-                declMethod, declClass, expThis };
+                stmMethod, expMethod, stmVarDecAssign, expNew, stmRet,
+                declMethod, declClass, expThis, stmVarDec };
 
 enum OpType { opPlus, opMinus, opMult, opDiv, opNot, opAnd, opOr,
                 opLogEq, opLogNotEq };
@@ -380,15 +380,14 @@ class AssignStm : public ASN
 
 class VarDecStm : public ASN
 {
-    //Example Input: int x
+    //Example Input: int x;
     public:
         String typeName;
         String name;
-        ASNPtr value;
 
         // first: type, second: name, third: exp
-        VarDecStm(String, String, ASNPtr&&);
-        ASNType getType() const { return stmVarDef; }
+        VarDecStm(String, String);
+        ASNType getType() const { return stmVarDec; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
         void generateCode(GenEnv &);
@@ -396,11 +395,35 @@ class VarDecStm : public ASN
         bool operator==(VarDecStm const& other) const
         {
             return typeName == other.typeName
+                && name == other.name;
+        }
+
+        DECLARE_CMP(VarDecStm)
+};
+
+class VarDecAssignStm : public ASN
+{
+    //Example Input: int x = 5;
+    public:
+        String typeName;
+        String name;
+        ASNPtr value;
+
+        // first: type, second: name, third: exp
+        VarDecAssignStm(String, String, ASNPtr&&);
+        ASNType getType() const { return stmVarDecAssign; }
+        String toString() const;
+        Type typeCheckPrv(TypeEnv&);
+        void generateCode(GenEnv &);
+
+        bool operator==(VarDecAssignStm const& other) const
+        {
+            return typeName == other.typeName
                 && name == other.name
                 && value == other.value;
         }
 
-        DECLARE_CMP(VarDecStm)
+        DECLARE_CMP(VarDecAssignStm)
 };
 
 class RetStm : public ASN

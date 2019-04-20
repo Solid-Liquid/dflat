@@ -110,7 +110,7 @@ TEST_CASE( "TypeChecker checks structured code without exceptions","[TypeChecker
 
         class MyClass
         {
-            int x = 0;
+            int x;
 
             void f()
             {
@@ -145,7 +145,7 @@ TEST_CASE( "TypeChecker checks structured code without exceptions","[TypeChecker
 
         class MyClass
         {
-            bool x = true;
+            bool x;
 
             int f(int y)        // Comments
             {                   // included
@@ -205,8 +205,8 @@ TEST_CASE( "TypeChecker checks structured code without exceptions","[TypeChecker
 
         class A
         {
-            int x = 0;
-            int y = 0;
+            int x;
+            int y;
 
             A A(int x, int y)
             {
@@ -276,12 +276,13 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
 //
 //        )");
 
+    // TODO: this actually might not be an issue (change it?)
     //Class cannot use instance of itself inside itself:
     REQUIRE_DOESNT_TYPECHECK(R"(
 
         class MyClass
         {
-            MyClass var = new MyClass();
+            MyClass var;
         };
 
         )");
@@ -292,7 +293,10 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
 
         class MyClass
         {
-            bool var = new int();
+            bool method()
+            {
+                bool var = new int();
+            }
         };
 
         )");
@@ -305,7 +309,7 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
 
         class B
         {
-            A obj = new A();
+            A obj;
 
             void func()
             {
@@ -323,7 +327,7 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
 
         class B
         {
-            A obj = new A();
+            A obj;
 
             void func()
             {

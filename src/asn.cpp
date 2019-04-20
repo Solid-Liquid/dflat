@@ -244,12 +244,23 @@ String AssignStm::toString() const
 }
 
 //VarDecStm:
-VarDecStm::VarDecStm(String _typeName, String _name, ASNPtr&& _value)
-    : typeName(_typeName), name(_name), value(move(_value))
+VarDecStm::VarDecStm(String _typeName, String _name)
+    : typeName(_typeName), name(_name)
 {
 }
 
 String VarDecStm::toString() const
+{
+    return typeName + " " + name + ";";
+}
+
+//VarDecAssignStm:
+VarDecAssignStm::VarDecAssignStm(String _typeName, String _name, ASNPtr&& _value)
+    : typeName(_typeName), name(_name), value(move(_value))
+{
+}
+
+String VarDecAssignStm::toString() const
 {
     return typeName + " " + name + " = " + value->toString() + ";";
 }

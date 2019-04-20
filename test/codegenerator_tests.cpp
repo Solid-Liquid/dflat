@@ -97,14 +97,14 @@ TEST_CASE( "Statement Code Generation Tests", "[CodeGenerator]" )
      */
 
     //Integer Declaration Statement:
-    REQUIRE( codeGenStm("int var = 1 + 2;") == "\tdfType_int dfVar_var = (1+2);\n");
+    REQUIRE( codeGenStm("int var = 1 + 2;") == "dfType_int dfVar_var = (1+2);\n");
 
-    REQUIRE( codeGenStm("int var = -2;") == "\tdfType_int dfVar_var = (-2);\n");
+    REQUIRE( codeGenStm("int var = -2;") == "dfType_int dfVar_var = (-2);\n");
     
     //Boolean declaration Statement:
-    REQUIRE( codeGenStm("bool var = true;") == "\tdfType_int dfVar_var = 1;\n"); //no bool in C code
+    REQUIRE( codeGenStm("bool var = true;") == "dfType_int dfVar_var = 1;\n"); //no bool in C code
 
-    REQUIRE( codeGenStm("bool var = false;") == "\tdfType_int dfVar_var = 0;\n"); //no bool in C code
+    REQUIRE( codeGenStm("bool var = false;") == "dfType_int dfVar_var = 0;\n"); //no bool in C code
 
     //Return statement:
     REQUIRE( codeGenStm("return 69;") == "return 69;\n");

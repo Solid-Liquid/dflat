@@ -99,6 +99,7 @@ public:
     ASNPtr parseLogical();
     ASNPtr parseLogicalDown();
     ASNPtr parseExp();
+    ASNPtr parseVarAssignDecl();
     ASNPtr parseVarDecl();
     ASNPtr parseAssignStm();
     ASNPtr parseIfStm();

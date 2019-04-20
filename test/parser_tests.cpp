@@ -401,7 +401,25 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ~AssignStm(~VariableExp("myobj", "x"), ~NumberExp(1))
              );
 
-    REQUIRE( PT(parseVarDecl,           //type name = 1;  -> variable declaration
+    REQUIRE( PT(parseVarDecl,           //type name;  -> variable declaration
+                NameToken("type"),
+                NameToken("name"),
+                SemiToken()
+                )
+             ==
+             ~VarDecStm("type", "name")
+             );
+
+    REQUIRE( PT(parseVarDecl,           //int var;  -> variable declaration
+                NameToken("int"),
+                NameToken("var"),
+                SemiToken()
+                )
+             ==
+             ~VarDecStm("int", "var")
+             );
+
+    REQUIRE( PT(parseVarAssignDecl,           //type name = 1;  -> variable declaration/assignment
                 NameToken("type"),
                 NameToken("name"),
                 AssignToken(),
@@ -409,10 +427,10 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 SemiToken()
                 )
              ==
-             ~VarDecStm("type", "name", ~NumberExp(1))
+             ~VarDecAssignStm("type", "name", ~NumberExp(1))
              );
 
-    REQUIRE( PT(parseVarDecl,           //bool name = true;  -> variable declaration with bool
+    REQUIRE( PT(parseVarAssignDecl,           //bool name = true;  -> variable declaration with bool
                 NameToken("bool"),
                 NameToken("name"),
                 AssignToken(),
@@ -420,7 +438,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 SemiToken()
                 )
              ==
-             ~VarDecStm("bool", "name", ~BoolExp(true))
+             ~VarDecAssignStm("bool", "name", ~BoolExp(true))
              );
 
 
@@ -674,16 +692,24 @@ TEST_CASE( "Parser properly throws exceptions", "[parser]" )
              ParserException
              );
 
-    REQUIRE_THROWS_AS( PT(parseVarDecl, //type name = ;  -> expected expression
-                NameToken("type"),  //TODO semicolon?; declaration without assignment???
+    REQUIRE_THROWS_AS( PT(parseVarDecl, //int var  -> expected semicolon
+                NameToken("int"),
+                NameToken("var"),
+                AssignToken()
+                ),
+             ParserException
+             );
+
+    REQUIRE_THROWS_AS( PT(parseVarAssignDecl, //type name = ;  -> expected expression
+                NameToken("type"),
                 NameToken("name"),
                 AssignToken()
                 ),
              ParserException
              );
 
-    REQUIRE_THROWS_AS( PT(parseVarDecl, //type name = 1 +;  -> expected expression
-                NameToken("type"),  //TODO semicolon?; declaration without assignment???
+    REQUIRE_THROWS_AS( PT(parseVarAssignDecl, //type name = 1 +;  -> expected expression
+                NameToken("type"),
                 NameToken("name"),
                 AssignToken(),
                 NumberToken(1),
