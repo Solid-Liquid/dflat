@@ -161,3 +161,14 @@ TEST_CASE( "Statement Code Generation Tests", "[CodeGenerator]" )
 
              );
 }
+
+TEST_CASE( "Block Code Generation Tests", "[CodeGenerator]" )
+{
+    /*
+     *   Tests for properly generating code for blocks (only):
+     *   Resulting code is one line to avoid white space that
+     *   shouldn't be there.
+     */
+
+    //TODO: write them tests
+}
