@@ -60,7 +60,7 @@ class TypeEnv
         ///Map of Maps for classes and their relevant variables:
         /// Map: ValueType class ->
         ///     Map: String variable/function name -> Type
-        Map<ValueType, Map<String, Type>> _vars;
+//        Map<ValueType, Map<String, Type>> _vars;
     
         ClassMetaMan _classes;
         ScopeMetaMan _scopes;
