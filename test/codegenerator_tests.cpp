@@ -109,14 +109,14 @@ TEST_CASE( "Statement Code Generation Tests", "[CodeGenerator]" )
      */
 
     //Integer Declaration Statement:
-    REQUIRE( codeGenStm("int var = 1 + 2;") == "\t$TYPE(int) $VAR(var) = (1+2);\n");
+    REQUIRE( codeGenStm("int var = 1 + 2;") == "$TYPE(int) $VAR(var) = (1+2);\n");
 
-    REQUIRE( codeGenStm("int var = -2;") == "\t$TYPE(int) $VAR(var) = (-2);\n");
+    REQUIRE( codeGenStm("int var = -2;") == "$TYPE(int) $VAR(var) = (-2);\n");
     
     //Boolean declaration Statement:
-    REQUIRE( codeGenStm("bool var = true;") == "\t$TYPE(int) $VAR(var) = 1;\n"); //no bool in C code
+    REQUIRE( codeGenStm("bool var = true;") == "$TYPE(int) $VAR(var) = 1;\n"); //no bool in C code
 
-    REQUIRE( codeGenStm("bool var = false;") == "\t$TYPE(int) $VAR(var) = 0;\n"); //no bool in C code
+    REQUIRE( codeGenStm("bool var = false;") == "$TYPE(int) $VAR(var) = 0;\n"); //no bool in C code
 
     //Return statement:
     REQUIRE( codeGenStm("return 69;") == "return 69;\n");

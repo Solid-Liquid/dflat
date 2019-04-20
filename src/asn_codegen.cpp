@@ -203,7 +203,42 @@ void AssignStm::generateCode(GenEnv& env)
 void VarDecStm::generateCode(GenEnv& env)
 {
     //TODO: cannonical names
+    //TODO: use env to determine if there should be a tab or not
     env << codeLiteral("\t"); // Hardcoding member vars to 1 tab.
+
+    //typename could be cannonical name of class
+    if (typeName == "bool")
+    {
+        env << codeType("int");
+    }
+    else
+    {
+        env << codeType(typeName);
+    }
+
+    env << codeLiteral(" ")
+        << codeVar(name)
+        << codeLiteral(";\n");
+
+    if (!env.classes.cur())
+    {
+        // TODO needed for testing?
+        env.scopes.declLocal(name, ValueType(typeName));
+    }
+    else if (env.curFunc)
+    {
+        env.scopes.declLocal(name, ValueType(typeName));
+    }
+    else
+    {
+        env.classes.addMember(name, ValueType(typeName));
+    }
+}
+
+void VarDecAssignStm::generateCode(GenEnv& env)
+{
+    //TODO: cannonical names
+    //env << codeLiteral("\t"); // Hardcoding member vars to 1 tab.
 
     //typename could be cannonical name of class
     if (typeName == "bool")

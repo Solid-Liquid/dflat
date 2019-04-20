@@ -533,7 +533,7 @@ ASNPtr Parser::parseExp()
 
 // STATEMENT PARSERS
 
-ASNPtr Parser::parseVarDecl()
+ASNPtr Parser::parseVarAssignDecl()
 {
     TRACE;
     ENABLE_ROLLBACK;
@@ -546,7 +546,21 @@ ASNPtr Parser::parseVarDecl()
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<VarDecStm>(varType, varName, move(exp));
+    return make_unique<VarDecAssignStm>(varType, varName, move(exp));
+}
+
+ASNPtr Parser::parseVarDecl()
+{
+    TRACE;
+    ENABLE_ROLLBACK;
+
+    PARSE(varType, parseName());
+    PARSE(varName, parseName());
+    MUST_MATCH_(SemiToken);
+
+    CANCEL_ROLLBACK;
+    SUCCESS;
+    return make_unique<VarDecStm>(varType, varName);
 }
 
 ASNPtr Parser::parseAssignStm()
@@ -633,7 +647,12 @@ ASNPtr Parser::parseStm()
     TRACE;
     ASNPtr result;
 
-    if (result = parseVarDecl())
+    if (result = parseVarAssignDecl())
+    {
+        SUCCESS;
+        return result;
+    }
+    else if (result = parseVarDecl())
     {
         SUCCESS;
         return result;
@@ -787,12 +806,12 @@ ASNPtr Parser::parseClassStm()
     TRACE;
     ASNPtr result;
 
-    if (result = parseVarDecl())
+    if (result = parseMethodDecl())
     {
         SUCCESS;
         return result;
     }
-    else if (result = parseMethodDecl())
+    else if (result = parseVarDecl())
     {
         SUCCESS;
         return result;
