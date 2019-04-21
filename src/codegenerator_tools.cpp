@@ -6,21 +6,7 @@ namespace dflat
 {
 
 static String const prolog = R"(
-#define $TYPE(x)   dftype_##x
-#define $VAR(x)    dfvar_##x
-#define $MEMBER(x) dfmember_##x
-#define $PARENT()  dfparent
-#define $METHOD(x) dfmethod_##x
-
 )";
-
-static String const typePrefix   = "$TYPE(";
-static String const varPrefix    = "$VAR(";
-static String const memberPrefix = "$MEMBER(";
-static String const methodPrefix = "$METHOD(";
-static String const parent       = "$PARENT";
-static String const suffix       = ")";
-
 
 std::stringstream& GenEnv::write()
 {
@@ -70,22 +56,22 @@ String GenEnv::concat() const
 
 String GenEnv::mangleTypeName(String const& x)
 {
-    return typePrefix + x + suffix;
+    return "df_" + x;
 }
 
 String GenEnv::mangleVarName(String const& x)
 {
-    return varPrefix + x + suffix;
+    return "df_" + x;
 }
 
 String GenEnv::mangleMemberName(String const& x)
 {
-    return memberPrefix + x + suffix;
+    return "df_" + x;
 }
 
 String GenEnv::mangleMethodName(String const& x)
 {
-    return methodPrefix + x + suffix;
+    return "df_" + x;
 }
 
 GenEnv& GenEnv::operator<<(CodeTypeName const& x)
@@ -126,7 +112,7 @@ GenEnv& GenEnv::operator<<(CodeNumber const& x)
 
 GenEnv& GenEnv::operator<<(CodeParent const&)
 {
-    write() << parent;
+    write() << "dfparent";
     return *this;
 }
 

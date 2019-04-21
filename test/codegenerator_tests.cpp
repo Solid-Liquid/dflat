@@ -39,18 +39,6 @@ String codeGenStm(String const& input)
     return env.concat();
 }
 
-
-
-//                   SPECIAL NOTE:
-//
-// Currently you will see things such as $VAR() and $TYPE()
-// in the generated code. We are using these in conjuction
-// with macros in C as part of our naming conventions for
-// variables, etc. We are likely to change this to something
-// less insane looking :)
-// TODO: change this
-
-
 TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
 {
     /*
@@ -69,15 +57,15 @@ TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
 
 
     //Tests for variables:
-    REQUIRE( codeGenExp("var") == "$VAR(var)"); //TODO: Append to variable/obj names
+    REQUIRE( codeGenExp("var") == "df_var"); //TODO: Append to variable/obj names
 
-    REQUIRE( codeGenExp("obj.member") == "$VAR(obj)->$MEMBER(member)");
+    REQUIRE( codeGenExp("obj.member") == "df_obj->df_member");
 
 
     //Tests for operator expressions:
-    REQUIRE( codeGenExp("var + 2") == "($VAR(var)+2)");
+    REQUIRE( codeGenExp("var + 2") == "(df_var+2)");
 
-    REQUIRE( codeGenExp("obj.member + 2") == "($VAR(obj)->$MEMBER(member)+2)");
+    REQUIRE( codeGenExp("obj.member + 2") == "(df_obj->df_member+2)");
 
     REQUIRE( codeGenExp("1 + 2") == "(1+2)");
 
@@ -121,19 +109,19 @@ TEST_CASE( "Statement Code Generation Tests", "[CodeGenerator]" )
      */
 
     //Integer Declaration Statement:
-    REQUIRE( codeGenStm("int var = 1 + 2;") == "$TYPE(int) $VAR(var) = (1+2);\n");
+    REQUIRE( codeGenStm("int var = 1 + 2;") == "df_int df_var = (1+2);\n");
 
-    REQUIRE( codeGenStm("int var = -2;") == "$TYPE(int) $VAR(var) = (-2);\n");
+    REQUIRE( codeGenStm("int var = -2;") == "df_int df_var = (-2);\n");
     
     //Boolean declaration Statement:
-    REQUIRE( codeGenStm("bool var = true;") == "$TYPE(int) $VAR(var) = 1;\n"); //no bool in C code
+    REQUIRE( codeGenStm("bool var = true;") == "df_int df_var = 1;\n"); //no bool in C code
 
-    REQUIRE( codeGenStm("bool var = false;") == "$TYPE(int) $VAR(var) = 0;\n"); //no bool in C code
+    REQUIRE( codeGenStm("bool var = false;") == "df_int df_var = 0;\n"); //no bool in C code
 
     //Return statement:
     REQUIRE( codeGenStm("return 69;") == "return 69;\n");
 
-    REQUIRE( codeGenStm("return var;") == "return $VAR(var);\n");
+    REQUIRE( codeGenStm("return var;") == "return df_var;\n");
 
     REQUIRE( codeGenStm("return 1 + 2 + 3;") == "return (1+(2+3));\n");
 
@@ -159,7 +147,7 @@ TEST_CASE( "Control Stuctures/Block Code Generation Tests", "[CodeGenerator]" )
 
              ==
 
-             "if ((!1))\n{\n$TYPE(int) $VAR(var) = (1+2);\n}\n"
+             "if ((!1))\n{\ndf_int df_var = (1+2);\n}\n"
 
              );
 
@@ -179,7 +167,7 @@ TEST_CASE( "Control Stuctures/Block Code Generation Tests", "[CodeGenerator]" )
 
              ==
 
-             "if ((1==0))\n{\n$TYPE(int) $VAR(var) = (1+2);\n}\nelse\n{\n$TYPE(int) $VAR(var) = (1-2);\n}\n"
+             "if ((1==0))\n{\ndf_int df_var = (1+2);\n}\nelse\n{\ndf_int df_var = (1-2);\n}\n"
 
              );
 
@@ -195,7 +183,7 @@ TEST_CASE( "Control Stuctures/Block Code Generation Tests", "[CodeGenerator]" )
 
              ==
 
-             "while ((1||0))\n{\n$TYPE(int) $VAR(var) = (1+2);\n}\n"
+             "while ((1||0))\n{\ndf_int df_var = (1+2);\n}\n"
 
              );
 }
