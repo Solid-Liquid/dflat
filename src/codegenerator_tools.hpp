@@ -77,7 +77,7 @@ struct CodeNumber
 struct CodeParent
 {};
 
-struct CodeClassTabs
+struct CodeTabs
 {};
 
 struct CodeMethodTabs
@@ -102,8 +102,7 @@ class GenEnv
         GenEnv& operator<<(CodeLiteral const&);
         GenEnv& operator<<(CodeNumber const&);
         GenEnv& operator<<(CodeParent const&);
-        GenEnv& operator<<(CodeClassTabs const&);
-        GenEnv& operator<<(CodeMethodTabs const&);
+        GenEnv& operator<<(CodeTabs const&);
         GenEnv& operator<<(CodeTabIn const&);
         GenEnv& operator<<(CodeTabOut const&);
         GenEnv& operator<<(ASNPtr const&);

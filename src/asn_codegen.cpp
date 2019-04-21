@@ -60,7 +60,7 @@ void Block::generateCode(GenEnv & env)
 {
     env.scopes.push();
 
-    env << CodeMethodTabs()
+    env << CodeTabs()
         << CodeLiteral("{\n")
         << CodeTabIn();
 
@@ -70,7 +70,7 @@ void Block::generateCode(GenEnv & env)
     }
 
     env << CodeTabOut()
-        << CodeMethodTabs()
+        << CodeTabs()
         << CodeLiteral("}\n");
 
     env.scopes.pop();
@@ -78,7 +78,7 @@ void Block::generateCode(GenEnv & env)
 
 void IfStm::generateCode(GenEnv & env)
 {
-    env << CodeMethodTabs()
+    env << CodeTabs()
         << CodeLiteral("if (")
         << logicExp
         << CodeLiteral(")\n")
@@ -86,7 +86,7 @@ void IfStm::generateCode(GenEnv & env)
 
     if (hasFalse)
     {
-        env << CodeMethodTabs()
+        env << CodeTabs()
             << CodeLiteral("else\n")
             << falseStatements;
     }
@@ -94,7 +94,7 @@ void IfStm::generateCode(GenEnv & env)
 
 void WhileStm::generateCode(GenEnv & env)
 {
-    env << CodeMethodTabs()
+    env << CodeTabs()
         << CodeLiteral("while (")
         << logicExp
         << CodeLiteral(")\n")
@@ -109,7 +109,7 @@ void MethodDef::generateCode(GenEnv & env)
 //    scope_decl_method(name, *asnType);
     env.scopes.push();
     
-    env << CodeMethodTabs()
+    env << CodeTabs()
         << CodeTypeName(retTypeName)
         << CodeLiteral(" ")
         << CodeMethodName(name)
@@ -163,7 +163,7 @@ void MethodExp::generateCode(GenEnv & env)
 
 void MethodStm::generateCode(GenEnv & env)
 {
-    env << CodeMethodTabs()
+    env << CodeTabs()
         << methodExp
         << CodeLiteral(";\n");
 }
@@ -181,7 +181,7 @@ void NewExp::generateCode(GenEnv&)
 void AssignStm::generateCode(GenEnv& env)
 {
     // TODO: check if this works for every case (i.e. rhs is new stm)
-    env << CodeMethodTabs()
+    env << CodeTabs()
         << lhs
         << CodeLiteral(" = ")
         << rhs
@@ -192,7 +192,7 @@ void VarDecStm::generateCode(GenEnv& env)
 {
     //TODO: cannonical names
     //TODO: use env to determine if there should be a tab or not
-    env << CodeClassTabs()
+    env << CodeTabs()
         << CodeTypeName(typeName)
         << CodeLiteral(" ")
         << CodeVarName(name)
@@ -216,10 +216,10 @@ void VarDecStm::generateCode(GenEnv& env)
 void VarDecAssignStm::generateCode(GenEnv& env)
 {
     //TODO: cannonical names
-    //env << codeLiteral("\t"); // Hardcoding member vars to 1 tab.
 
     //typename could be cannonical name of class
-    env << CodeTypeName(typeName)
+    env << CodeTabs()
+        << CodeTypeName(typeName)
         << CodeLiteral(" ")
         << CodeVarName(name)
         << CodeLiteral(" = ")
@@ -243,7 +243,7 @@ void VarDecAssignStm::generateCode(GenEnv& env)
 
 void RetStm::generateCode(GenEnv& env)
 {
-    env << CodeMethodTabs()
+    env << CodeTabs()
         << CodeLiteral("return ")
         << value
         << CodeLiteral(";\n");
@@ -261,8 +261,8 @@ void ClassDecl::generateCode(GenEnv& env)
     {
         env.classes.setParent(ValueType(parent->name));
 
-        env << CodeClassTabs()
-            << CodeLiteral("struct ") // Hardcoded to 1 tab
+        env << CodeTabs()
+            << CodeLiteral("struct ")
             << CodeClassDecl(parent->name)
             << CodeLiteral(" ")
             << CodeParent()

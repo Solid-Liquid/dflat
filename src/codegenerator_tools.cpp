@@ -133,15 +133,17 @@ GenEnv& GenEnv::operator<<(CodeParent const&)
     return *this;
 }
 
-GenEnv& GenEnv::operator<<(CodeClassTabs const&)
+GenEnv& GenEnv::operator<<(CodeTabs const&)
 {
-    write() << '\t';
-    return *this;
-}
-
-GenEnv& GenEnv::operator<<(CodeMethodTabs const&)
-{
-    write() << String(_tabs, '\t');
+    if (curFunc)
+    {
+        write() << String(_tabs, '\t');
+    }
+    else
+    {
+        write() << '\t';
+    }
+    
     return *this;
 }
 
