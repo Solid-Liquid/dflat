@@ -14,9 +14,7 @@ class Lexer : private LexerCore
         TokenPtr tryTokenizeName();
         TokenPtr tryTokenizeNumber();
         TokenPtr tryTokenizePunct();
-        //TokenPtr singleToken();
         void skipWhitespace();
-        void skipComment();
         TokenPtr lookupKeyword(String const&) const;
         TokenPtr lookupPunct1(char c) const;
         TokenPtr lookupPunct2(char c1, char c2) const;
@@ -217,18 +215,16 @@ void Lexer::skipWhitespace()
             c = peek();
         }
 
-        // There's probably some WS left.
-        while (isspace(c))
-        {
-            next();
-            c = peek();
-        }
+        // We may be on a new comment line.
+        skipWhitespace();
     }
 }
 
 TokenPtr Lexer::singleToken(){
     TokenPtr tok = nullptr;
 
+    skipWhitespace();
+        
     if ((tok = tryTokenizeName()))
     {
         return tok;
@@ -249,12 +245,10 @@ Vector<TokenPtr> Lexer::tokenize()
 {
     Vector<TokenPtr> tokens;
     TokenPtr current = nullptr;
-    skipWhitespace();
 
     while((current = singleToken()))
     {
         tokens.push_back(move(current));
-        skipWhitespace();
     }
 
     if(!at_end()) //If not end, but no valid token was returned above, error.

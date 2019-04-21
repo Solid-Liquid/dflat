@@ -89,6 +89,10 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         TokenPtr t = std::make_unique<NameToken>("hi");
         to_string(t);
     }
+
+    // Test for empty input
+    REQUIRE ( tokenize("") == tokens() );
+    REQUIRE ( tokenize("//comment\n //anothercomment") == tokens() );
     
     //Tests for single tokens getting tokenized properly
     
