@@ -18,32 +18,95 @@ namespace dflat
 struct ASN;
 using ASNPtr = std::unique_ptr<ASN>; // TODO don't like this code dupe.
 
-struct CodeTypeName     { String value; };
-struct CodeMethodName   { String value; };
-struct CodeVarName      { String value; };
-struct CodeMemberName   { String value; };
-struct CodeLiteral      { String value; };
-struct CodeNumber       { int value; };
-struct CodeParent       {};
-struct CodeTabs         {};
-struct CodeTabIn        {};
-struct CodeTabOut       {};
+struct CodeTypeName     
+{ 
+    String value; 
+    CodeTypeName(String _value)
+        : value(std::move(_value))
+    {}
+};
+
+struct CodeClassDecl
+{ 
+    String value; 
+    CodeClassDecl(String _value)
+        : value(std::move(_value))
+    {}
+};
+
+struct CodeMethodName
+{ 
+    String value; 
+    CodeMethodName(String _value)
+        : value(std::move(_value))
+    {}
+};
+
+struct CodeVarName
+{ 
+    String value; 
+    CodeVarName(String _value)
+        : value(std::move(_value))
+    {}
+};
+
+struct CodeMemberName
+{ 
+    String value; 
+    CodeMemberName(String _value)
+        : value(std::move(_value))
+    {}
+};
+
+struct CodeLiteral
+{ 
+    String value; 
+    CodeLiteral(String _value)
+        : value(std::move(_value))
+    {}
+};
+
+struct CodeNumber
+{ 
+    int value; 
+    CodeNumber(int _value)
+        : value(_value)
+    {}
+};
+
+struct CodeParent
+{};
+
+struct CodeClassTabs
+{};
+
+struct CodeMethodTabs
+{};
+
+struct CodeTabIn
+{};
+
+struct CodeTabOut
+{};
+        
+extern String const codeProlog;
 
 class GenEnv
 {
     public:
         GenEnv& operator<<(CodeTypeName const&);
+        GenEnv& operator<<(CodeClassDecl const&);
         GenEnv& operator<<(CodeVarName const&);
         GenEnv& operator<<(CodeMemberName const&);
         GenEnv& operator<<(CodeMethodName const&);
         GenEnv& operator<<(CodeLiteral const&);
         GenEnv& operator<<(CodeNumber const&);
         GenEnv& operator<<(CodeParent const&);
-        GenEnv& operator<<(CodeTabs const&);
+        GenEnv& operator<<(CodeClassTabs const&);
+        GenEnv& operator<<(CodeMethodTabs const&);
         GenEnv& operator<<(CodeTabIn const&);
         GenEnv& operator<<(CodeTabOut const&);
         GenEnv& operator<<(ASNPtr const&);
-        String prolog() const;
         String concat() const;
         ScopeMetaMan scopes;
         ClassMetaMan classes;
@@ -55,6 +118,7 @@ class GenEnv
     private:
         std::stringstream& write();
         String mangleTypeName(String const&);
+        String mangleClassDecl(String const&);
         String mangleVarName(String const&);
         String mangleMemberName(String const&);
         String mangleMethodName(String const&);

@@ -16,10 +16,6 @@ namespace dflat
 //Macro that makes a dynamic cast look like less of a mess:
 #define cast(ptr,type) dynamic_cast<type*>(ptr.get())
 
-ValueType const intType("int");
-ValueType const boolType("bool");
-ValueType const voidType("void");
-
 struct MethodMeta
 {
     String name;

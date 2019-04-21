@@ -17,6 +17,29 @@ void declTestStuff(GenEnv& env)
     env.scopes.declLocal("obj", ValueType("Object"));
 }
 
+// Strip tabs and newlines from string
+// Note: This will break testing strings with \t or \n in them
+String cleanOutput(String const& s)
+{
+    String t;
+    t.reserve(s.size());
+
+    for (char c : s)
+    {
+        switch (c)
+        {
+            case '\r':
+            case '\n':
+            case '\t':
+                break;
+            default:
+                t += c;
+        }
+    }
+
+    return t;
+}
+
 String codeGenExp(String const& input)
 {
     //Helper function that makes testing expression code generation less ugly
@@ -24,8 +47,15 @@ String codeGenExp(String const& input)
     //calls parseExp() and generateCode(). (No typchecking)
     GenEnv env;
     declTestStuff(env);
-    Parser(tokenize(input)).parseExp()->generateCode(env);
-    return env.concat();
+    auto result = Parser(tokenize(input)).parseExp();
+    
+    if (!result)
+    {
+        throw ParserException("Test failed to parse");
+    }
+    
+    result->generateCode(env);
+    return cleanOutput(env.concat());
 }
 
 String codeGenStm(String const& input)
@@ -35,8 +65,20 @@ String codeGenStm(String const& input)
     //calls parseStm() and generateCode(). (No typchecking)
     GenEnv env;
     declTestStuff(env);
-    Parser(tokenize(input)).parseStm()->generateCode(env);
-    return env.concat();
+    auto result = Parser(tokenize(input)).parseStm();
+    
+    if (!result)
+    {
+        throw ParserException("Test failed to parse");
+    }
+    
+    result->generateCode(env);
+    return cleanOutput(env.concat());
+}
+
+String codeGenProg(String const& input)
+{
+    return cleanOutput(codeGenerator(parse(tokenize(input))));
 }
 
 TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
@@ -109,21 +151,21 @@ TEST_CASE( "Statement Code Generation Tests", "[CodeGenerator]" )
      */
 
     //Integer Declaration Statement:
-    REQUIRE( codeGenStm("int var = 1 + 2;") == "df_int df_var = (1+2);\n");
+    REQUIRE( codeGenStm("int var = 1 + 2;") == "int df_var = (1+2);");
 
-    REQUIRE( codeGenStm("int var = -2;") == "df_int df_var = (-2);\n");
+    REQUIRE( codeGenStm("int var = -2;") == "int df_var = (-2);");
     
     //Boolean declaration Statement:
-    REQUIRE( codeGenStm("bool var = true;") == "df_int df_var = 1;\n"); //no bool in C code
+    REQUIRE( codeGenStm("bool var = true;") == "int df_var = 1;"); //no bool in C code
 
-    REQUIRE( codeGenStm("bool var = false;") == "df_int df_var = 0;\n"); //no bool in C code
+    REQUIRE( codeGenStm("bool var = false;") == "int df_var = 0;"); //no bool in C code
 
     //Return statement:
-    REQUIRE( codeGenStm("return 69;") == "return 69;\n");
+    REQUIRE( codeGenStm("return 69;") == "return 69;");
 
-    REQUIRE( codeGenStm("return var;") == "return df_var;\n");
+    REQUIRE( codeGenStm("return var;") == "return df_var;");
 
-    REQUIRE( codeGenStm("return 1 + 2 + 3;") == "return (1+(2+3));\n");
+    REQUIRE( codeGenStm("return 1 + 2 + 3;") == "return (1+(2+3));");
 
 }
 
@@ -147,7 +189,7 @@ TEST_CASE( "Control Stuctures/Block Code Generation Tests", "[CodeGenerator]" )
 
              ==
 
-             "if ((!1))\n{\ndf_int df_var = (1+2);\n}\n"
+             "if ((!1)){int df_var = (1+2);}"
 
              );
 
@@ -167,7 +209,7 @@ TEST_CASE( "Control Stuctures/Block Code Generation Tests", "[CodeGenerator]" )
 
              ==
 
-             "if ((1==0))\n{\ndf_int df_var = (1+2);\n}\nelse\n{\ndf_int df_var = (1-2);\n}\n"
+             "if ((1==0)){int df_var = (1+2);}else{int df_var = (1-2);}"
 
              );
 
@@ -183,7 +225,19 @@ TEST_CASE( "Control Stuctures/Block Code Generation Tests", "[CodeGenerator]" )
 
              ==
 
-             "while ((1||0))\n{\ndf_int df_var = (1+2);\n}\n"
+             "while ((1||0)){int df_var = (1+2);}"
 
              );
+}
+
+TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
+{
+    REQUIRE( codeGenProg(R"(
+            class Base
+            {
+                int x;
+            };
+        )") == 
+            "struct df_Base{int df_x;};"
+        );
 }

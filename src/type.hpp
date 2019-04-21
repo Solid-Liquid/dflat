@@ -70,6 +70,16 @@ class Type : private Variant<ValueType, MethodType>
         bool operator!=(Type const&) const;
 };
 
+
+// Builtin types
+ValueType const intType("int");
+ValueType const boolType("bool");
+ValueType const voidType("void");
+
+bool isBuiltinType(ValueType const&);
+char const* translateBuiltinType(ValueType const&);
+
+
 } // namespace dflat
 
 

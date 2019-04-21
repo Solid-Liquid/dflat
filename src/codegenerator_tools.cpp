@@ -1,11 +1,13 @@
 #include "codegenerator_tools.hpp"
 #include "asn.hpp"
+#include "config.hpp"
 #include <iostream>
 
 namespace dflat
 {
 
-static String const prolog = R"(
+String const codeProlog = R"(
+#define PLACEHOLDER false
 )";
 
 std::stringstream& GenEnv::write()
@@ -22,11 +24,6 @@ std::stringstream& GenEnv::write()
     {
         return _funcDef;
     }
-}
-
-String GenEnv::prolog() const
-{
-    return dflat::prolog;
 }
 
 String GenEnv::concat() const
@@ -56,6 +53,20 @@ String GenEnv::concat() const
 
 String GenEnv::mangleTypeName(String const& x)
 {
+    ValueType typeName(x);
+
+    if (isBuiltinType(typeName))
+    {
+        return translateBuiltinType(typeName);
+    }
+    else
+    {
+        return "struct df_" + x + "*";
+    }
+}
+
+String GenEnv::mangleClassDecl(String const& x)
+{
     return "df_" + x;
 }
 
@@ -77,6 +88,12 @@ String GenEnv::mangleMethodName(String const& x)
 GenEnv& GenEnv::operator<<(CodeTypeName const& x)
 {
     write() << mangleTypeName(x.value);
+    return *this;
+}
+
+GenEnv& GenEnv::operator<<(CodeClassDecl const& x)
+{
+    write() << mangleClassDecl(x.value);
     return *this;
 }
 
@@ -116,7 +133,13 @@ GenEnv& GenEnv::operator<<(CodeParent const&)
     return *this;
 }
 
-GenEnv& GenEnv::operator<<(CodeTabs const&)
+GenEnv& GenEnv::operator<<(CodeClassTabs const&)
+{
+    write() << '\t';
+    return *this;
+}
+
+GenEnv& GenEnv::operator<<(CodeMethodTabs const&)
 {
     write() << String(_tabs, '\t');
     return *this;

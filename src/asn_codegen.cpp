@@ -5,18 +5,6 @@
 namespace dflat
 {
 
-static CodeVarName    codeVar(String x)     { return { std::move(x) }; }
-static CodeMemberName codeMember(String x)  { return { std::move(x) }; }
-static CodeMethodName codeMethod(String x)  { return { std::move(x) }; }
-static CodeTypeName   codeType(String x)    { return { std::move(x) }; }
-static CodeLiteral    codeLiteral(String x) { return { std::move(x) }; }
-static CodeNumber     codeNumber(int x)     { return {x}; }
-
-static CodeParent const codeParent;
-static CodeTabs const   codeTabs;
-static CodeTabIn const  codeTabIn;
-static CodeTabOut const codeTabOut;
-
 void VariableExp::generateCode(GenEnv & env)
 {
     //TODO referencing members of parent classes
@@ -31,7 +19,7 @@ void VariableExp::generateCode(GenEnv & env)
         if (decl && decl->declType == DeclType::local)
         {
             // Local.
-            env << codeVar(name);
+            env << CodeVarName(name);
         }
         else
         {
@@ -43,73 +31,73 @@ void VariableExp::generateCode(GenEnv & env)
 
 void NumberExp::generateCode(GenEnv & env)
 {
-    env << codeNumber(value);
+    env << CodeNumber(value);
 }
 
 void BoolExp::generateCode(GenEnv & env)
 {
-    env << codeNumber(value ? 1 : 0);
+    env << CodeNumber(value ? 1 : 0);
 }
 
 void BinopExp::generateCode(GenEnv & env)
 {
-    env << codeLiteral("(")
+    env << CodeLiteral("(")
         << lhs
-        << codeLiteral(opString(op))
+        << CodeLiteral(opString(op))
         << rhs
-        << codeLiteral(")");
+        << CodeLiteral(")");
 }
 
 void UnopExp::generateCode(GenEnv & env)
 {
-    env << codeLiteral("(") 
-        << codeLiteral(opString(op))
+    env << CodeLiteral("(") 
+        << CodeLiteral(opString(op))
         << rhs
-        << codeLiteral(")");
+        << CodeLiteral(")");
 }
 
 void Block::generateCode(GenEnv & env)
 {
     env.scopes.push();
 
-    env << codeTabs
-        << codeLiteral("{\n")
-        << codeTabIn;
+    env << CodeMethodTabs()
+        << CodeLiteral("{\n")
+        << CodeTabIn();
 
     for (ASNPtr const& stmt : statements)
     {
         env << stmt;
     }
 
-    env << codeTabOut
-        << codeTabs
-        << codeLiteral("}\n");
+    env << CodeTabOut()
+        << CodeMethodTabs()
+        << CodeLiteral("}\n");
 
     env.scopes.pop();
 }
 
 void IfStm::generateCode(GenEnv & env)
 {
-    env << codeTabs
-        << codeLiteral("if (")
+    env << CodeMethodTabs()
+        << CodeLiteral("if (")
         << logicExp
-        << codeLiteral(")\n")
+        << CodeLiteral(")\n")
         << trueStatements;
 
     if (hasFalse)
     {
-        env << codeTabs
-            << codeLiteral("else\n")
+        env << CodeMethodTabs()
+            << CodeLiteral("else\n")
             << falseStatements;
     }
 }
 
 void WhileStm::generateCode(GenEnv & env)
 {
-    env << codeTabs
-        << codeLiteral("while (")
+    env << CodeMethodTabs()
+        << CodeLiteral("while (")
         << logicExp
-        << codeLiteral(")\n")
+        << CodeLiteral(")\n")
         << statements;
 }
 
@@ -121,29 +109,29 @@ void MethodDef::generateCode(GenEnv & env)
 //    scope_decl_method(name, *asnType);
     env.scopes.push();
     
-    env << codeTabs
-        << codeType(retTypeName)
-        << codeLiteral(" ")
-        << codeMethod(name)
-        << codeLiteral("(");
+    env << CodeMethodTabs()
+        << CodeTypeName(retTypeName)
+        << CodeLiteral(" ")
+        << CodeMethodName(name)
+        << CodeLiteral("(");
     
-    env << codeType(curClass.name())
-        << codeLiteral(" ")
-        << codeVar("this");
+    env << CodeTypeName(curClass.name())
+        << CodeLiteral(" ")
+        << CodeVarName("this");
         
     env.scopes.declLocal("this", curClass);
 
     for(auto&& ar : args)
     {
-        env << codeLiteral(", ")
-            << codeType(ar.typeName)
-            << codeLiteral(" ")
-            << codeVar(ar.name);
+        env << CodeLiteral(", ")
+            << CodeTypeName(ar.typeName)
+            << CodeLiteral(" ")
+            << CodeVarName(ar.name);
         
         env.scopes.declLocal(ar.name, ValueType(ar.typeName));
     }
 
-    env << codeLiteral(")\n")
+    env << CodeLiteral(")\n")
         << statements;
 
     env.scopes.pop();
@@ -154,14 +142,14 @@ void MethodExp::generateCode(GenEnv & env)
 {
     // TODO: Scope resolution. Canonical name
     env << method
-        << codeLiteral("(");
+        << CodeLiteral("(");
 
     int track = 0;
     for(auto&& ar : args)
     {
         if(track > 0)
         {
-            env << codeLiteral(", ")
+            env << CodeLiteral(", ")
                 << ar;
         }
         
@@ -169,15 +157,15 @@ void MethodExp::generateCode(GenEnv & env)
         ++track;
     }
    
-    env << codeLiteral(")");
+    env << CodeLiteral(")");
     //TODO: Possible set env.curFunc to null
 }
 
 void MethodStm::generateCode(GenEnv & env)
 {
-    env << codeTabs
+    env << CodeMethodTabs()
         << methodExp
-        << codeLiteral(";\n");
+        << CodeLiteral(";\n");
 }
 
 void NewExp::generateCode(GenEnv&)
@@ -193,32 +181,22 @@ void NewExp::generateCode(GenEnv&)
 void AssignStm::generateCode(GenEnv& env)
 {
     // TODO: check if this works for every case (i.e. rhs is new stm)
-    env << codeTabs
+    env << CodeMethodTabs()
         << lhs
-        << codeLiteral(" = ")
+        << CodeLiteral(" = ")
         << rhs
-        << codeLiteral(";\n");
+        << CodeLiteral(";\n");
 }
 
 void VarDecStm::generateCode(GenEnv& env)
 {
     //TODO: cannonical names
     //TODO: use env to determine if there should be a tab or not
-    env << codeLiteral("\t"); // Hardcoding member vars to 1 tab.
-
-    //typename could be cannonical name of class
-    if (typeName == "bool")
-    {
-        env << codeType("int");
-    }
-    else
-    {
-        env << codeType(typeName);
-    }
-
-    env << codeLiteral(" ")
-        << codeVar(name)
-        << codeLiteral(";\n");
+    env << CodeClassTabs()
+        << CodeTypeName(typeName)
+        << CodeLiteral(" ")
+        << CodeVarName(name)
+        << CodeLiteral(";\n");
 
     if (!env.classes.cur())
     {
@@ -241,20 +219,12 @@ void VarDecAssignStm::generateCode(GenEnv& env)
     //env << codeLiteral("\t"); // Hardcoding member vars to 1 tab.
 
     //typename could be cannonical name of class
-    if (typeName == "bool")
-    {
-        env << codeType("int");
-    }
-    else
-    {
-        env << codeType(typeName);
-    }
-    
-    env << codeLiteral(" ")
-        << codeVar(name)
-        << codeLiteral(" = ")
+    env << CodeTypeName(typeName)
+        << CodeLiteral(" ")
+        << CodeVarName(name)
+        << CodeLiteral(" = ")
         << value
-        << codeLiteral(";\n");
+        << CodeLiteral(";\n");
 
     if (!env.classes.cur())
     {
@@ -273,29 +243,30 @@ void VarDecAssignStm::generateCode(GenEnv& env)
 
 void RetStm::generateCode(GenEnv& env)
 {
-    env << codeTabs
-        << codeLiteral("return ")
+    env << CodeMethodTabs()
+        << CodeLiteral("return ")
         << value
-        << codeLiteral(";\n");
+        << CodeLiteral(";\n");
 }
 
 void ClassDecl::generateCode(GenEnv& env)
 {
     env.classes.enter(ValueType(name));
                        
-    env << codeLiteral("struct ")
-        << codeType(name)
-        << codeLiteral("\n{\n");
+    env << CodeLiteral("struct ")
+        << CodeClassDecl(name)
+        << CodeLiteral("\n{\n");
 
     if(parent) 
     {
         env.classes.setParent(ValueType(parent->name));
 
-        env << codeLiteral("\tstruct ") // Hardcoded to 1 tab
-            << codeType(parent->name)
-            << codeLiteral(" ")
-            << codeParent
-            << codeLiteral(";\n");
+        env << CodeClassTabs()
+            << CodeLiteral("struct ") // Hardcoded to 1 tab
+            << CodeClassDecl(parent->name)
+            << CodeLiteral(" ")
+            << CodeParent()
+            << CodeLiteral(";\n");
     }
 
     for (ASNPtr& member : members)
@@ -303,7 +274,7 @@ void ClassDecl::generateCode(GenEnv& env)
         env << member;
     }
 
-    env << codeLiteral("};\n");
+    env << CodeLiteral("};\n");
     env.classes.leave();
 }
 

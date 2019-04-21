@@ -1,4 +1,5 @@
 #include "type.hpp"
+#include "map.hpp"
 #include <stdexcept>
 
 namespace dflat
@@ -164,6 +165,40 @@ bool MethodType::operator==(MethodType const& other) const
 bool MethodType::operator!=(MethodType const& other) const
 {
     return !(*this == other);
+}
+
+
+// Builtin types
+namespace 
+{
+    struct BuiltinType
+    {
+        char const* translation;
+    };
+
+    const Map<ValueType, BuiltinType> s_builtinTypes
+    {
+        { intType, {"int"} },
+        { boolType, {"int"} },
+        { voidType, {"void"} },
+    };
+}
+
+bool isBuiltinType(ValueType const& type)
+{
+    return s_builtinTypes.count(type) != 0;
+}
+
+char const* translateBuiltinType(ValueType const& type)
+{
+    BuiltinType const* bt = lookup(s_builtinTypes, type);
+
+    if (!bt)
+    {
+        throw std::logic_error("No builtin type '" + type.toString() + "'");
+    }
+    
+    return bt->translation;
 }
 
 } // namespace dflat

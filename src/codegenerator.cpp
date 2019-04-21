@@ -13,7 +13,7 @@ String codeGenerator(Vector<ASNPtr> const& program)
 
     }
 
-    return env.prolog() + env.concat();
+    return env.concat();
 }
 
 GenEnv initialGenEnv()
