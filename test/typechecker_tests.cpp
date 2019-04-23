@@ -14,8 +14,10 @@ Type expType(String const& input)
     auto tokens = tokenize(input);
     Parser parser(tokens);
     auto asn = parser.parseExp();
-    return typeCheck(asn);
+    TypeEnv env;
+    return asn->typeCheck(env);
 }
+
 
 Type stmType(String const& input)
 {
@@ -24,7 +26,10 @@ Type stmType(String const& input)
     auto tokens = tokenize(input);
     Parser parser(tokens);
     auto asn = parser.parseStm();
-    return typeCheck(asn);
+    TypeEnv env;
+    env.enterClass(ValueType("Test"));
+    env.enterMethod(CanonName("test", MethodType(voidType, {})));
+    return asn->typeCheck(env);
 }
     
 //TODO Base b = new Sub(); should typecheck.

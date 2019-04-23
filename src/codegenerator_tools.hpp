@@ -4,6 +4,8 @@
 #include "map.hpp"
 #include "classmeta.hpp"
 #include "scopemeta.hpp"
+#include "methodmeta.hpp"
+#include "typechecker_tools.hpp"
 #include "set.hpp"
 #include <sstream>
 #include "optional.hpp"
@@ -36,8 +38,8 @@ struct CodeClassDecl
 
 struct CodeMethodName
 { 
-    String value; 
-    CodeMethodName(String _value)
+    CanonName value; 
+    CodeMethodName(CanonName _value)
         : value(std::move(_value))
     {}
 };
@@ -80,9 +82,6 @@ struct CodeParent
 struct CodeTabs
 {};
 
-struct CodeMethodTabs
-{};
-
 struct CodeTabIn
 {};
 
@@ -94,6 +93,8 @@ extern String const codeProlog;
 class GenEnv
 {
     public:
+        GenEnv(TypeEnv const&);
+
         GenEnv& operator<<(CodeTypeName const&);
         GenEnv& operator<<(CodeClassDecl const&);
         GenEnv& operator<<(CodeVarName const&);
@@ -107,11 +108,24 @@ class GenEnv
         GenEnv& operator<<(CodeTabOut const&);
         GenEnv& operator<<(ASNPtr const&);
         String concat() const;
-        ScopeMetaMan scopes;
-        ClassMetaMan classes;
-        Optional<String> curFunc;
+        
+        void enterClass(ValueType const& classType);
+        void leaveClass();
+        bool inClass() const;
+        ClassMeta const& curClass() const;
+ 
+        void enterMethod(CanonName const& methodName);
+        void leaveMethod();
+        bool inMethod() const;
+        MethodMeta const& curMethod() const;
+        CanonName const& getCanonName(MethodExp const*) const;
 
-        void emitMember(ValueType const& objectType, String const& memberName);
+        void enterScope();
+        void leaveScope();
+        void declareLocal(String const& name, ValueType const& type);
+        Optional<Decl> lookupDecl(String const& name) const;
+
+        void emitMemberVar(ValueType const& objectType, String const& memberName);
         void emitObject(String const& objectName, String const& memberName);
 
     private:
@@ -120,12 +134,16 @@ class GenEnv
         String mangleClassDecl(String const&);
         String mangleVarName(String const&);
         String mangleMemberName(String const&);
-        String mangleMethodName(String const&);
+        String mangleMethodName(CanonName const&);
         
         std::stringstream _structDef;
         std::stringstream _funcDef;
         std::stringstream _main;
         unsigned _tabs = 0;
+        ScopeMetaMan _scopes;
+        ClassMetaMan _classes;
+        MethodMetaMan _methods;
+        Optional<MethodMeta> _curMethod;
 };
 
 }

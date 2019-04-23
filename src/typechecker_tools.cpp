@@ -13,7 +13,12 @@ TypeEnv::TypeEnv()
 
 void TypeEnv::enterClass(ValueType const& classType)
 {
-    declareClass(classType);
+    if (_classes.lookup(classType))
+    {
+        throw TypeCheckerException("Duplicate class declaration " 
+                + classType.toString());
+    }
+
     _classes.enter(classType);
 }
 
@@ -22,33 +27,82 @@ void TypeEnv::leaveClass()
     _classes.leave();
 }
 
-void TypeEnv::addClassMember(String const& name, Type const& memberType)
+void TypeEnv::addClassVar(String const& name, ValueType const& type)
 {
-    _classes.addMember(name, memberType);
+    _classes.addVar(name, type);
 }
 
-ClassMeta const* TypeEnv::curClass() const
+void TypeEnv::addClassMethod(CanonName const& methodName)
 {
-    return _classes.cur();
+    _classes.addMethod(methodName);
 }
 
-void TypeEnv::enterMethod(String const& name)
+bool TypeEnv::inClass() const
 {
-    _curMethod = MethodMeta{};
-    _curMethod->name = name;
+    return _classes.cur() != nullptr;
+}
+
+ClassMeta const& TypeEnv::curClass() const
+{
+    if (!_classes.cur())
+    {
+        throw std::logic_error("no curClass");
+    }
+
+    return *_classes.cur();
+}
+
+void TypeEnv::enterMethod(CanonName const& methodName)
+{
+    addClassMethod(methodName);
+    _curMethod = MethodMeta{methodName};
+    _scopes.push(); // Argument scope.
+    _scopes.declLocal(config::thisName, curClass().type);
+    
 }
 
 void TypeEnv::leaveMethod()
 {
+    _scopes.pop();
     _curMethod = nullopt;
 }
 
-MethodMeta const* TypeEnv::curMethod() const
+bool TypeEnv::inMethod() const
 {
-    return &*_curMethod;
+    return _curMethod != nullopt;
 }
 
-Type TypeEnv::lookupRuleType(String const& name) const
+MethodMeta const& TypeEnv::curMethod() const
+{
+    if (!_curMethod)
+    {
+        throw std::logic_error("no curMethod");
+    }
+
+    return *_curMethod;
+}
+
+void TypeEnv::enterScope()
+{
+    _scopes.push();
+}
+
+void TypeEnv::leaveScope()
+{
+    _scopes.pop();
+}
+
+void TypeEnv::declareLocal(String const& name, ValueType const& type)
+{
+    if (!_curMethod)
+    {
+        throw std::logic_error("declareLocal with no curMethod");
+    }
+
+    _scopes.declLocal(name, type);
+}
+
+Type TypeEnv::lookupRuleType(CanonName const& name) const
 {
     Type const* type = lookup(_rules, name);
 
@@ -58,154 +112,123 @@ Type TypeEnv::lookupRuleType(String const& name) const
     }
     else
     {
-        throw TypeCheckerException("Invalid operands to operator: " + name);
+        throw TypeCheckerException("Invalid operands to operator: " + name.canonName());
     }
 }
 
-MethodType TypeEnv::lookupMethodType(String const& methodName) const
+MethodType TypeEnv::lookupMethodType(CanonName const& methodName) const
 {
-    return lookupMethodTypeByClass(methodName, _classes.cur()->type);
+    return lookupMethodTypeByClass(_classes.cur()->type, methodName);
 }
 
-MethodType TypeEnv::lookupMethodTypeByClass(String const& methodName, 
-        ValueType const& classType) const
+MethodType TypeEnv::lookupMethodTypeByClass(ValueType const& classType,
+        CanonName const& methodName) const
 {
-    Map<String, Type> const* classVars = lookup(_vars, classType);
-
-    if (!classVars)
+    Optional<MemberMeta> member = _classes.lookupMethod(classType, methodName);
+    
+    if (!member)
     {
-        throw std::logic_error(String(__func__) + ": bad class lookup " 
-                + classType.toString());
-    }
-
-    Type const* methodType = lookup(*classVars, methodName);
-
-    if (!methodType)
-    {
-        throw TypeCheckerException("Invalid reference to method '" 
-                + methodName + "' in class: " + classType.toString());
+        throw TypeCheckerException("Undeclared method '" + methodName.canonName() + "'");
     }
     
-    if (!methodType->isMethod())
+    if (!member->type.isMethod())
     {
-        throw TypeCheckerException("Referenced name '" + methodName
+        throw TypeCheckerException("Referenced method name '" + methodName.canonName()
             + "' in class " + classType.toString() + " is not a method type");
     }
-    
-    return methodType->method();
-}
 
-ValueType TypeEnv::lookupVarType(String const& varName)
+    return member->type.method();
+}
+            
+ValueType TypeEnv::lookupVarType(String const& varName) const
 {
-    if (varName == "this")
+    Optional<Decl> decl = _scopes.lookup(varName);
+
+    if (decl && decl->declType == DeclType::local)
     {
-        return ValueType(_classes.cur()->type);
+        Type varType = decl->type;
+
+        if (!varType.isValue())
+        {
+            throw TypeCheckerException("Referenced var name '" + varName
+                + " is not a variable type");
+        }
+
+        return varType.value();
     }
     else
     {
-        return lookupVarTypeByClass(varName, _classes.cur()->type);
+        Optional<Decl> thisDecl = _scopes.lookup(config::thisName);
+
+        if (thisDecl)
+        {
+            // It's probably our fault if "this" isn't a value type.
+            ValueType classType = thisDecl->type.value();
+            return lookupVarTypeByClass(classType, varName);
+        }
+        else
+        {
+            throw TypeCheckerException("Undeclared var name '" + varName + "'");
+        }
     }
 }
 
-ValueType TypeEnv::lookupVarTypeByClass(String const& varName, 
-        ValueType const& classType)
+ValueType TypeEnv::lookupVarTypeByClass(ValueType const& classType,
+        String const& memberName) const
 {
-    Map<String, Type> const* classVars = lookup(_vars, classType);
+    Optional<MemberMeta> member = _classes.lookupVar(classType, memberName);
 
-    if (!classVars)
+    if (!member)
     {
-        throw std::logic_error(String(__func__) + ": bad class lookup " 
-                + classType.toString());
+        throw TypeCheckerException("Undeclared member var name '" + memberName + "'");
     }
 
-    Type const* varType = lookup(*classVars, varName);
-
-    if (!varType)
+    if (!member->type.isValue())
     {
-        throw TypeCheckerException("Invalid reference to variable '" 
-                + varName + "' in class: " + classType.toString());
-    }
-    
-    if (!varType->isValue())
-    {
-        throw TypeCheckerException("Referenced name '" + varName
+        throw TypeCheckerException("Referenced member var name '" + memberName
             + "' in class " + classType.toString() 
             + " is not a variable type");
     }
 
-    return varType->value();
+    return member->type.value();
 }
 
-bool TypeEnv::assertValidType(ValueType const& type)
+void TypeEnv::assertValidType(ValueType const& type) const
 {
     if (_classes.cur() && _classes.cur()->type == type)
     {
         throw TypeCheckerException("Cannot use an instance of a class inside its own definition. Inside class: " + _classes.cur()->type.toString());
     }
 
-    ValueType const* valid = lookup(_types, type);
-
-    if (valid)
+    if (isBuiltinType(type))
     {
-        return true;
+        return;
     }
-    else
+
+    if (!_classes.lookup(type))
     {
         throw TypeCheckerException("Invalid reference to unknown type: " 
                 + type.toString());
     }
 }
 
-void TypeEnv::mapNameToType(String const& name, Type const& type)
-{
-    ValueType classType = _classes.cur() ? _classes.cur()->type 
-                                         : config::globalClass;
-
-    Map<String, Type>* classVars = lookup(_vars, classType);
-
-    if (!classVars)
-    {
-        throw std::logic_error(String(__func__) + ": bad class lookup " 
-                + classType.toString());
-    }
-
-    // Insert OR replace (this might be a new scope).
-    auto it = classVars->find(name);
-
-    if (it == classVars->end())
-    {
-        classVars->insert({ name, type });
-    }
-    else
-    {
-        it->second = type;
-    }
-    
-    if (config::traceTypeCheck)
-    {
-        std::cout << "map " << classType.toString() << "::" 
-            << name << " to " << type.toString() << "\n";
-    }
-}
-
 void TypeEnv::initialize() 
 {
-    auto predefined = [&](ValueType const& t)
+    auto binopRule = [&](OpType op, ValueType const& ret, 
+            ValueType const& lhs, ValueType const& rhs)
     {
-        _types.insert(t);
-    };
-
-    auto binopRule = [&](OpType op, Type const& ret, 
-            Type const& lhs, Type const& rhs)
-    {
-        String name = binopCanonicalName(op, lhs, rhs);
-        _rules.insert({ name, ret });
+        String name(opString(op));
+        MethodType type(ret, { lhs, rhs });
+        CanonName canonName(name, type);
+        _rules.insert({ canonName, ret });
     };
     
-    auto unopRule = [&](OpType op, Type const& ret, Type const& rhs)
+    auto unopRule = [&](OpType op, ValueType const& ret, ValueType const& rhs)
     {
-        String name = unopCanonicalName(op, rhs);
-        _rules.insert({ name, ret });
+        String name(opString(op));
+        MethodType type(ret, { rhs });
+        CanonName canonName(name, type);
+        _rules.insert({ canonName, ret });
     };
 
     ValueType const i = intType;
@@ -213,13 +236,8 @@ void TypeEnv::initialize()
     ValueType const v = voidType;
 
     // Initialize the global namespace
-    _vars.insert({ config::globalClass, {} });
+//    _vars.insert({ config::globalClass, {} });
     
-    // Predefined declarable types. 
-    predefined(i);
-    predefined(b);
-    predefined(v);
-
     // Predefined function types. 
     binopRule(opPlus,  i, i, i); // int +(int,int)
     binopRule(opMinus, i, i, i);
@@ -241,27 +259,5 @@ void TypeEnv::initialize()
     unopRule(opMinus, i, i); // int -(int)
     unopRule(opNot,   b, b); // bool !(bool)
 }
-
-void TypeEnv::declareClass(ValueType const& classType)
-{
-    auto it = _vars.find(classType);
-
-    if (it == _vars.end())
-    {
-        _types.insert(classType);
-        _vars.insert({ classType, {} });
-
-        if (config::traceTypeCheck)
-        {
-            std::cout << "declare class " << classType.toString() << "\n";
-        }
-    }
-    else
-    {
-        throw TypeCheckerException("Duplicate class declaration " 
-                + classType.toString());
-    }
-}
-
 
 } //namespace dflat

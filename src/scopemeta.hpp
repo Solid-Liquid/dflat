@@ -28,10 +28,10 @@ class ScopeMetaMan
         void push();
         void pop();
         void declAny(String const&, Decl const&);
-        void declMethod(String const&, Type const&);
+//        void declMethod(String const&, Type const&);
         void declLocal(String const&, Type const&);
         void print() const;
-        Optional<Decl> lookup(String const&);
+        Optional<Decl> lookup(String const&) const;
        
 
     private:

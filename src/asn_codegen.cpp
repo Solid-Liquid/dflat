@@ -7,14 +7,14 @@ namespace dflat
 
 void VariableExp::generateCode(GenEnv & env)
 {
-    //TODO referencing members of parent classes
     if (object)
     {
+        // object->member
         env.emitObject(*object, name);
     }
     else
     {
-        Optional<Decl> decl = env.scopes.lookup(name);
+        Optional<Decl> decl = env.lookupDecl(name);
 
         if (decl && decl->declType == DeclType::local)
         {
@@ -24,7 +24,7 @@ void VariableExp::generateCode(GenEnv & env)
         else
         {
             // Must be using implicit this.
-            env.emitObject("this", name);
+            env.emitObject(config::thisName, name);
         }
     }
 }
@@ -58,7 +58,7 @@ void UnopExp::generateCode(GenEnv & env)
 
 void Block::generateCode(GenEnv & env)
 {
-    env.scopes.push();
+    env.enterScope();
 
     env << CodeTabs()
         << CodeLiteral("{\n")
@@ -73,7 +73,7 @@ void Block::generateCode(GenEnv & env)
         << CodeTabs()
         << CodeLiteral("}\n");
 
-    env.scopes.pop();
+    env.leaveScope();
 }
 
 void IfStm::generateCode(GenEnv & env)
@@ -103,24 +103,19 @@ void WhileStm::generateCode(GenEnv & env)
 
 void MethodDef::generateCode(GenEnv & env)
 {
-    env.curFunc = name;
-    ValueType curClass = env.classes.cur()->type;
-    
-//    scope_decl_method(name, *asnType);
-    env.scopes.push();
+    CanonName const canonName(name, asnType->method());
+    env.enterMethod(canonName);
+    ValueType curClass = env.curClass().type;
     
     env << CodeTabs()
         << CodeTypeName(retTypeName)
         << CodeLiteral(" ")
-        << CodeMethodName(name)
-        << CodeLiteral("(");
-    
-    env << CodeTypeName(curClass.name())
+        << CodeMethodName(canonName)
+        << CodeLiteral("(")
+        << CodeTypeName(curClass.name())
         << CodeLiteral(" ")
-        << CodeVarName("this");
+        << CodeVarName(config::thisName);
         
-    env.scopes.declLocal("this", curClass);
-
     for(auto&& ar : args)
     {
         env << CodeLiteral(", ")
@@ -128,21 +123,21 @@ void MethodDef::generateCode(GenEnv & env)
             << CodeLiteral(" ")
             << CodeVarName(ar.name);
         
-        env.scopes.declLocal(ar.name, ValueType(ar.typeName));
+        env.declareLocal(ar.name, ValueType(ar.typeName));
     }
 
     env << CodeLiteral(")\n")
         << statements;
 
-    env.scopes.pop();
-    env.curFunc = nullopt;
+    env.leaveMethod();
 }
 
 void MethodExp::generateCode(GenEnv & env)
 {
-    // TODO: Scope resolution. Canonical name
-    env << method
+    env << CodeMethodName(env.getCanonName(this))
         << CodeLiteral("(");
+
+    //TODO this
 
     int track = 0;
     for(auto&& ar : args)
@@ -158,7 +153,6 @@ void MethodExp::generateCode(GenEnv & env)
     }
    
     env << CodeLiteral(")");
-    //TODO: Possible set env.curFunc to null
 }
 
 void MethodStm::generateCode(GenEnv & env)
@@ -198,18 +192,9 @@ void VarDecStm::generateCode(GenEnv& env)
         << CodeVarName(name)
         << CodeLiteral(";\n");
 
-    if (!env.classes.cur())
+    if (env.inMethod())
     {
-        // TODO needed for testing?
-        env.scopes.declLocal(name, ValueType(typeName));
-    }
-    else if (env.curFunc)
-    {
-        env.scopes.declLocal(name, ValueType(typeName));
-    }
-    else
-    {
-        env.classes.addMember(name, ValueType(typeName));
+        env.declareLocal(name, ValueType(typeName));
     }
 }
 
@@ -226,18 +211,9 @@ void VarDecAssignStm::generateCode(GenEnv& env)
         << value
         << CodeLiteral(";\n");
 
-    if (!env.classes.cur())
+    if (env.inMethod())
     {
-        // TODO needed for testing?
-        env.scopes.declLocal(name, ValueType(typeName)); 
-    }
-    else if (env.curFunc)
-    {
-        env.scopes.declLocal(name, ValueType(typeName)); 
-    }
-    else
-    {
-        env.classes.addMember(name, ValueType(typeName));
+        env.declareLocal(name, ValueType(typeName)); 
     }
 }
 
@@ -251,7 +227,7 @@ void RetStm::generateCode(GenEnv& env)
 
 void ClassDecl::generateCode(GenEnv& env)
 {
-    env.classes.enter(ValueType(name));
+    env.enterClass(ValueType(name));
                        
     env << CodeLiteral("struct ")
         << CodeClassDecl(name)
@@ -259,8 +235,6 @@ void ClassDecl::generateCode(GenEnv& env)
 
     if(parent) 
     {
-        env.classes.setParent(ValueType(parent->name));
-
         env << CodeTabs()
             << CodeLiteral("struct ")
             << CodeClassDecl(parent->name)
@@ -275,7 +249,7 @@ void ClassDecl::generateCode(GenEnv& env)
     }
 
     env << CodeLiteral("};\n");
-    env.classes.leave();
+    env.leaveClass();
 }
 
 } //namespace dflat

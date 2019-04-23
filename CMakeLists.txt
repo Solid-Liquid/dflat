@@ -21,6 +21,9 @@ add_library(dflat_common
     src/typechecker_tools.cpp src/typechecker_tools.hpp
     src/classmeta.cpp src/classmeta.hpp
     src/scopemeta.cpp src/scopemeta.hpp
+    src/methodmeta.cpp src/methodmeta.hpp
+    src/canonname.cpp src/canonname.hpp
+    src/variable.cpp src/variable.hpp
     src/codegenerator.hpp
     src/codegenerator.cpp
     src/codegenerator_tools.cpp src/codegenerator_tools.hpp

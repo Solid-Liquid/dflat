@@ -6,6 +6,8 @@
 namespace dflat
 {
 
+using std::move;
+
 String opString(OpType op)
 {
     switch(op)
@@ -180,14 +182,14 @@ String MethodDef::toString() const
 }
 
 //MethodExp:
-MethodExp::MethodExp(ASNPtr&& _method, Vector<ASNPtr>&& _args)
+MethodExp::MethodExp(Variable _method, Vector<ASNPtr>&& _args)
     : method(move(_method)), args(move(_args))
 {
 }
 
 String MethodExp::toString() const
 {
-    String str = method->toString() + "(";
+    String str = method.toString() + "(";
     int track = 0;
     for(auto&& ar : args)
     {

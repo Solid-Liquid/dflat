@@ -7,8 +7,8 @@
 namespace dflat
 {
 
-String codeGenerator(Vector<ASNPtr> const& program);
-GenEnv initialGenEnv();
+String generateCode(Vector<ASNPtr> const& program, TypeEnv const&);
+//GenEnv initialGenEnv();
 
 } // namespace dflat
 

@@ -70,6 +70,8 @@ class Type : private Variant<ValueType, MethodType>
         bool operator!=(Type const&) const;
 };
 
+// Type that can't be used.
+ValueType const undefinedType("undefined");
 
 // Builtin types
 ValueType const intType("int");
@@ -83,16 +85,16 @@ char const* translateBuiltinType(ValueType const&);
 } // namespace dflat
 
 
-// std::hash overload for ValueType.
+// std::hash overloads.
 namespace std
 {
 
 template <>
 struct hash<dflat::ValueType>
 {
-    size_t operator()(dflat::ValueType const& t) const
+    size_t operator()(dflat::ValueType const& x) const
     {
-        return std::hash<dflat::TypeName>{}(t.name());
+        return std::hash<dflat::TypeName>{}(x.name());
     }
 };
 

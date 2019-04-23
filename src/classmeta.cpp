@@ -1,8 +1,7 @@
 #include "classmeta.hpp"
-
-#include "string.hpp"
-#include "map.hpp"
-#include "type.hpp"
+#include "asn.hpp"
+#include "typechecker.hpp"
+#include <iostream>
 
 namespace dflat
 {
@@ -27,9 +26,11 @@ void ClassMetaMan::declare(ValueType const& type)
         auto result = _classes.insert({ type, ClassMeta(type) });
         it = result.first;
     }
+
+    // Already declared OK. Handle in user.
 }
 
-ClassMeta* ClassMetaMan::lookup(ValueType const& type)
+ClassMeta* ClassMetaMan::_lookup(ValueType const& type)
 {
     return dflat::lookup(_classes, type);
 }
@@ -39,16 +40,19 @@ ClassMeta const* ClassMetaMan::lookup(ValueType const& type) const
     return dflat::lookup(_classes, type);
 }
 
-int ClassMetaMan::classHasMember(ValueType const& type, String const& member) const
+Optional<MemberMeta> ClassMetaMan::lookupVar(ValueType const& classType,
+        String const& memberName) const
 {
     int depth = 1;
-    ClassMeta const* cm = dflat::lookup(_classes, type);
+    ClassMeta const* cm = dflat::lookup(_classes, classType);
 
     while (cm)
     {
-        if (cm->members.count(member))
+        Type const* memberType = dflat::lookup(cm->members, memberName);
+
+        if (memberType)
         {
-            return depth;
+            return MemberMeta{ depth, *memberType };
         }
         else
         {
@@ -56,7 +60,7 @@ int ClassMetaMan::classHasMember(ValueType const& type, String const& member) co
 
             if (cm->parent)
             {
-                cm = lookup(*cm->parent);
+                cm = lookup(cm->parent.value());
             }
             else
             {
@@ -65,7 +69,13 @@ int ClassMetaMan::classHasMember(ValueType const& type, String const& member) co
         }
     }
 
-    return 0; // Does not have member.
+    return nullopt;
+}
+
+Optional<MemberMeta> ClassMetaMan::lookupMethod(ValueType const& classType,
+        CanonName const& methodName) const
+{
+    return lookupVar(classType, methodName.canonName());
 }
 
 ClassMeta const* ClassMetaMan::cur() const
@@ -74,23 +84,30 @@ ClassMeta const* ClassMetaMan::cur() const
     {
         return nullptr;
     }
-//    if (!_curClass)
-//    {
-//        throw std::logic_error("no current class");
-//    }
 
     return lookup(*_curClass);
 }
 
-void ClassMetaMan::addMember(String const& memberName, Type const& memberType)
+void ClassMetaMan::addVar(String const& name, ValueType const& type)
 {
     if (!cur())
     {
         throw std::logic_error("adding member when no current class");
     }
 
-    ClassMeta* classMeta = lookup(cur()->type);
-    classMeta->members.insert({ memberName, memberType });
+    ClassMeta* classMeta = _lookup(cur()->type);
+    classMeta->members.insert({ name, type });
+}
+
+void ClassMetaMan::addMethod(CanonName const& methodName)
+{
+    if (!cur())
+    {
+        throw std::logic_error("adding member when no current class");
+    }
+
+    ClassMeta* classMeta = _lookup(cur()->type);
+    classMeta->members.insert({ methodName.canonName(), methodName.type() });
 }
 
 void ClassMetaMan::setParent(ValueType const& parentType)
@@ -100,8 +117,30 @@ void ClassMetaMan::setParent(ValueType const& parentType)
         throw std::logic_error("setting parent when no current class");
     }
     
-    ClassMeta* classMeta = lookup(cur()->type);
+    ClassMeta* classMeta = _lookup(cur()->type);
     classMeta->parent = parentType;
+}
+
+void ClassMetaMan::print() const
+{
+    std::cout << "ClassMeta:";
+    for (auto [ck,cv] : _classes)
+    {
+        std::cout << "\n" << ck.toString();
+
+        if (!cv.members.empty())
+        {
+            for (auto [mk,mv] : cv.members)
+            {
+                std::cout << "\n\t" << mk;
+            }
+        }
+    }
+    if (_curClass)
+    {
+        std::cout << "\n(cur: " << _curClass->toString() << ")";
+    }
+    std::cout << "\n";
 }
 
 } // namespace dflat

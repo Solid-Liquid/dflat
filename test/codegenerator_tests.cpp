@@ -1,20 +1,30 @@
 //Unit tests for Code Generation
 
 #include "catch2/catch.hpp"
+#include "typechecker.hpp"
 #include "codegenerator.hpp"
 #include "parser.hpp"
 #include "lexer.hpp"
 
 using namespace dflat;
 
-void declTestStuff(GenEnv& env)
+GenEnv testGenEnv()
 {
-    // Tests use the following symbols. (See the other two functions below).
-    env.classes.enter(ValueType("Object"));
-    env.classes.addMember("member", ValueType("int"));
-    env.classes.leave();
-    env.scopes.declLocal("var", ValueType("int"));
-    env.scopes.declLocal("obj", ValueType("Object"));
+    ValueType objectType("Object");
+    CanonName methodName("method", MethodType(voidType, {}));
+
+    TypeEnv typeEnv;
+    typeEnv.enterClass(objectType);
+    typeEnv.addClassVar("member", intType);
+    typeEnv.addClassMethod(methodName);
+    typeEnv.leaveClass();
+
+    GenEnv genEnv(typeEnv);
+    genEnv.enterClass(objectType);
+    genEnv.enterMethod(methodName);
+    genEnv.declareLocal("var", intType);
+    genEnv.declareLocal("obj", objectType);
+    return genEnv;
 }
 
 // Strip tabs and newlines from string
@@ -45,8 +55,7 @@ String codeGenExp(String const& input)
     //Helper function that makes testing expression code generation less ugly
     //Takes a string, tokenizes it, passes it a parser instance,
     //calls parseExp() and generateCode(). (No typchecking)
-    GenEnv env;
-    declTestStuff(env);
+    GenEnv env = testGenEnv();
     auto result = Parser(tokenize(input)).parseExp();
     
     if (!result)
@@ -63,8 +72,7 @@ String codeGenStm(String const& input)
     //Helper function that makes testing statement code generation less ugly
     //Takes a string, tokenizes it, passes it a parser instance,
     //calls parseStm() and generateCode(). (No typchecking)
-    GenEnv env;
-    declTestStuff(env);
+    GenEnv env = testGenEnv();
     auto result = Parser(tokenize(input)).parseStm();
     
     if (!result)
@@ -78,7 +86,9 @@ String codeGenStm(String const& input)
 
 String codeGenProg(String const& input)
 {
-    return cleanOutput(codeGenerator(parse(tokenize(input))));
+    Vector<ASNPtr> program = parse(tokenize(input));
+    TypeEnv typeEnv = typeCheck(program);
+    return cleanOutput(generateCode(program, typeEnv));
 }
 
 TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )

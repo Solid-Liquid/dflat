@@ -7,6 +7,7 @@
 #include <memory>
 #include "string.hpp"
 #include "vector.hpp"
+#include "variable.hpp"
 #include "typechecker_tools.hpp"
 #include "codegenerator_tools.hpp"
 
@@ -303,10 +304,10 @@ class MethodExp : public ASN
 {
     //Example Input: func(var, 1)
     public:
-        ASNPtr method;
+        Variable method;
         Vector<ASNPtr> args;
 
-        MethodExp(ASNPtr&&, Vector<ASNPtr>&&);
+        MethodExp(Variable, Vector<ASNPtr>&&);
         ASNType getType() const { return expMethod; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);

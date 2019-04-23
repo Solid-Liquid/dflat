@@ -182,9 +182,7 @@ Optional<OpType> Parser::parseLogicalOp()
     }
 }
 
-// EXPRESSION PARSERS
-
-ASNPtr Parser::parseVariable()
+Optional<Variable> Parser::parseVariable()
 {
     TRACE;
     ENABLE_ROLLBACK;
@@ -197,14 +195,14 @@ ASNPtr Parser::parseVariable()
             PARSE(member, parseName());
             CANCEL_ROLLBACK;
             SUCCESS;
-            return make_unique<VariableExp>("this", member);
+            return Variable("this", member);
         }
         else
         {
             // just this
             CANCEL_ROLLBACK;
             SUCCESS;
-            return make_unique<VariableExp>("this");
+            return Variable(nullopt, "this");
         }
     }
     else
@@ -217,7 +215,7 @@ ASNPtr Parser::parseVariable()
             PARSE(member, parseName());
             CANCEL_ROLLBACK;
             SUCCESS;
-            return make_unique<VariableExp>(object, member);
+            return Variable(object, member);
         }
         else 
         {
@@ -225,8 +223,26 @@ ASNPtr Parser::parseVariable()
             // This could be just a variable, or a member with implicit this.
             CANCEL_ROLLBACK;
             SUCCESS;
-            return make_unique<VariableExp>(object);
+            return Variable(nullopt, object);
         }
+    }
+}
+
+
+// EXPRESSION PARSERS
+
+ASNPtr Parser::parseVariableExp()
+{
+    TRACE;
+    PARSE(var, parseVariable());
+    SUCCESS;
+    if (var.object)
+    {
+        return make_unique<VariableExp>(*var.object, var.variable);
+    }
+    else
+    {
+        return make_unique<VariableExp>(var.variable);
     }
 }
 
@@ -394,7 +410,7 @@ ASNPtr Parser::parsePrimary()
         SUCCESS;
         return result;
     }
-    else if (result = parseVariable())
+    else if (result = parseVariableExp())
     {
         SUCCESS;
         return result;
@@ -568,7 +584,7 @@ ASNPtr Parser::parseAssignStm()
     TRACE;
     ENABLE_ROLLBACK;
 
-    PARSE(lhs, parseVariable());
+    PARSE(lhs, parseVariableExp());
     MATCH_(AssignToken);
     MUST_PARSE(rhs, parseExp(), "Expected expression in assignment");
     MUST_MATCH_(SemiToken);

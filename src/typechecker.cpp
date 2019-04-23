@@ -35,42 +35,6 @@ void assertTypeIs(Type const &test, Type const &against)
     }
 }
 
-// Note that this function can produce a canonical name for an illegal type.
-// This is for the sake of decent errors. That is, while only ValueTypes
-// are allowed as arguments, this takes any Type.
-String funcCanonicalName(String const &name, Vector<Type> const &argTypes)
-{
-    String canonicalName = name + "(";
-    bool first = true;
-
-    for (Type const &argType : argTypes)
-    {
-        if (first)
-        {
-            first = false;
-        }
-        else
-        {
-            canonicalName += ",";
-        }
-
-        canonicalName += argType.toString();
-    }
-
-    canonicalName += ")";
-    return canonicalName;
-}
-
-String unopCanonicalName(OpType op, Type const &rhsType)
-{
-    return funcCanonicalName(opString(op), { rhsType });
-}
-
-String binopCanonicalName(OpType op, Type const &lhsType, Type const &rhsType)
-{
-    return funcCanonicalName(opString(op), { lhsType, rhsType });
-}
-
 TypeCheckerException::TypeCheckerException(String msg) noexcept
 {
     message = "TypeChecker Exception:\n" + msg;

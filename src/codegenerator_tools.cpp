@@ -10,13 +10,17 @@ String const codeProlog = R"(
 #define PLACEHOLDER false
 )";
 
+GenEnv::GenEnv(TypeEnv const& typeEnv)
+    : _classes(typeEnv._classes)
+{}
+
 std::stringstream& GenEnv::write()
 {
-    if (!classes.cur()) 
+    if (!inClass()) 
     {
         return _main;
     } 
-    else if (!curFunc) 
+    else if (!inMethod()) 
     {
         return _structDef;
     } 
@@ -50,6 +54,96 @@ String GenEnv::concat() const
     s += sMain;
     return s;
 }
+        
+void GenEnv::enterClass(ValueType const& classType)
+{
+    _classes.enter(classType);
+}
+
+void GenEnv::leaveClass()
+{
+    _classes.leave();
+}
+
+bool GenEnv::inClass() const
+{
+    return _classes.cur() != nullptr;
+}
+
+ClassMeta const& GenEnv::curClass() const
+{
+    if (!_classes.cur())
+    {
+        throw std::logic_error("no curClass");
+    }
+
+    return *_classes.cur();
+}
+
+void GenEnv::enterMethod(CanonName const& methodName)
+{
+    _curMethod = MethodMeta{methodName};
+    _scopes.push(); // Argument scope.
+    _scopes.declLocal(config::thisName, curClass().type);
+}
+
+void GenEnv::leaveMethod()
+{
+    _scopes.pop();
+    _curMethod = nullopt;
+}
+
+bool GenEnv::inMethod() const
+{
+    return _curMethod != nullopt;
+}
+
+MethodMeta const& GenEnv::curMethod() const
+{
+    if (!_curMethod)
+    {
+        throw std::logic_error("no curMethod");
+    }
+
+    return *_curMethod;
+}
+        
+CanonName const& GenEnv::getCanonName(MethodExp const* methodExp) const
+{
+    CanonName const* name = _methods.lookupCanonName(methodExp);
+
+    if (!name)
+    {
+        throw std::logic_error("No canon name!");
+    }
+
+    return *name;
+}
+
+void GenEnv::enterScope()
+{
+    _scopes.push();
+}
+
+void GenEnv::leaveScope()
+{
+    _scopes.pop();
+}
+
+void GenEnv::declareLocal(String const& name, ValueType const& type)
+{
+    if (!_curMethod)
+    {
+        throw std::logic_error("declareLocal with no curMethod");
+    }
+
+    _scopes.declLocal(name, type);
+}
+
+Optional<Decl> GenEnv::lookupDecl(String const& name) const
+{
+    return _scopes.lookup(name);
+}
 
 String GenEnv::mangleTypeName(String const& x)
 {
@@ -80,9 +174,16 @@ String GenEnv::mangleMemberName(String const& x)
     return "df_" + x;
 }
 
-String GenEnv::mangleMethodName(String const& x)
+String GenEnv::mangleMethodName(CanonName const& name)
 {
-    return "df_" + x;
+    String s = "dfm_" + name.baseName();
+
+    for (ValueType const& arg : name.type().args())
+    {
+        s += "_" + arg.toString();
+    }
+
+    return s;
 }
 
 GenEnv& GenEnv::operator<<(CodeTypeName const& x)
@@ -135,7 +236,7 @@ GenEnv& GenEnv::operator<<(CodeParent const&)
 
 GenEnv& GenEnv::operator<<(CodeTabs const&)
 {
-    if (curFunc)
+    if (_curMethod)
     {
         write() << String(_tabs, '\t');
     }
@@ -170,37 +271,37 @@ GenEnv& GenEnv::operator<<(ASNPtr const& x)
     return *this;
 }
 
-void GenEnv::emitMember(ValueType const& objectType, String const& memberName)
+void GenEnv::emitMemberVar(ValueType const& objectType, String const& memberName)
 {
-    int depth = classes.classHasMember(objectType, memberName);
+    Optional<MemberMeta> const member = _classes.lookupVar(objectType, memberName);
 
-    if (depth == 0)
+    if (!member)
     {
-        throw std::logic_error("no member '" + memberName 
+        throw std::logic_error("no member var '" + memberName 
                 + "' in '" + objectType.name() + "'");
     }
-
-    while (depth > 1)
+    
+    for (int i = 1; i < member->depth; ++i)
     {
-        *this << CodeLiteral{"->"}
-              << CodeParent{};
+        *this << CodeLiteral("->")
+              << CodeParent();
     }
 
-    *this << CodeLiteral{"->"}
+    *this << CodeLiteral("->")
           << CodeMemberName{memberName};
 }
 
 void GenEnv::emitObject(String const& objectName, String const& memberName)
 {
-    Optional<Decl> decl = scopes.lookup(objectName);
+    Optional<Decl> decl = _scopes.lookup(objectName);
 
     if (!decl)
     {
         throw std::logic_error("no object '" + objectName + "' in scope");
     }
 
-    *this << CodeVarName{objectName};
-    emitMember(decl->type.value(), memberName);
+    *this << CodeVarName(objectName);
+    emitMemberVar(decl->type.value(), memberName);
 }
 
 } // namespace dflat

@@ -3,9 +3,9 @@
 namespace dflat
 {
 
-String codeGenerator(Vector<ASNPtr> const& program)
+String generateCode(Vector<ASNPtr> const& program, TypeEnv const& typeEnv)
 {
-    GenEnv env;
+    GenEnv env(typeEnv);
     for(size_t i = 0; i < program.size(); i++)
     {
 
@@ -16,12 +16,12 @@ String codeGenerator(Vector<ASNPtr> const& program)
     return env.concat();
 }
 
-GenEnv initialGenEnv()
-{
-    //TODO
-    GenEnv env;
-    return env;
-}
+//GenEnv initialGenEnv()
+//{
+//    //TODO
+//    GenEnv env;
+//    return env;
+//}
 
 
 } //namespace dflat

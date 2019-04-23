@@ -16,6 +16,20 @@ ASNPtr passPrint(ASNPtr&& asn)
     return move(asn);
 }
 
+// Needed for nice output.
+namespace Catch 
+{
+    template<>
+    struct StringMaker<ASNPtr> 
+    {
+        static 
+        String convert(ASNPtr const& value) 
+        {
+            return value->toString();
+        }
+    };
+}
+
 //Parser( tokens(NumberToken(1), PlusToken(), NumberToken(1)) ).parseAdditive()
 #define PT(method, ...) passPrint(Parser(tokens(__VA_ARGS__)).method())
 
@@ -58,14 +72,14 @@ TEST_CASE( "Parser works correctly", "[parser]" )
         ~NumberExp(6)
         );
 
-    REQUIRE (PT(parseVariable, // "this" as a single token
+    REQUIRE (PT(parseVariableExp, // "this" as a single token
         ThisToken()
         )
         ==
         ~VariableExp("this")
         );
     
-    REQUIRE (PT(parseVariable, // this.x -> VariableExp
+    REQUIRE (PT(parseVariableExp, // this.x -> VariableExp
         ThisToken(),
         MemberToken(),
         NameToken("x")
@@ -74,7 +88,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
         ~VariableExp("this", "x")
         );
 
-    REQUIRE( PT(parseVariable, //fun -> VariableExp
+    REQUIRE( PT(parseVariableExp, //fun -> VariableExp
         NameToken("fun")
         )
         ==
@@ -490,7 +504,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 RightParenToken()
                 )
              ==
-             ~MethodExp(~VariableExp("obj", "meth"), Vector<ASNPtr>{})
+             ~MethodExp(Variable("obj", "meth"), Vector<ASNPtr>{})
              );
     
     REQUIRE( PT(parseMethodExp,          //meth()  ->  MethodExp with "this"
@@ -499,7 +513,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 RightParenToken()
                 )
              ==
-             ~MethodExp(~VariableExp("meth"), Vector<ASNPtr>{})
+             ~MethodExp(Variable(nullopt, "meth"), Vector<ASNPtr>{})
              );
 
 
@@ -512,7 +526,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 RightParenToken()
                 )
              ==
-             ~MethodExp(~VariableExp("obj", "meth"), asns(NumberExp(3)))
+             ~MethodExp(Variable("obj", "meth"), asns(NumberExp(3)))
              );
 
 
@@ -527,7 +541,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 RightParenToken()
                 )
              ==
-             ~MethodExp(~VariableExp("obj", "meth"),
+             ~MethodExp(Variable("obj", "meth"),
                       asns(NumberExp(3), VariableExp("suh")))
              );
 
@@ -544,7 +558,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 )
              ==
              ~MethodStm(
-                 ~MethodExp(~VariableExp("obj", "meth"),
+                 ~MethodExp(Variable("obj", "meth"),
                          asns(NumberExp(3), VariableExp("suh"))))
              );
 
@@ -607,7 +621,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
         nullptr
         );
 
-    REQUIRE( PT(parseVariable, //parse is not Variable
+    REQUIRE( PT(parseVariableExp, //parse is not Variable
         NumberToken(6)
         )
         ==

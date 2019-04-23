@@ -19,11 +19,11 @@ void ScopeMetaMan::declAny(String const& name, Decl const& decl)
     _scopes.back().insert({name, decl});
 }
 
-void ScopeMetaMan::declMethod(String const& name, Type const& type)
-{
-    Decl decl{ DeclType::method, type };
-    declAny(name, decl);
-}
+//void ScopeMetaMan::declMethod(CanonName const& name, Type const& type)
+//{
+//    Decl decl{ DeclType::method, type };
+//    declAny(name, decl);
+//}
 
 void ScopeMetaMan::declLocal(String const& name, Type const& type)
 {
@@ -45,7 +45,7 @@ void ScopeMetaMan::print() const
     }
 }
 
-Optional<Decl> ScopeMetaMan::lookup(String const& name)
+Optional<Decl> ScopeMetaMan::lookup(String const& name) const
 {
     auto it = _scopes.rbegin();
     auto const end = _scopes.rend();

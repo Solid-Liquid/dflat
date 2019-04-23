@@ -21,12 +21,11 @@ Type ASN::typeCheck(TypeEnv& env)
 
 Type VariableExp::typeCheckPrv(TypeEnv& env)
 {
-    // Variable type is the declared type for this name.
     if (object)
     {
         // Lookup as a member of object.
         ValueType objectType = env.lookupVarType(*object);
-        return env.lookupVarTypeByClass(name, objectType);
+        return env.lookupVarTypeByClass(objectType, name);
     }
     else
     {
@@ -53,8 +52,20 @@ Type BinopExp::typeCheckPrv(TypeEnv& env)
     // e.g. "1 + 2" might be "+(int,int)" with type int.
     Type lhsType = lhs->typeCheck(env);
     Type rhsType = rhs->typeCheck(env);
-    String funcName = binopCanonicalName(op, lhsType, rhsType);
-    return env.lookupRuleType(funcName);
+        
+    if (!lhsType.isValue())
+    {
+        throw TypeCheckerException("Using method as operator lhs");
+    }
+    
+    if (!rhsType.isValue())
+    {
+        throw TypeCheckerException("Using method as operator rhs");
+    }
+
+    MethodType const type(undefinedType, { lhsType.value(), rhsType.value() });
+    CanonName const canonName(opString(op), type);
+    return env.lookupRuleType(canonName);
 }
 
 Type UnopExp::typeCheckPrv(TypeEnv& env)
@@ -62,21 +73,29 @@ Type UnopExp::typeCheckPrv(TypeEnv& env)
     // Look up the type by the canonical name for this operation.
     // e.g. "-1" might be "-(int)" with type int.
     Type rhsType = rhs->typeCheck(env);
-    String funcName = unopCanonicalName(op, rhsType);
-    return env.lookupRuleType(funcName);
+    
+    if (!rhsType.isValue())
+    {
+        throw TypeCheckerException("Using method as operator rhs");
+    }
+   
+    MethodType const type(undefinedType, { rhsType.value() });
+    CanonName const canonName(opString(op), type);
+    return env.lookupRuleType(canonName);
 }
 
 Type Block::typeCheckPrv(TypeEnv& env)
 {
     // Make sure all statements typecheck (in a new scope).
     // Final type is void.
-    TypeEnv scopeEnv = env;
+    env.enterScope();
 
     for (ASNPtr const& stm : statements)
     {
-        stm->typeCheck(scopeEnv);
+        stm->typeCheck(env);
     }
 
+    env.leaveScope();
     return voidType;
 }
 
@@ -113,32 +132,25 @@ Type WhileStm::typeCheckPrv(TypeEnv& env)
 
 Type MethodDef::typeCheckPrv(TypeEnv& env)
 {
-    Vector<Type> argTypes; // Just the arg types.
     MethodType methodType(ValueType(retTypeName), {});
+    ValueType const curClass = env.curClass().type;
 
     for (FormalArg const& arg : args)
     {
         ValueType argType(arg.typeName);
-        argTypes.push_back(argType);
         methodType.addArgType(argType);
     }
 
-    String methodName = funcCanonicalName(name, argTypes);
-    env.mapNameToType(methodName, methodType);
-
-    // Currenly in this method.
-    env.enterMethod(methodName);
-
-    // Open new scope and declare args in it.
-    TypeEnv methodEnv = env;
+    CanonName const methodName(name, methodType);
+    env.enterMethod(methodName); // New current method
 
     for (FormalArg const& arg : args)
     {
-        methodEnv.mapNameToType(arg.name, ValueType(arg.typeName));
+        env.declareLocal(arg.name, ValueType(arg.typeName));
     }
 
     // Typecheck body.
-    statements->typeCheck(methodEnv);
+    statements->typeCheck(env);
 
     // No longer in a method.
     env.leaveMethod();
@@ -149,32 +161,35 @@ Type MethodDef::typeCheckPrv(TypeEnv& env)
 
 Type MethodExp::typeCheckPrv(TypeEnv& env)
 {
-    auto varExp = dynamic_cast<VariableExp const*>(method.get());
-
-    if (!varExp) {
-        throw std::logic_error("INTERNAL ERROR: bad MethodExp method");
-    }
-
-    String objectName = (varExp->object ? *varExp->object : "this");
+    String objectName = (method.object ? *method.object : config::thisName);
 
     // Get class type of method.
     ValueType objectType = env.lookupVarType(objectName);
 
     // Make overload name.
-    Vector<Type> argTypes;
+    Vector<ValueType> argTypes;
+    int argNum = 1;
 
     for (ASNPtr& arg : args)
     {
         Type argType = arg->typeCheck(env);
-        argTypes.push_back(argType);
+
+        if (!argType.isValue())
+        {
+            throw TypeCheckerException("Passing method as argument " 
+                    + to_string(argNum));
+        }
+        
+        argTypes.push_back(argType.value());
+        ++argNum;
     }
 
-    // Get name for this overload.
-    String methodName = funcCanonicalName(varExp->name, argTypes);
+    // Need canonical name to lookup full type. Use undefined return type.
+    MethodType const methodType(undefinedType, argTypes);
+    CanonName const methodName(method.variable, methodType);
 
-    // Get return type.
-    MethodType methodType = env.lookupMethodTypeByClass(methodName, objectType);
-    return ValueType(methodType.ret());
+    // Get return type for this method.
+    return env.lookupMethodTypeByClass(objectType, methodName).ret();
 }
 
 Type MethodStm::typeCheckPrv(TypeEnv& env)
@@ -207,8 +222,16 @@ Type VarDecStm::typeCheckPrv(TypeEnv& env)
 {
     ValueType lhsType(typeName);
     env.assertValidType(lhsType); //make sure that "type" is a declared type
-
-    env.mapNameToType(name, lhsType);
+    
+    if (env.inMethod())
+    {
+        env.declareLocal(name, ValueType(typeName)); 
+    }
+    else
+    {
+        env.addClassVar(name, ValueType(typeName));
+    }
+    
     return voidType;
 }
 
@@ -223,18 +246,26 @@ Type VarDecAssignStm::typeCheckPrv(TypeEnv& env)
         throw TypeCheckerException(
                 "In declaration of variable '" + name + "' of type '" + 
                 lhsType.toString() +
-                "' inside class '" + env.curClass()->type.toString() +
+                "' inside class '" + env.curClass().type.toString() +
                 "':\nRHS expression of type '" + rhsType.toString() +
                 "' does not match the expected type.");
     }
 
-    env.mapNameToType(name, lhsType);
+    if (env.inMethod())
+    {
+        env.declareLocal(name, ValueType(typeName)); 
+    }
+    else
+    {
+        env.addClassVar(name, ValueType(typeName));
+    }
+    
     return voidType;
 }
 
 Type RetStm::typeCheckPrv(TypeEnv& env)
 {
-    MethodType methodType = env.lookupMethodType(env.curMethod()->name);
+    MethodType methodType = env.lookupMethodType(env.curMethod().name);
 
     // Make a new type consisting only of the return type
     //   so that it can be correctly compared to mine.
@@ -249,9 +280,9 @@ Type RetStm::typeCheckPrv(TypeEnv& env)
     {
         throw TypeCheckerException(
                     "Attempting to return type '" + myRetType.toString() + 
-                    "' in method '" + env.curMethod()->name 
+                    "' in method '" + env.curMethod().name.canonName()
                     + "' which has return type '" + methodRetType.toString() +
-                    "' in class '" + env.curClass()->type.toString() + "'");
+                    "' in class '" + env.curClass().type.toString() + "'");
     }
 }
 

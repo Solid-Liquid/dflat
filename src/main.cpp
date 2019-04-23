@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
         TypeEnv typeEnv = typeCheck(program);
 
         // Run CodeGenerator:
-        String output = codeGenerator(program);
+        String output = generateCode(program, typeEnv);
         std::cout << output << endl;
     }
     catch(exception& e)
