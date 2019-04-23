@@ -19,12 +19,6 @@ void ScopeMetaMan::declAny(String const& name, Decl const& decl)
     _scopes.back().insert({name, decl});
 }
 
-//void ScopeMetaMan::declMethod(CanonName const& name, Type const& type)
-//{
-//    Decl decl{ DeclType::method, type };
-//    declAny(name, decl);
-//}
-
 void ScopeMetaMan::declLocal(String const& name, Type const& type)
 {
     Decl decl{ DeclType::local, type };

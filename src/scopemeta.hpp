@@ -27,14 +27,13 @@ class ScopeMetaMan
     public:
         void push();
         void pop();
-        void declAny(String const&, Decl const&);
-//        void declMethod(String const&, Type const&);
         void declLocal(String const&, Type const&);
         void print() const;
         Decl const* lookup(String const&) const;
-       
 
     private:
+        void declAny(String const&, Decl const&);
+        
         Vector<Map<String, Decl>> _scopes = {{}};
 };
 

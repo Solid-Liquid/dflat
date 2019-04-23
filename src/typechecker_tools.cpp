@@ -199,7 +199,6 @@ ValueType TypeEnv::lookupVarTypeByClass(ValueType const& classType,
 
     if (!member)
     {
-        _classes.print();
         throw TypeCheckerException("Undeclared member var name '" + memberName + "'");
     }
 
@@ -255,9 +254,6 @@ void TypeEnv::initialize()
     ValueType const b = boolType;
     ValueType const v = voidType;
 
-    // Initialize the global namespace
-//    _vars.insert({ config::globalClass, {} });
-    
     // Predefined function types. 
     binopRule(opPlus,  i, i, i); // int +(int,int)
     binopRule(opMinus, i, i, i);

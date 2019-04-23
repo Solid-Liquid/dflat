@@ -8,7 +8,6 @@ namespace dflat
 {
 
 String generateCode(Vector<ASNPtr> const& program, TypeEnv const&);
-//GenEnv initialGenEnv();
 
 } // namespace dflat
 

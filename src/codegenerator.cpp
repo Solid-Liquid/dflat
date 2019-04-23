@@ -16,12 +16,4 @@ String generateCode(Vector<ASNPtr> const& program, TypeEnv const& typeEnv)
     return env.concat();
 }
 
-//GenEnv initialGenEnv()
-//{
-//    //TODO
-//    GenEnv env;
-//    return env;
-//}
-
-
 } //namespace dflat
