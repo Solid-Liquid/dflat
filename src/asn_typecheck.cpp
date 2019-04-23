@@ -155,18 +155,19 @@ Type MethodDef::typeCheckPrv(TypeEnv& env)
     // No longer in a method.
     env.leaveMethod();
 
-    // This isn't an expression, so return void.
-    return voidType;
+    return methodType;
 }
 
 Type MethodExp::typeCheckPrv(TypeEnv& env)
 {
+    // If no name, use implicit "this".
     String objectName = (method.object ? *method.object : config::thisName);
 
-    // Get class type of method.
+    // Get method's class.
     ValueType objectType = env.lookupVarType(objectName);
 
-    // Make overload name.
+    // Construct method type to get canonical name.
+    // Return type is left undefined.
     Vector<ValueType> argTypes;
     int argNum = 1;
 
@@ -184,11 +185,11 @@ Type MethodExp::typeCheckPrv(TypeEnv& env)
         ++argNum;
     }
 
-    // Need canonical name to lookup full type. Use undefined return type.
     MethodType const methodType(undefinedType, argTypes);
     CanonName const methodName(method.variable, methodType);
+    env.setMethodMeta(this, objectType, methodName); // Needed later.
 
-    // Get return type for this method.
+    // Get return type for whatever has this canonical name.
     return env.lookupMethodTypeByClass(objectType, methodName).ret();
 }
 
@@ -265,7 +266,7 @@ Type VarDecAssignStm::typeCheckPrv(TypeEnv& env)
 
 Type RetStm::typeCheckPrv(TypeEnv& env)
 {
-    MethodType methodType = env.lookupMethodType(env.curMethod().name);
+    MethodType methodType = env.lookupMethodType(env.curMethod().methodName);
 
     // Make a new type consisting only of the return type
     //   so that it can be correctly compared to mine.
@@ -280,7 +281,7 @@ Type RetStm::typeCheckPrv(TypeEnv& env)
     {
         throw TypeCheckerException(
                     "Attempting to return type '" + myRetType.toString() + 
-                    "' in method '" + env.curMethod().name.canonName()
+                    "' in method '" + env.curMethod().methodName.canonName()
                     + "' which has return type '" + methodRetType.toString() +
                     "' in class '" + env.curClass().type.toString() + "'");
     }
@@ -296,6 +297,7 @@ Type ClassDecl::typeCheckPrv(TypeEnv& env)
     {
         ValueType baseType(parent->name);
         env.assertValidType(baseType); //check if the base class is valid
+        env.setClassParent(baseType);
     }
 
     for (ASNPtr& member : members)

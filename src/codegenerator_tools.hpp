@@ -38,9 +38,12 @@ struct CodeClassDecl
 
 struct CodeMethodName
 { 
-    CanonName value; 
-    CodeMethodName(CanonName _value)
-        : value(std::move(_value))
+    ValueType objectType;
+    CanonName methodName;
+
+    CodeMethodName(ValueType _objectType, CanonName _methodName)
+        : objectType(std::move(_objectType))
+        , methodName(std::move(_methodName))
     {}
 };
 
@@ -118,7 +121,7 @@ class GenEnv
         void leaveMethod();
         bool inMethod() const;
         MethodMeta const& curMethod() const;
-        CanonName const& getCanonName(MethodExp const*) const;
+        MethodMeta const& getMethodMeta(MethodExp const*) const;
 
         void enterScope();
         void leaveScope();
@@ -134,7 +137,7 @@ class GenEnv
         String mangleClassDecl(String const&);
         String mangleVarName(String const&);
         String mangleMemberName(String const&);
-        String mangleMethodName(CanonName const&);
+        String mangleMethodName(ValueType const& objectType, CanonName const& methodName);
         
         std::stringstream _structDef;
         std::stringstream _funcDef;

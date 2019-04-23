@@ -12,6 +12,7 @@ String const codeProlog = R"(
 
 GenEnv::GenEnv(TypeEnv const& typeEnv)
     : _classes(typeEnv._classes)
+    , _methods(typeEnv._methods)
 {}
 
 std::stringstream& GenEnv::write()
@@ -82,7 +83,7 @@ ClassMeta const& GenEnv::curClass() const
 
 void GenEnv::enterMethod(CanonName const& methodName)
 {
-    _curMethod = MethodMeta{methodName};
+    _curMethod = MethodMeta{ curClass().type, methodName };
     _scopes.push(); // Argument scope.
     _scopes.declLocal(config::thisName, curClass().type);
 }
@@ -108,16 +109,16 @@ MethodMeta const& GenEnv::curMethod() const
     return *_curMethod;
 }
         
-CanonName const& GenEnv::getCanonName(MethodExp const* methodExp) const
+MethodMeta const& GenEnv::getMethodMeta(MethodExp const* methodExp) const
 {
-    CanonName const* name = _methods.lookupCanonName(methodExp);
+    MethodMeta const* method = _methods.lookupMeta(methodExp);
 
-    if (!name)
+    if (!method)
     {
-        throw std::logic_error("No canon name!");
+        throw std::logic_error("No method meta for '" + methodExp->toString() + "'");
     }
 
-    return *name;
+    return *method;
 }
 
 void GenEnv::enterScope()
@@ -174,11 +175,11 @@ String GenEnv::mangleMemberName(String const& x)
     return "df_" + x;
 }
 
-String GenEnv::mangleMethodName(CanonName const& name)
+String GenEnv::mangleMethodName(ValueType const& objectName, CanonName const& methodName)
 {
-    String s = "dfm_" + name.baseName();
+    String s = "dfm_" + objectName.toString() + "_" + methodName.baseName();
 
-    for (ValueType const& arg : name.type().args())
+    for (ValueType const& arg : methodName.type().args())
     {
         s += "_" + arg.toString();
     }
@@ -212,7 +213,7 @@ GenEnv& GenEnv::operator<<(CodeMemberName const& x)
 
 GenEnv& GenEnv::operator<<(CodeMethodName const& x)
 {
-    write() << mangleMethodName(x.value);
+    write() << mangleMethodName(x.objectType, x.methodName);
     return *this;
 }
 

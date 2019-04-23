@@ -110,7 +110,7 @@ void MethodDef::generateCode(GenEnv & env)
     env << CodeTabs()
         << CodeTypeName(retTypeName)
         << CodeLiteral(" ")
-        << CodeMethodName(canonName)
+        << CodeMethodName(curClass, canonName)
         << CodeLiteral("(")
         << CodeTypeName(curClass.name())
         << CodeLiteral(" ")
@@ -134,22 +134,21 @@ void MethodDef::generateCode(GenEnv & env)
 
 void MethodExp::generateCode(GenEnv & env)
 {
-    env << CodeMethodName(env.getCanonName(this))
-        << CodeLiteral("(");
+    String const objectName = method.object ? *method.object 
+                                            : config::thisName;
 
-    //TODO this
+    auto [objectType, methodName] = env.getMethodMeta(this);
 
-    int track = 0;
-    for(auto&& ar : args)
+    env << CodeMethodName(objectType, methodName)
+        << CodeLiteral("(")
+        << CodeVarName(objectName);
+    
+    for (auto&& ar : args)
     {
-        if(track > 0)
-        {
-            env << CodeLiteral(", ")
-                << ar;
-        }
+        env << CodeLiteral(", ")
+            << ar;
         
         ar->generateCode(env);
-        ++track;
     }
    
     env << CodeLiteral(")");

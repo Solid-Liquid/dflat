@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
         String output = generateCode(program, typeEnv);
         std::cout << output << endl;
     }
-    catch(exception& e)
+    catch(std::runtime_error& e)
     {
         cout << e.what() << endl;
     }

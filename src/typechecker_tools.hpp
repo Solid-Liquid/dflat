@@ -24,6 +24,7 @@ class TypeEnv
         TypeEnv();
 
         void enterClass(ValueType const& classType);
+        void setClassParent(ValueType const&);
         void leaveClass();
         void addClassVar(String const& name, ValueType const& type);
         void addClassMethod(CanonName const&);
@@ -34,7 +35,7 @@ class TypeEnv
         void leaveMethod();
         bool inMethod() const;
         MethodMeta const& curMethod() const;
-        void setCanonName(MethodExp const*, CanonName const&);
+        void setMethodMeta(MethodExp const*, ValueType const& objectType, CanonName const&);
 
         void enterScope();
         void leaveScope();

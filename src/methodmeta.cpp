@@ -4,14 +4,14 @@
 namespace dflat
 {
 
-CanonName const* MethodMetaMan::lookupCanonName(MethodExp const* exp) const
+MethodMeta const* MethodMetaMan::lookupMeta(MethodExp const* exp) const
 {
     return lookup(_canonNames, static_cast<void const*>(exp));
 }
         
-void MethodMetaMan::setCanonName(MethodExp const* exp, CanonName const& name)
+void MethodMetaMan::setMeta(MethodExp const* exp, MethodMeta meta)
 {
-    _canonNames.insert({ static_cast<void const*>(exp), name });
+    _canonNames.insert({ static_cast<void const*>(exp), std::move(meta) });
 }
 
 } // namespace dflat

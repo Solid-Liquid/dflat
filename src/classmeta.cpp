@@ -128,6 +128,11 @@ void ClassMetaMan::print() const
     {
         std::cout << "\n" << ck.toString();
 
+        if (cv.parent)
+        {
+            std::cout << " extends " << cv.parent->toString();
+        }
+
         if (!cv.members.empty())
         {
             for (auto [mk,mv] : cv.members)

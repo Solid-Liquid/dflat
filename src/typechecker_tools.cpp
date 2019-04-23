@@ -22,6 +22,11 @@ void TypeEnv::enterClass(ValueType const& classType)
     _classes.enter(classType);
 }
 
+void TypeEnv::setClassParent(ValueType const& parentType)
+{
+    _classes.setParent(parentType);
+}
+
 void TypeEnv::leaveClass()
 {
     _classes.leave();
@@ -55,7 +60,7 @@ ClassMeta const& TypeEnv::curClass() const
 void TypeEnv::enterMethod(CanonName const& methodName)
 {
     addClassMethod(methodName);
-    _curMethod = MethodMeta{methodName};
+    _curMethod = MethodMeta{ curClass().type, methodName };
     _scopes.push(); // Argument scope.
     _scopes.declLocal(config::thisName, curClass().type);
     
@@ -80,6 +85,12 @@ MethodMeta const& TypeEnv::curMethod() const
     }
 
     return *_curMethod;
+}
+
+void TypeEnv::setMethodMeta(MethodExp const* exp, 
+        ValueType const& objectType, CanonName const& name)
+{
+    _methods.setMeta(exp, MethodMeta{ objectType, name });
 }
 
 void TypeEnv::enterScope()
@@ -180,6 +191,7 @@ ValueType TypeEnv::lookupVarTypeByClass(ValueType const& classType,
 
     if (!member)
     {
+        _classes.print();
         throw TypeCheckerException("Undeclared member var name '" + memberName + "'");
     }
 

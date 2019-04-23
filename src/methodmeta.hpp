@@ -7,21 +7,24 @@
 namespace dflat
 {
 
+// This is metadata for method calls, not methods in general.
+
 struct MethodExp;
 
 struct MethodMeta
 {
-    CanonName name;
+    ValueType objectType;
+    CanonName methodName;
 };
 
 class MethodMetaMan
 {
     public:
-        CanonName const* lookupCanonName(MethodExp const*) const;
-        void setCanonName(MethodExp const*, CanonName const&);
+        MethodMeta const* lookupMeta(MethodExp const*) const;
+        void setMeta(MethodExp const*, MethodMeta);
 
     private:
-        Map<void const*, CanonName> _canonNames;
+        Map<void const*, MethodMeta> _canonNames;
 };
 
 } // namespace dflat
