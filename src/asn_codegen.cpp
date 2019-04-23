@@ -14,16 +14,14 @@ void VariableExp::generateCode(GenEnv & env)
     }
     else
     {
-        Optional<Decl> decl = env.lookupDecl(name);
-
-        if (decl && decl->declType == DeclType::local)
+        if (env.lookupLocalType(name))
         {
-            // Local.
             env << CodeVarName(name);
         }
         else
         {
             // Must be using implicit this.
+            // TODO this logic might be a source of errors.
             env.emitObject(config::thisName, name);
         }
     }
@@ -71,7 +69,7 @@ void Block::generateCode(GenEnv & env)
 
     env << CodeTabOut()
         << CodeTabs()
-        << CodeLiteral("}\n");
+        << CodeLiteral("}\n\n");
 
     env.leaveScope();
 }
@@ -137,11 +135,21 @@ void MethodExp::generateCode(GenEnv & env)
     String const objectName = method.object ? *method.object 
                                             : config::thisName;
 
-    auto [objectType, methodName] = env.getMethodMeta(this);
+    auto [thisType, methodName] = env.getMethodMeta(this);
+    ValueType objectType = env.getLocalType(objectName);
 
-    env << CodeMethodName(objectType, methodName)
-        << CodeLiteral("(")
-        << CodeVarName(objectName);
+    env << CodeMethodName(thisType, methodName)
+        << CodeLiteral("(");
+
+    // Base-cast if necessary.
+    if (objectType != thisType)
+    {
+        env << CodeLiteral("(")
+            << CodeTypeName(thisType.toString())
+            << CodeLiteral(")");
+    }
+
+    env << CodeVarName(objectName);
     
     for (auto&& ar : args)
     {
@@ -154,15 +162,16 @@ void MethodExp::generateCode(GenEnv & env)
     env << CodeLiteral(")");
 }
 
-void MethodStm::generateCode(GenEnv & env)
+void MethodStm::generateCode(GenEnv& env)
 {
     env << CodeTabs()
         << methodExp
         << CodeLiteral(";\n");
 }
 
-void NewExp::generateCode(GenEnv&)
+void NewExp::generateCode(GenEnv& env)
 {
+    env << CodeLiteral("0");
     // TODO: everything.
     //  <type>* <name> = (<type>*)malloc(sizeof(<type>));
     //  theoretically call constructor
@@ -247,7 +256,7 @@ void ClassDecl::generateCode(GenEnv& env)
         env << member;
     }
 
-    env << CodeLiteral("};\n");
+    env << CodeLiteral("};\n\n");
     env.leaveClass();
 }
 

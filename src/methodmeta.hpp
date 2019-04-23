@@ -13,7 +13,7 @@ struct MethodExp;
 
 struct MethodMeta
 {
-    ValueType objectType;
+    ValueType thisType;
     CanonName methodName;
 };
 

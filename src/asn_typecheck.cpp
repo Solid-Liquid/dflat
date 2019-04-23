@@ -187,10 +187,11 @@ Type MethodExp::typeCheckPrv(TypeEnv& env)
 
     MethodType const methodType(undefinedType, argTypes);
     CanonName const methodName(method.variable, methodType);
-    env.setMethodMeta(this, objectType, methodName); // Needed later.
-
+    
     // Get return type for whatever has this canonical name.
-    return env.lookupMethodTypeByClass(objectType, methodName).ret();
+    Type resultType = env.lookupMethodTypeByClass(objectType, methodName).ret();
+    env.setMethodMeta(this, objectType, methodName); // Needed later.
+    return resultType;
 }
 
 Type MethodStm::typeCheckPrv(TypeEnv& env)

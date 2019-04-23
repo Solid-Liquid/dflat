@@ -26,6 +26,7 @@ struct MemberMeta
 {
     int depth;
     Type type;
+    ValueType baseClassType;
 };
 
 class ClassMetaMan

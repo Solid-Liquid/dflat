@@ -52,7 +52,7 @@ Optional<MemberMeta> ClassMetaMan::lookupVar(ValueType const& classType,
 
         if (memberType)
         {
-            return MemberMeta{ depth, *memberType };
+            return MemberMeta{ depth, *memberType, cm->type };
         }
         else
         {

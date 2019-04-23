@@ -90,7 +90,15 @@ MethodMeta const& TypeEnv::curMethod() const
 void TypeEnv::setMethodMeta(MethodExp const* exp, 
         ValueType const& objectType, CanonName const& name)
 {
-    _methods.setMeta(exp, MethodMeta{ objectType, name });
+    Optional<MemberMeta> member = _classes.lookupMethod(objectType, name);
+
+    if (!member)
+    {
+        throw std::logic_error("setMethodMeta: no method '" + name.canonName() 
+                + "' in '" + objectType.toString() + "'");
+    }
+
+    _methods.setMeta(exp, MethodMeta{ member->baseClassType, name });
 }
 
 void TypeEnv::enterScope()
@@ -153,7 +161,7 @@ MethodType TypeEnv::lookupMethodTypeByClass(ValueType const& classType,
             
 ValueType TypeEnv::lookupVarType(String const& varName) const
 {
-    Optional<Decl> decl = _scopes.lookup(varName);
+    Decl const* decl = _scopes.lookup(varName);
 
     if (decl && decl->declType == DeclType::local)
     {
@@ -169,7 +177,7 @@ ValueType TypeEnv::lookupVarType(String const& varName) const
     }
     else
     {
-        Optional<Decl> thisDecl = _scopes.lookup(config::thisName);
+        Decl const* thisDecl = _scopes.lookup(config::thisName);
 
         if (thisDecl)
         {

@@ -45,7 +45,7 @@ void ScopeMetaMan::print() const
     }
 }
 
-Optional<Decl> ScopeMetaMan::lookup(String const& name) const
+Decl const* ScopeMetaMan::lookup(String const& name) const
 {
     auto it = _scopes.rbegin();
     auto const end = _scopes.rend();
@@ -54,13 +54,13 @@ Optional<Decl> ScopeMetaMan::lookup(String const& name) const
     {
         if (Decl const* decl = dflat::lookup(*it, name))
         {
-            return *decl;
+            return decl;
         }
 
         ++it;
     }
 
-    return nullopt;
+    return nullptr;
 }
 
 } // namespace dflat

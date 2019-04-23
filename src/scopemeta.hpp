@@ -31,7 +31,7 @@ class ScopeMetaMan
 //        void declMethod(String const&, Type const&);
         void declLocal(String const&, Type const&);
         void print() const;
-        Optional<Decl> lookup(String const&) const;
+        Decl const* lookup(String const&) const;
        
 
     private:

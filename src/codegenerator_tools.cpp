@@ -6,9 +6,84 @@
 namespace dflat
 {
 
-String const codeProlog = R"(
-#define PLACEHOLDER false
+String codeProlog()
+{
+    return R"(
+#include <stdlib.h>
+
+#define DF_NEW(T) (struct T*)malloc(sizeof(struct T))
+
 )";
+
+}
+
+String codeEpilog()
+{
+    ValueType mainClassType("Main");
+    String mainClassName("main");
+
+    MethodType mainMethodType(voidType, {});
+    CanonName mainMethodName("main", mainMethodType);
+
+    return String{}
+         + "int main()\n"
+         + "{\n"
+         + "\t" 
+         + mangleTypeName(mainClassType.toString()) 
+         + " "
+         + mangleVarName(mainClassName)
+         + " = DF_NEW("
+         + mangleClassDecl(mainClassType.toString())
+         + ");\n"
+         + "\t"
+         + mangleMethodName(mainClassType, mainMethodName)
+         + "("
+         + mangleVarName(mainClassName)
+         + ");\n"
+         + "}\n";
+}
+
+String mangleTypeName(String const& x)
+{
+    ValueType typeName(x);
+
+    if (isBuiltinType(typeName))
+    {
+        return translateBuiltinType(typeName);
+    }
+    else
+    {
+        return "struct df_" + x + "*";
+    }
+}
+
+String mangleClassDecl(String const& x)
+{
+    return "df_" + x;
+}
+
+String mangleVarName(String const& x)
+{
+    return "df_" + x;
+}
+
+String mangleMemberName(String const& x)
+{
+    return "df_" + x;
+}
+
+String mangleMethodName(ValueType const& objectName, CanonName const& methodName)
+{
+    String s = "dfm_" + objectName.toString() + "_" + methodName.baseName();
+
+    for (ValueType const& arg : methodName.type().args())
+    {
+        s += "_" + arg.toString();
+    }
+
+    return s;
+}
+
 
 GenEnv::GenEnv(TypeEnv const& typeEnv)
     : _classes(typeEnv._classes)
@@ -17,11 +92,7 @@ GenEnv::GenEnv(TypeEnv const& typeEnv)
 
 std::stringstream& GenEnv::write()
 {
-    if (!inClass()) 
-    {
-        return _main;
-    } 
-    else if (!inMethod()) 
+    if (!inMethod()) 
     {
         return _structDef;
     } 
@@ -33,27 +104,9 @@ std::stringstream& GenEnv::write()
 
 String GenEnv::concat() const
 {
-    String s;
-    String const& sStruct = _structDef.str();
-    String const& sFunc   = _funcDef.str();
-    String const& sMain   = _main.str();
-
-    s += sStruct;
-
-    if (!sStruct.empty())
-    {
-        s += "\n";
-    }
-
-    s += sFunc;
-
-    if (!sFunc.empty())
-    {
-        s += "\n";
-    }
-
-    s += sMain;
-    return s;
+    return _structDef.str()
+         + "\n"
+         + _funcDef.str();
 }
         
 void GenEnv::enterClass(ValueType const& classType)
@@ -141,50 +194,48 @@ void GenEnv::declareLocal(String const& name, ValueType const& type)
     _scopes.declLocal(name, type);
 }
 
-Optional<Decl> GenEnv::lookupDecl(String const& name) const
+ValueType const& GenEnv::getLocalType(String const& name) const
 {
-    return _scopes.lookup(name);
-}
+    Decl const* decl = _scopes.lookup(name);
 
-String GenEnv::mangleTypeName(String const& x)
-{
-    ValueType typeName(x);
-
-    if (isBuiltinType(typeName))
+    if (!decl)
     {
-        return translateBuiltinType(typeName);
-    }
-    else
-    {
-        return "struct df_" + x + "*";
-    }
-}
-
-String GenEnv::mangleClassDecl(String const& x)
-{
-    return "df_" + x;
-}
-
-String GenEnv::mangleVarName(String const& x)
-{
-    return "df_" + x;
-}
-
-String GenEnv::mangleMemberName(String const& x)
-{
-    return "df_" + x;
-}
-
-String GenEnv::mangleMethodName(ValueType const& objectName, CanonName const& methodName)
-{
-    String s = "dfm_" + objectName.toString() + "_" + methodName.baseName();
-
-    for (ValueType const& arg : methodName.type().args())
-    {
-        s += "_" + arg.toString();
+        throw std::logic_error("no local with name '" + name + "'");
     }
 
-    return s;
+    if (decl->declType != DeclType::local)
+    {
+        throw std::logic_error("decl '" + name + "' is not a local");
+    }
+
+    if (!decl->type.isValue())
+    {
+        throw std::logic_error("decl '" + name + "' is not a value type");
+    }
+
+    return decl->type.value();
+}
+
+ValueType const* GenEnv::lookupLocalType(String const& name) const
+{
+    Decl const* decl = _scopes.lookup(name);
+
+    if (!decl)
+    {
+        return nullptr;
+    }
+
+    if (decl->declType != DeclType::local)
+    {
+        return nullptr;
+    }
+
+    if (!decl->type.isValue())
+    {
+        throw std::logic_error("decl '" + name + "' is not a value type");
+    }
+
+    return &decl->type.value();
 }
 
 GenEnv& GenEnv::operator<<(CodeTypeName const& x)
@@ -294,7 +345,7 @@ void GenEnv::emitMemberVar(ValueType const& objectType, String const& memberName
 
 void GenEnv::emitObject(String const& objectName, String const& memberName)
 {
-    Optional<Decl> decl = _scopes.lookup(objectName);
+    Decl const* decl = _scopes.lookup(objectName);
 
     if (!decl)
     {

@@ -91,7 +91,13 @@ struct CodeTabIn
 struct CodeTabOut
 {};
         
-extern String const codeProlog;
+String codeProlog();
+String codeEpilog();
+String mangleTypeName(String const&);
+String mangleClassDecl(String const&);
+String mangleVarName(String const&);
+String mangleMemberName(String const&);
+String mangleMethodName(ValueType const& objectType, CanonName const& methodName);
 
 class GenEnv
 {
@@ -126,22 +132,17 @@ class GenEnv
         void enterScope();
         void leaveScope();
         void declareLocal(String const& name, ValueType const& type);
-        Optional<Decl> lookupDecl(String const& name) const;
+        ValueType const& getLocalType(String const& name) const;
+        ValueType const* lookupLocalType(String const& name) const;
 
         void emitMemberVar(ValueType const& objectType, String const& memberName);
         void emitObject(String const& objectName, String const& memberName);
 
     private:
         std::stringstream& write();
-        String mangleTypeName(String const&);
-        String mangleClassDecl(String const&);
-        String mangleVarName(String const&);
-        String mangleMemberName(String const&);
-        String mangleMethodName(ValueType const& objectType, CanonName const& methodName);
         
         std::stringstream _structDef;
         std::stringstream _funcDef;
-        std::stringstream _main;
         unsigned _tabs = 0;
         ScopeMetaMan _scopes;
         ClassMetaMan _classes;
