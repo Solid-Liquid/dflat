@@ -214,10 +214,11 @@ ValueType TypeEnv::lookupVarTypeByClass(ValueType const& classType,
 
 void TypeEnv::assertValidType(ValueType const& type) const
 {
-    if (_classes.cur() && _classes.cur()->type == type)
-    {
-        throw TypeCheckerException("Cannot use an instance of a class inside its own definition. Inside class: " + _classes.cur()->type.toString());
-    }
+    // NOTE: You actuall can do this.
+//    if (_classes.cur() && _classes.cur()->type == type)
+//    {
+//        throw TypeCheckerException("Cannot use an instance of a class inside its own definition. Inside class: " + _classes.cur()->type.toString());
+//    }
 
     if (isBuiltinType(type))
     {
@@ -229,6 +230,59 @@ void TypeEnv::assertValidType(ValueType const& type) const
         throw TypeCheckerException("Invalid reference to unknown type: " 
                 + type.toString());
     }
+}
+
+void TypeEnv::assertTypeIs(Type const &test, Type const &against) const
+{
+    if (test == against)
+    {
+        return;
+    }
+
+    throw TypeCheckerException(
+        "Type '" + test.toString() + 
+        "' must be '" + against.toString() + "'"
+        );
+}
+
+void TypeEnv::assertTypeIsOrBase(Type const& t1, Type const& t2) const
+{
+    if (t1 == t2)
+    {
+        return;
+    }
+
+    if (t1.isValue() && t2.isValue())
+    {
+        // Testing base/derived only makes sense with ValueTypes.
+        ValueType const t1v = t1.value();
+        ValueType const t2v = t2.value();
+        ClassMeta const* meta1 = _classes.lookup(t1v);
+        ClassMeta const* meta2 = _classes.lookup(t2v);
+
+        if (meta1)
+        {
+            while (meta2)
+            {
+                if (!meta2->parent)
+                {
+                    break;
+                }
+
+                if (*meta2->parent == t1v)
+                {
+                    return;
+                }
+
+                meta2 = _classes.lookup(*meta2->parent);
+            }
+        }
+    }
+
+    throw TypeCheckerException(
+        "Type '" + t1.toString() + 
+        "' must be '" + t2.toString() + "' or a base class of it"
+        );
 }
 
 void TypeEnv::initialize() 

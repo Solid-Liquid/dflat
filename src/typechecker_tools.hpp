@@ -49,7 +49,15 @@ class TypeEnv
         ValueType lookupVarType(String const& varName) const;
         ValueType lookupVarTypeByClass(ValueType const& classType,
                 String const& varName) const;
+
+        // Throws on failure.
         void assertValidType(ValueType const& type) const;
+
+        // t1 must equal t2. Throws on failure.
+        void assertTypeIs(Type const& t1, Type const& t2) const;
+
+        // t1 must equal t2 or be a base of t2. Throws on failure.
+        void assertTypeIsOrBase(Type const& t1, Type const& t2) const;
 
     private:
         void initialize();

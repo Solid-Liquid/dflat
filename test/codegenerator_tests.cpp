@@ -29,21 +29,33 @@ GenEnv testGenEnv()
 
 // Strip tabs and newlines from string
 // Note: This will break testing strings with \t or \n in them
-String cleanOutput(String const& s)
+String strip(String const& s)
 {
     String t;
     t.reserve(s.size());
+    bool nl = true;
 
     for (char c : s)
     {
         switch (c)
         {
             case '\r':
+                break;
             case '\n':
+                nl = true;
+                break;
             case '\t':
                 break;
+            case ' ':
+                if (!nl)
+                {
+                    t += c;
+                }
+                break;
             default:
+                nl = false;
                 t += c;
+                break;
         }
     }
 
@@ -64,7 +76,7 @@ String codeGenExp(String const& input)
     }
     
     result->generateCode(env);
-    return cleanOutput(env.concat());
+    return strip(env.concat());
 }
 
 String codeGenStm(String const& input)
@@ -81,14 +93,14 @@ String codeGenStm(String const& input)
     }
     
     result->generateCode(env);
-    return cleanOutput(env.concat());
+    return strip(env.concat());
 }
 
 String codeGenProg(String const& input)
 {
     Vector<ASNPtr> program = parse(tokenize(input));
     TypeEnv typeEnv = typeCheck(program);
-    return cleanOutput(generateCode(program, typeEnv));
+    return strip(generateCode(program, typeEnv));
 }
 
 TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
@@ -242,12 +254,228 @@ TEST_CASE( "Control Stuctures/Block Code Generation Tests", "[CodeGenerator]" )
 
 TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
 {
+    // Single class with single member var.
     REQUIRE( codeGenProg(R"(
             class Base
             {
                 int x;
             };
-        )") == 
-            "struct df_Base{int df_x;};"
-        );
+        )") == strip(R"( 
+            struct df_Base
+            {
+                int df_x;
+            };
+        )"));
+    
+    // Single class with single method.
+    REQUIRE( codeGenProg(R"(
+            class Base
+            {
+                int f()
+                {
+                    return 1;
+                }
+            };
+        )") == strip(R"(
+            struct df_Base
+            {
+            };
+            int dfm_Base_f(struct df_Base* df_this)
+            {
+                return 1;
+            }
+        )"));
+    
+    // Simple inherited member var.
+    REQUIRE( codeGenProg(R"(
+            class Base
+            {
+                int x;
+            };
+            class Sub extends Base
+            {
+                int f()
+                {
+                    return x;
+                }
+            };
+        )") == strip(R"(
+            struct df_Base
+            {
+                int df_x;
+            };
+            struct df_Sub
+            {
+                struct df_Base dfparent;
+            };
+            int dfm_Sub_f(struct df_Sub* df_this)
+            {
+                return df_this->dfparent.df_x;
+            }
+        )"));
+    
+    // Double inherited member var.
+    REQUIRE( codeGenProg(R"(
+            class Base1
+            {
+                int x;
+            };
+            class Base2 extends Base1
+            {
+            };
+            class Sub extends Base2
+            {
+                int f()
+                {
+                    return x;
+                }
+            };
+        )") == strip(R"(
+            struct df_Base1
+            {
+                int df_x;
+            };
+            struct df_Base2
+            {
+                struct df_Base1 dfparent;
+            };
+            struct df_Sub
+            {
+                struct df_Base2 dfparent;
+            };
+            int dfm_Sub_f(struct df_Sub* df_this)
+            {
+                return df_this->dfparent.dfparent.df_x;
+            }
+        )"));
+
+    // Inherited method.
+    REQUIRE( codeGenProg(R"(
+            class Base
+            {
+                int f()
+                {
+                    return 1;
+                }
+            };
+            class Sub extends Base
+            {
+                int g()
+                {
+                    return f();
+                }
+            };
+        )") == strip(R"(
+            struct df_Base
+            {
+            };
+            struct df_Sub
+            {
+                struct df_Base dfparent;
+            };
+            int dfm_Base_f(struct df_Base* df_this)
+            {
+                return 1;
+            }
+            int dfm_Sub_g(struct df_Sub* df_this)
+            {
+                return dfm_Base_f((struct df_Base*)df_this);
+            }
+        )"));
+    
+    // Basic instantiation.
+    // TODO Default constructors.
+    REQUIRE( codeGenProg(R"(
+            class Base
+            {
+                Base f()
+                {
+                    return new Base();
+                }
+            };
+        )") == strip(R"(
+            struct df_Base
+            {
+            };
+            struct df_Base* dfm_Base_f(struct df_Base* df_this)
+            {
+                return DF_NEW(df_Base);
+            }
+        )"));
+
+    // Construction.
+    // TODO Constructors.
+    REQUIRE( codeGenProg(R"(
+            class Base
+            {
+                Base f()
+                {
+                    return new Base(1,2);
+                }
+            };
+        )") == strip(R"(
+            struct df_Base
+            {
+            };
+            struct df_Base* dfm_Base_f(struct df_Base* df_this)
+            {
+                return DF_NEW(df_Base);
+            }
+        )"));
+
+    // Virtual construction and call.
+    // TODO C virtual call.
+    REQUIRE( codeGenProg(R"(
+            class Base
+            {
+                int f()
+                {
+                    return 1;
+                }
+            };
+            class Sub extends Base
+            {
+                int f()
+                {
+                    return 2;
+                }
+            };
+            class Main
+            {
+                void main()
+                {
+                    Base base = new Base();
+                    Base sub  = new Sub();
+                    base.f();
+                    sub.f();
+                }
+            };
+        )") == strip(R"(
+            struct df_Base
+            {
+            };
+            struct df_Sub
+            {
+                struct df_Base dfparent;
+            };
+            struct df_Main
+            {
+            };
+            int dfm_Base_f(struct df_Base* df_this)
+            {
+                return 1;
+            }
+            int dfm_Sub_f(struct df_Sub* df_this)
+            {
+                return 2;
+            }
+            void dfm_Main_main(struct df_Main* df_this)
+            {
+                struct df_Base* df_base = DF_NEW(df_Base);
+                struct df_Base* df_sub = DF_NEW(df_Sub);
+                dfm_Base_f(df_base);
+                dfm_Base_f(df_sub);
+            }
+        )"));
+
 }

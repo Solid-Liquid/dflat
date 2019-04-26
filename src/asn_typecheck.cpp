@@ -105,13 +105,13 @@ Type IfStm::typeCheckPrv(TypeEnv& env)
     // Blocks must typecheck with type void.
     // Final type is void.
     Type condType = logicExp->typeCheck(env);
-    assertTypeIs(condType, boolType);
+    env.assertTypeIs(condType, boolType);
 
     Type trueBlockType = trueStatements->typeCheck(env);
-    assertTypeIs(trueBlockType, voidType);
+    env.assertTypeIs(trueBlockType, voidType);
 
     Type falseBlockType = falseStatements->typeCheck(env);
-    assertTypeIs(falseBlockType, voidType);
+    env.assertTypeIs(falseBlockType, voidType);
 
     return voidType;
 }
@@ -122,10 +122,10 @@ Type WhileStm::typeCheckPrv(TypeEnv& env)
     // Body must typecheck with type void.
     // Final type is void.
     Type condType = logicExp->typeCheck(env);
-    assertTypeIs(condType, boolType);
+    env.assertTypeIs(condType, boolType);
 
     Type bodyType = statements->typeCheck(env);
-    assertTypeIs(bodyType, voidType);
+    env.assertTypeIs(bodyType, voidType);
 
     return voidType;
 }
@@ -216,7 +216,7 @@ Type AssignStm::typeCheckPrv(TypeEnv& env)
     // Final type is void.
     Type lhsType = lhs->typeCheck(env);
     Type rhsType = rhs->typeCheck(env);
-    assertTypeIs(rhsType, lhsType);
+    env.assertTypeIsOrBase(lhsType, rhsType);
     return voidType;
 }
 
@@ -242,16 +242,18 @@ Type VarDecAssignStm::typeCheckPrv(TypeEnv& env)
     ValueType lhsType(typeName);
     env.assertValidType(lhsType); //make sure that "type" is a declared type
     Type rhsType = value->typeCheck(env);
+    env.assertTypeIsOrBase(lhsType, rhsType);
 
-    if (Type(lhsType) != rhsType)
-    {
-        throw TypeCheckerException(
-                "In declaration of variable '" + name + "' of type '" + 
-                lhsType.toString() +
-                "' inside class '" + env.curClass().type.toString() +
-                "':\nRHS expression of type '" + rhsType.toString() +
-                "' does not match the expected type.");
-    }
+    //TODO reinstate this helpful error somehow.
+//    if (Type(lhsType) != rhsType)
+//    {
+//        throw TypeCheckerException(
+//                "In declaration of variable '" + name + "' of type '" + 
+//                lhsType.toString() +
+//                "' inside class '" + env.curClass().type.toString() +
+//                "':\nRHS expression of type '" + rhsType.toString() +
+//                "' does not match the expected type.");
+//    }
 
     if (env.inMethod())
     {

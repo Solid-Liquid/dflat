@@ -333,14 +333,15 @@ void GenEnv::emitMemberVar(ValueType const& objectType, String const& memberName
                 + "' in '" + objectType.name() + "'");
     }
     
+    *this << CodeLiteral("->");
+
     for (int i = 1; i < member->depth; ++i)
     {
-        *this << CodeLiteral("->")
-              << CodeParent();
+        *this << CodeParent()
+              << CodeLiteral(".");
     }
 
-    *this << CodeLiteral("->")
-          << CodeMemberName{memberName};
+    *this << CodeMemberName{memberName};
 }
 
 void GenEnv::emitObject(String const& objectName, String const& memberName)

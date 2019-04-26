@@ -171,13 +171,12 @@ void MethodStm::generateCode(GenEnv& env)
 
 void NewExp::generateCode(GenEnv& env)
 {
-    env << CodeLiteral("0");
-    // TODO: everything.
-    //  <type>* <name> = (<type>*)malloc(sizeof(<type>));
-    //  theoretically call constructor
-    //
-//        String typeName;
-//        Vector<ASNPtr> args;
+    // DF_NEW(T) is a macro equivalent to "(struct T*)malloc(sizeof(T))"
+    env << CodeLiteral("DF_NEW(")
+        << CodeClassDecl(typeName)
+        << CodeLiteral(")");
+
+    // TODO Constructors taking args.
 }
 
 void AssignStm::generateCode(GenEnv& env)
@@ -192,8 +191,6 @@ void AssignStm::generateCode(GenEnv& env)
 
 void VarDecStm::generateCode(GenEnv& env)
 {
-    //TODO: cannonical names
-    //TODO: use env to determine if there should be a tab or not
     env << CodeTabs()
         << CodeTypeName(typeName)
         << CodeLiteral(" ")
@@ -208,9 +205,6 @@ void VarDecStm::generateCode(GenEnv& env)
 
 void VarDecAssignStm::generateCode(GenEnv& env)
 {
-    //TODO: cannonical names
-
-    //typename could be cannonical name of class
     env << CodeTabs()
         << CodeTypeName(typeName)
         << CodeLiteral(" ")

@@ -8,10 +8,6 @@ namespace dflat
 {
 TypeEnv typeCheck(Vector<ASNPtr> const&);
 Type typeCheck(ASNPtr const&);
-
-// Throw an exception if two types aren't equal.
-void assertTypeIs(Type const&, Type const&);
-
 TypeEnv initialTypeEnv();
 
 } //namespace dflat

@@ -110,6 +110,20 @@ TEST_CASE( "TypeChecker checks structured code without exceptions","[TypeChecker
 
         )");
 
+    //Instantiating polymorphic type
+    REQUIRE_TYPECHECKS(R"(
+
+        class BaseClass {};
+        class DerivedClass extends BaseClass{};
+        class Main
+        {
+            void main()
+            {
+                BaseClass x = new DerivedClass();
+            }
+        };
+        )");
+
     //Demonstrates successful use and assignment of member variable "x":
     REQUIRE_TYPECHECKS(R"(
 
@@ -281,19 +295,8 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
 //
 //        )");
 
-    // TODO: this actually might not be an issue (change it?)
-    //Class cannot use instance of itself inside itself:
-    REQUIRE_DOESNT_TYPECHECK(R"(
 
-        class MyClass
-        {
-            MyClass var;
-        };
-
-        )");
-
-
-    //Variable "var" is type bool. Expected RHS to be "bool" (instead it's int):
+    //Variable "var" is type bool. Expected RHS to be "bool" (instead it's int)
     REQUIRE_DOESNT_TYPECHECK(R"(
 
         class MyClass
@@ -347,7 +350,7 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
                       TypeCheckerException);
 
     //Mismatched types. ("int" is not equivalent to "bool"):
-    REQUIRE_THROWS_AS(assertTypeIs(intType, boolType),
+    REQUIRE_THROWS_AS(TypeEnv().assertTypeIs(intType, boolType),
                       TypeCheckerException);
 
     //Invalid operands to operator:
