@@ -76,13 +76,10 @@ class TypeEnv
 
 };
 
-class TypeCheckerException : public std::exception
+class TypeCheckerException : public std::runtime_error
 {
     public:
         TypeCheckerException(String msg) noexcept;
-        const char* what() const noexcept;
-    private:
-        String message;
 };
 
 } //namespace dflat

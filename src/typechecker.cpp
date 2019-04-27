@@ -24,14 +24,4 @@ Type typeCheck(ASNPtr const& asn)
     return asn->typeCheck(env);
 }
 
-TypeCheckerException::TypeCheckerException(String msg) noexcept
-{
-    message = "TypeChecker Exception:\n" + msg;
-}
-
-const char *TypeCheckerException::what() const noexcept
-{
-    return message.c_str();
-}
-
 } //namespace dflat

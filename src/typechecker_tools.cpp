@@ -6,6 +6,11 @@
 namespace dflat
 {
 
+TypeCheckerException::TypeCheckerException(String msg) noexcept
+    : std::runtime_error("TypeChecker Exception:\n" + std::move(msg))
+{}
+
+
 TypeEnv::TypeEnv()
 {
     initialize();
