@@ -9,14 +9,13 @@ namespace dflat
 String GenEnv::prolog() const
 {
 /*
-    NEW(T,R,V,C,...)
+    NEW(T,V,C,...)
         Constructs a T.
-        R is the type to cast to (different from T when polymorphic).
         V is the vtable function for T.
         C is the constructor to call.
         ... are the extra arguments to pass to C.
 
-    NEW0(T,R,V,C)
+    NEW0(T,V,C)
         Same but with no extra arguments to C (default constructor).
 
     VTABLE(x)
@@ -46,8 +45,8 @@ String GenEnv::prolog() const
     String s = R"(
 #include <stdlib.h>
 
-#define NEW(T,V,C,...) C(dfalloc(sizeof(struct T), (vtablefn)&V), __VA_ARGS__)
-#define NEW0(T,V,C)    C(dfalloc(sizeof(struct T), (vtablefn)&V))
+#define NEW(T,V,C,...)   C(dfalloc(sizeof(struct T), (vtablefn)&V), __VA_ARGS__)
+#define NEW0(T,V,C)      C(dfalloc(sizeof(struct T), (vtablefn)&V))
 #define VTABLE(x)        (((struct vtable*)x)->vt)
 #define FIRST_ARG(x,...) x
 #define CALL(R,f,...)    ( ( (R(*)(void*)) ( (*VTABLE(FIRST_ARG(__VA_ARGS__))) (f) ) ) (__VA_ARGS__) )
