@@ -517,7 +517,6 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
         )"));
 
     // Virtual construction and call.
-    // TODO C virtual call.
     REQUIRE( codeGenProg(R"(
             class Base
             {
