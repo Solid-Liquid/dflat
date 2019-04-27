@@ -22,13 +22,8 @@ Vector<ASNPtr> parse(Vector<TokenPtr> const& tokens)
 }
 
 ParserException::ParserException(String msg) noexcept
+    : std::runtime_error("Parser Exception\n" + std::move(msg))
 {
-    message = "Parser Exception:\n" + msg;
-}
-
-const char* ParserException::what() const noexcept
-{
-    return message.c_str();
 }
 
 /**
@@ -92,6 +87,11 @@ void Parser::next()
     /*end MUST_MATCH_*/
 
 ASNPtr deref(ASNPtr& p)
+{
+    return move(p);
+}
+
+BlockPtr deref(BlockPtr& p)
 {
     return move(p);
 }
@@ -618,7 +618,7 @@ ASNPtr Parser::parseIfStm()
     MUST_PARSE(logicExp, parseExp(), "Expected logical expression in if statement");
     MUST_MATCH_(RightParenToken);
     MUST_PARSE(trueStatements, parseBlock(), "Expected block{} after if statement");
-    ASNPtr elseBlock;
+    BlockPtr elseBlock;
     bool hasElse;
     if( match<ElseToken>() )
     {
@@ -717,7 +717,7 @@ ASNPtr Parser::parseStm()
 
 // COMPOUND PARSERS
 
-ASNPtr Parser::parseBlock()
+BlockPtr Parser::parseBlock()
 {
     TRACE;
     ENABLE_ROLLBACK;
@@ -764,12 +764,42 @@ ASNPtr Parser::parseMethodDecl()
         }
     }
     MUST_MATCH_(RightParenToken);
-    MUST_PARSE(body, parseBlock(), "Expected block{} after while statement");
+    MUST_PARSE(body, parseBlock(), "Expected block{} for method body");
 
     CANCEL_ROLLBACK;
     SUCCESS;
     return make_unique<MethodDef>(typeName, functionName,
                                   move(exps), move(body));
+}
+
+ASNPtr Parser::parseConsDecl()
+{
+    // Constructor. Like a method, but instead of beginning with
+    //  <TYPE> <NAME>, just begins with <CONS>
+    TRACE;
+    ENABLE_ROLLBACK;
+
+    Vector<FormalArg> exps;
+    Optional<FormalArg> temp;
+
+    MATCH_(ConsToken);
+    MUST_MATCH_(LeftParenToken);
+    temp = parseFormalArg();
+    if (temp)
+    {
+        exps.push_back(*temp);
+        while(match<CommaToken>())
+        {
+            MUST_PARSE(temp1, parseFormalArg(), "Expected type variable after ','");
+            exps.push_back(temp1);
+        }
+    }
+    MUST_MATCH_(RightParenToken);
+    MUST_PARSE(body, parseBlock(), "Expected block{} for constructor body");
+
+    CANCEL_ROLLBACK;
+    SUCCESS;
+    return make_unique<ConsDef>(move(exps), move(body));
 }
 
 ASNPtr Parser::parseClassDecl()
@@ -822,7 +852,12 @@ ASNPtr Parser::parseClassStm()
     TRACE;
     ASNPtr result;
 
-    if (result = parseMethodDecl())
+    if (result = parseConsDecl())
+    {
+        SUCCESS;
+        return result;
+    }
+    else if (result = parseMethodDecl())
     {
         SUCCESS;
         return result;

@@ -21,13 +21,8 @@ class Lexer : private LexerCore
 };
 
 LexerException::LexerException(String msg) noexcept
+    : std::runtime_error("Lexer Exception:\n" + std::move(msg))
 {
-    message = "Lexer Exception:\n" + msg;
-}
-
-const char* LexerException::what() const noexcept
-{
-    return message.c_str();
 }
 
 Lexer::Lexer(String const& input)
@@ -99,7 +94,8 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
         { "return", tokReturn },
         { "this", tokThis },
         { "class", tokClass },
-        { "extends", tokExtends }
+        { "extends", tokExtends },
+        { "cons", tokCons },
     };
 
     auto it = KWS.find(name);
@@ -121,6 +117,7 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
         case tokThis:       return make_unique<ThisToken>();
         case tokClass:      return make_unique<ClassToken>();
         case tokExtends:    return make_unique<ExtendsToken>();
+        case tokCons:       return make_unique<ConsToken>();
         default:            return nullptr;
     }
 }

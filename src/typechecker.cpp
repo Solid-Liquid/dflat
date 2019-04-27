@@ -24,17 +24,6 @@ Type typeCheck(ASNPtr const& asn)
     return asn->typeCheck(env);
 }
 
-void assertTypeIs(Type const &test, Type const &against)
-{
-    if (test != against)
-    {
-        throw TypeCheckerException(
-            "Type '" + test.toString() + 
-            "' must be '" + against.toString() + "'"
-            );
-    }
-}
-
 TypeCheckerException::TypeCheckerException(String msg) noexcept
 {
     message = "TypeChecker Exception:\n" + msg;

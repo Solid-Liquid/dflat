@@ -4,14 +4,14 @@
 namespace dflat
 {
 
-MethodMeta const* MethodMetaMan::lookupMeta(MethodExp const* exp) const
+MethodMeta const* MethodMetaMan::lookupMeta(ASN const* node) const
 {
-    return lookup(_canonNames, static_cast<void const*>(exp));
+    return lookup(_canonNames, node);
 }
         
-void MethodMetaMan::setMeta(MethodExp const* exp, MethodMeta meta)
+void MethodMetaMan::setMeta(ASN const* node, MethodMeta meta)
 {
-    _canonNames.insert({ static_cast<void const*>(exp), std::move(meta) });
+    _canonNames.insert({ node, std::move(meta) });
 }
 
 } // namespace dflat

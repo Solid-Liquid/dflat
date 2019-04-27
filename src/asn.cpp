@@ -26,6 +26,47 @@ String opString(OpType op)
     std::abort(); // Unhandled op.
 }
 
+bool operator==(ASNPtr const& a, ASNPtr const& b)
+{
+    if (!a && !b)
+    {
+        return true;
+    }
+
+    if (!a || !b)
+    {
+        return false;
+    }
+
+    return *a == *b;
+}
+
+bool operator!=(ASNPtr const& a, ASNPtr const& b)
+{
+    return !(a == b);
+}
+
+bool operator==(BlockPtr const& a, BlockPtr const& b)
+{
+    if (!a && !b)
+    {
+        return true;
+    }
+
+    if (!a || !b)
+    {
+        return false;
+    }
+
+    return *a == *b;
+}
+
+bool operator!=(BlockPtr const& a, BlockPtr const& b)
+{
+    return !(a == b);
+}
+
+
 //ASN:
 ASN::~ASN()
 {
@@ -122,7 +163,7 @@ String Block::toString() const
 }
 
 //IfBlock:
-IfStm::IfStm(ASNPtr&& _logicExp, ASNPtr&& _trueStatements, bool _hasFalse, ASNPtr&& _falseStatements)
+IfStm::IfStm(ASNPtr&& _logicExp, BlockPtr&& _trueStatements, bool _hasFalse, BlockPtr&& _falseStatements)
     : logicExp(move(_logicExp))
     , trueStatements(move(_trueStatements))
     , hasFalse(_hasFalse)
@@ -143,7 +184,7 @@ String IfStm::toString() const
 }
 
 //WhileStm:
-WhileStm::WhileStm(ASNPtr&& _logicExp, ASNPtr&& _statements)
+WhileStm::WhileStm(ASNPtr&& _logicExp, BlockPtr&& _statements)
     : logicExp(move(_logicExp)), statements(move(_statements))
 {
 }
@@ -155,9 +196,9 @@ String WhileStm::toString() const
     return str;
 }
 
-//MethodBlock:
+//MethodDef:
 MethodDef::MethodDef(String _retTypeName, String _name,
-             Vector<FormalArg>&& _args, ASNPtr&& _statements)
+             Vector<FormalArg>&& _args, BlockPtr&& _statements)
     : retTypeName(_retTypeName)
     , name(_name)
     , args(move(_args))
@@ -168,6 +209,29 @@ MethodDef::MethodDef(String _retTypeName, String _name,
 String MethodDef::toString() const
 {
     String str = retTypeName + " " + name + "(";
+    int track = 0;
+    for(auto&& ar : args)
+    {
+        if(track > 0)
+            str += ", ";
+        str += ar.typeName + " " + ar.name;
+        ++track;
+    }
+    str += ")\n";
+    str += statements->toString();
+    return str;
+}
+
+//ConsDef:
+ConsDef::ConsDef(Vector<FormalArg>&& _args, BlockPtr&& _statements)
+    : args(move(_args))
+    , statements(move(_statements))
+{
+}
+
+String ConsDef::toString() const
+{
+    String str = "cons(";
     int track = 0;
     for(auto&& ar : args)
     {

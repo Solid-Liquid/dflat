@@ -158,6 +158,34 @@ Type MethodDef::typeCheckPrv(TypeEnv& env)
     return methodType;
 }
 
+Type ConsDef::typeCheckPrv(TypeEnv& env)
+{
+    ValueType const curClass = env.curClass().type;
+    MethodType consType(curClass, {});
+
+    for (FormalArg const& arg : args)
+    {
+        ValueType argType(arg.typeName);
+        consType.addArgType(argType);
+    }
+
+    CanonName const consName(config::consName, consType);
+    env.enterMethod(consName); // New current method
+
+    for (FormalArg const& arg : args)
+    {
+        env.declareLocal(arg.name, ValueType(arg.typeName));
+    }
+
+    // Typecheck body.
+    statements->typeCheck(env);
+
+    // No longer in a method.
+    env.leaveMethod();
+
+    return consType;
+}
+
 Type MethodExp::typeCheckPrv(TypeEnv& env)
 {
     // If no name, use implicit "this".
@@ -204,9 +232,40 @@ Type MethodStm::typeCheckPrv(TypeEnv& env)
 
 Type NewExp::typeCheckPrv(TypeEnv& env)
 {
-    ValueType type(typeName);
+    ValueType const type(typeName);
     env.assertValidType(type);
-    // TODO: check args against class constructor (contructor coming soon, sit tite!)
+
+    // Construct method type to get canonical name for constructor.
+    Vector<ValueType> argTypes;
+    int argNum = 1;
+
+    for (ASNPtr& arg : args)
+    {
+        Type argType = arg->typeCheck(env);
+
+        if (!argType.isValue())
+        {
+            throw TypeCheckerException("Passing method as argument " 
+                    + to_string(argNum));
+        }
+        
+        argTypes.push_back(argType.value());
+        ++argNum;
+    }
+
+    MethodType const consType(type, argTypes);
+    CanonName const consName(config::consName, consType);
+
+    // Check existence of such a constructor.
+    Type resultType = env.lookupMethodTypeByClass(type, consName).ret();
+
+    if (resultType != type)
+    {
+        throw std::logic_error("Constructor for '" + type.toString()
+                + "' returns '" + resultType.toString() + "'");
+    }
+
+    env.setMethodMeta(this, type, consName); // Needed later.
     return type;
 }
 
@@ -302,7 +361,8 @@ Type ClassDecl::typeCheckPrv(TypeEnv& env)
         env.assertValidType(baseType); //check if the base class is valid
         env.setClassParent(baseType);
     }
-
+    
+    // Typecheck member vars/methods.
     for (ASNPtr& member : members)
     {
         member->typeCheck(env);

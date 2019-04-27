@@ -12,7 +12,7 @@ namespace dflat
                     tokLParen, tokRParen, tokComma, tokSemi, tokWhile,
                     tokAnd, tokOr, tokEq, tokNotEq, tokNot, tokMember,
                     tokTrue, tokFalse, tokEnd, tokNew, tokReturn,
-                    tokThis, tokClass, tokExtends};
+                    tokThis, tokClass, tokExtends, tokCons};
 
     class Token
     {
@@ -249,6 +249,13 @@ namespace dflat
         public:
             TokType getType() const { return tokExtends; }
             String toString() const { return "extends"; }
+    };
+    
+    class ConsToken : public Token
+    {
+        public:
+            TokType getType() const { return tokCons; }
+            String toString() const { return "cons"; }
     };
     
     String to_string(TokenPtr const&);

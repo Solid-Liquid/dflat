@@ -35,7 +35,7 @@ class TypeEnv
         void leaveMethod();
         bool inMethod() const;
         MethodMeta const& curMethod() const;
-        void setMethodMeta(MethodExp const*, ValueType const& objectType, CanonName const&);
+        void setMethodMeta(ASN const*, ValueType const& objectType, CanonName const&);
 
         void enterScope();
         void leaveScope();

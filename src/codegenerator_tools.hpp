@@ -18,8 +18,12 @@ namespace dflat
 
 // Have to forward declare to break include cycle.
 struct ASN;
-using ASNPtr = std::unique_ptr<ASN>; // TODO don't like this code dupe.
+using ASNPtr = std::unique_ptr<ASN>;
 
+struct Block;
+using BlockPtr = std::unique_ptr<Block>;
+
+// Something like "struct T*"
 struct CodeTypeName     
 { 
     String value; 
@@ -28,6 +32,7 @@ struct CodeTypeName
     {}
 };
 
+// Something like "T"
 struct CodeClassDecl
 { 
     String value; 
@@ -44,6 +49,17 @@ struct CodeMethodName
     CodeMethodName(ValueType _objectType, CanonName _methodName)
         : objectType(std::move(_objectType))
         , methodName(std::move(_methodName))
+    {}
+};
+
+// Constructor
+// objectType is the CanonName's type's return type.
+struct CodeConsName
+{ 
+    CanonName consName;
+
+    CodeConsName(CanonName _consName)
+        : consName(std::move(_consName))
     {}
 };
 
@@ -98,6 +114,7 @@ String mangleClassDecl(String const&);
 String mangleVarName(String const&);
 String mangleMemberName(String const&);
 String mangleMethodName(ValueType const& objectType, CanonName const& methodName);
+String mangleConsName(CanonName const& consName);
 
 class GenEnv
 {
@@ -109,6 +126,7 @@ class GenEnv
         GenEnv& operator<<(CodeVarName const&);
         GenEnv& operator<<(CodeMemberName const&);
         GenEnv& operator<<(CodeMethodName const&);
+        GenEnv& operator<<(CodeConsName const&);
         GenEnv& operator<<(CodeLiteral const&);
         GenEnv& operator<<(CodeNumber const&);
         GenEnv& operator<<(CodeParent const&);
@@ -116,6 +134,7 @@ class GenEnv
         GenEnv& operator<<(CodeTabIn const&);
         GenEnv& operator<<(CodeTabOut const&);
         GenEnv& operator<<(ASNPtr const&);
+        GenEnv& operator<<(BlockPtr const&);
         String concat() const;
         
         void enterClass(ValueType const& classType);
@@ -127,8 +146,10 @@ class GenEnv
         void leaveMethod();
         bool inMethod() const;
         MethodMeta const& curMethod() const;
-        MethodMeta const& getMethodMeta(MethodExp const*) const;
+        MethodMeta const& getMethodMeta(ASN const*) const;
 
+        void startBlock();
+        void endBlock();
         void enterScope();
         void leaveScope();
         void declareLocal(String const& name, ValueType const& type);

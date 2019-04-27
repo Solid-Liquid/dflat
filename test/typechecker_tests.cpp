@@ -15,6 +15,7 @@ Type expType(String const& input)
     Parser parser(tokens);
     auto asn = parser.parseExp();
     TypeEnv env;
+    env.enterClass(ValueType("Test"));
     return asn->typeCheck(env);
 }
 
@@ -77,7 +78,7 @@ TEST_CASE( "TypeChecker correctly checks types", "[TypeChecker]" )
     REQUIRE( stmType("bool x = true;")
              == voidType);
 
-    REQUIRE( stmType("int x = new int();")
+    REQUIRE( stmType("Test x = new Test();")
              == voidType);
 
     REQUIRE( stmType("int x = 2 + -5 * 8;")

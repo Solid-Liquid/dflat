@@ -265,6 +265,11 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
             {
                 int df_x;
             };
+            
+            struct df_Base* dfc_Base(struct df_Base* df_this)
+            {
+                return df_this;
+            }
         )"));
     
     // Single class with single method.
@@ -280,6 +285,11 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
             struct df_Base
             {
             };
+            
+            struct df_Base* dfc_Base(struct df_Base* df_this)
+            {
+                return df_this;
+            }
             int dfm_Base_f(struct df_Base* df_this)
             {
                 return 1;
@@ -308,6 +318,16 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
             {
                 struct df_Base dfparent;
             };
+            
+            struct df_Base* dfc_Base(struct df_Base* df_this)
+            {
+                return df_this;
+            }
+           
+            struct df_Sub* dfc_Sub(struct df_Sub* df_this)
+            {
+                return df_this;
+            }
             int dfm_Sub_f(struct df_Sub* df_this)
             {
                 return df_this->dfparent.df_x;
@@ -343,6 +363,21 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
             {
                 struct df_Base2 dfparent;
             };
+            
+            struct df_Base1* dfc_Base1(struct df_Base1* df_this)
+            {
+                return df_this;
+            }
+           
+            struct df_Base2* dfc_Base2(struct df_Base2* df_this)
+            {
+                return df_this;
+            }
+           
+            struct df_Sub* dfc_Sub(struct df_Sub* df_this)
+            {
+                return df_this;
+            }
             int dfm_Sub_f(struct df_Sub* df_this)
             {
                 return df_this->dfparent.dfparent.df_x;
@@ -373,9 +408,19 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
             {
                 struct df_Base dfparent;
             };
+            
+            struct df_Base* dfc_Base(struct df_Base* df_this)
+            {
+                return df_this;
+            }
             int dfm_Base_f(struct df_Base* df_this)
             {
                 return 1;
+            }
+           
+            struct df_Sub* dfc_Sub(struct df_Sub* df_this)
+            {
+                return df_this;
             }
             int dfm_Sub_g(struct df_Sub* df_this)
             {
@@ -384,7 +429,6 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
         )"));
     
     // Basic instantiation.
-    // TODO Default constructors.
     REQUIRE( codeGenProg(R"(
             class Base
             {
@@ -397,9 +441,14 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
             struct df_Base
             {
             };
+            
+            struct df_Base* dfc_Base(struct df_Base* df_this)
+            {
+                return df_this;
+            }
             struct df_Base* dfm_Base_f(struct df_Base* df_this)
             {
-                return DF_NEW(df_Base);
+                return DF_NEW0(df_Base, dfc_Base);
             }
         )"));
 
@@ -408,6 +457,9 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
     REQUIRE( codeGenProg(R"(
             class Base
             {
+                cons(int x, int y)
+                {
+                }
                 Base f()
                 {
                     return new Base(1,2);
@@ -417,9 +469,18 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
             struct df_Base
             {
             };
+            
+            struct df_Base* dfc_Base(struct df_Base* df_this)
+            {
+                return df_this;
+            }
+            struct df_Base* dfc_Base_int_int(struct df_Base* df_this, int df_x, int df_y)
+            {
+                return df_this;
+            }
             struct df_Base* dfm_Base_f(struct df_Base* df_this)
             {
-                return DF_NEW(df_Base);
+                return DF_NEW(df_Base, dfc_Base_int_int, 1, 2);
             }
         )"));
 
@@ -461,18 +522,33 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
             struct df_Main
             {
             };
+            
+            struct df_Base* dfc_Base(struct df_Base* df_this)
+            {
+                return df_this;
+            }
             int dfm_Base_f(struct df_Base* df_this)
             {
                 return 1;
+            }
+            
+            struct df_Sub* dfc_Sub(struct df_Sub* df_this)
+            {
+                return df_this;
             }
             int dfm_Sub_f(struct df_Sub* df_this)
             {
                 return 2;
             }
+            
+            struct df_Main* dfc_Main(struct df_Main* df_this)
+            {
+                return df_this;
+            }
             void dfm_Main_main(struct df_Main* df_this)
             {
-                struct df_Base* df_base = DF_NEW(df_Base);
-                struct df_Base* df_sub = DF_NEW(df_Sub);
+                struct df_Base* df_base = DF_NEW0(df_Base, dfc_Base);
+                struct df_Base* df_sub = DF_NEW0(df_Sub, dfc_Sub);
                 dfm_Base_f(df_base);
                 dfm_Base_f(df_sub);
             }

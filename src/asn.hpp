@@ -81,21 +81,13 @@ class ASN
 
 using ASNPtr = std::unique_ptr<ASN>;
 
-inline
-bool operator==(ASNPtr const& a, ASNPtr const& b)
-{
-    if (!a && !b)
-    {
-        return true;
-    }
+class Block;
+using BlockPtr = std::unique_ptr<Block>;
 
-    if (!a || !b)
-    {
-        return false;
-    }
-
-    return *a == *b;
-}
+bool operator==(ASNPtr const&, ASNPtr const&);
+bool operator!=(ASNPtr const&, ASNPtr const&);
+bool operator==(BlockPtr const&, BlockPtr const&);
+bool operator!=(BlockPtr const&, BlockPtr const&);
 
 class VariableExp : public ASN
 {
@@ -231,11 +223,11 @@ class IfStm : public ASN
     //Example Input: if(x == y) { statement } else { statement }
     public:
         ASNPtr logicExp;
-        ASNPtr trueStatements;
+        BlockPtr trueStatements;
         bool hasFalse;          //check if there is an else{} block
-        ASNPtr falseStatements;
+        BlockPtr falseStatements;
 
-        IfStm(ASNPtr&&, ASNPtr&&, bool, ASNPtr&&);
+        IfStm(ASNPtr&&, BlockPtr&&, bool, BlockPtr&&);
         ASNType getType() const { return stmIf; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -257,9 +249,9 @@ class WhileStm : public ASN
     //Example Input: while(x == y) { statement }
     public:
         ASNPtr logicExp;
-        ASNPtr statements;
+        BlockPtr statements;
 
-        WhileStm(ASNPtr&&, ASNPtr&&);
+        WhileStm(ASNPtr&&, BlockPtr&&);
         ASNType getType() const { return stmWhile; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -281,9 +273,9 @@ class MethodDef : public ASN
         String retTypeName;
         String name;
         Vector<FormalArg> args;
-        ASNPtr statements;
+        BlockPtr statements;
 
-        MethodDef(String, String, Vector<FormalArg>&&, ASNPtr&&);
+        MethodDef(String, String, Vector<FormalArg>&&, BlockPtr&&);
         ASNType getType() const { return defMethod; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -298,6 +290,28 @@ class MethodDef : public ASN
         }
 
         DECLARE_CMP(MethodDef)
+};
+
+class ConsDef : public ASN
+{
+    //Example Input: cons(int x, int y) { statements }
+    public:
+        Vector<FormalArg> args;
+        BlockPtr statements;
+
+        ConsDef(Vector<FormalArg>&&, BlockPtr&&);
+        ASNType getType() const { return defMethod; }
+        String toString() const;
+        Type typeCheckPrv(TypeEnv&);
+        void generateCode(GenEnv &);
+
+        bool operator==(ConsDef const& other) const
+        {
+            return args       == other.args
+                && statements == other.statements;
+        }
+
+        DECLARE_CMP(ConsDef)
 };
 
 class MethodExp : public ASN

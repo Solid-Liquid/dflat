@@ -7,12 +7,14 @@
 
 using namespace dflat;
 
-ASNPtr passPrint(ASNPtr&& asn)
+template <typename T>
+T passPrint(T&& asn)
 {
     if (asn) 
     {
         asn->toString();
     }
+    
     return move(asn);
 }
 
@@ -28,6 +30,21 @@ namespace Catch
             return value->toString();
         }
     };
+    
+    template<>
+    struct StringMaker<BlockPtr> 
+    {
+        static 
+        String convert(BlockPtr const& value) 
+        {
+            return value->toString();
+        }
+    };
+}
+
+BlockPtr emptyBlock()
+{
+    return std::make_unique<Block>();
 }
 
 //Parser( tokens(NumberToken(1), PlusToken(), NumberToken(1)) ).parseAdditive()
@@ -311,7 +328,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 RightBraceToken()
                 )
              ==
-             ~Block()
+             emptyBlock()
              );
 
     REQUIRE( PT(parseIfStm,         // If (1) { }  ->  IfStm
@@ -324,9 +341,9 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 )
              ==
              ~IfStm(~NumberExp(1),
-                      ~Block(),
+                      emptyBlock(),
                       false,
-                      ~Block())
+                      emptyBlock())
              );
 
     REQUIRE( PT(parseIfStm,         // if(1){} else{}  ->  If else stm
@@ -342,9 +359,9 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 )
              ==
              ~IfStm(~NumberExp(1),
-                    ~Block(),
+                    emptyBlock(),
                     true,
-                    ~Block())
+                    emptyBlock())
              );
 
     REQUIRE( PT(parseIfStm,         // if(true){} else{}  ->  If else stm
@@ -360,9 +377,9 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 )
              ==
              ~IfStm(~BoolExp(true),
-                    ~Block(),
+                    emptyBlock(),
                     true,
-                    ~Block())
+                    emptyBlock())
              );
 
     REQUIRE( PT(parseWhileStm,      //while(1){}  ->  while statement
@@ -375,7 +392,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 )
              ==
              ~WhileStm(~NumberExp(1),
-                       ~Block()
+                       emptyBlock()
                        )
              );
 
@@ -389,7 +406,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 )
              ==
              ~WhileStm(~BoolExp(false),
-                       ~Block()
+                       emptyBlock()
                        )
              );
 
@@ -607,7 +624,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 RightBraceToken()
                 )
              ==
-             ~MethodDef("int","func",Vector<FormalArg>(), ~Block())
+             ~MethodDef("int","func",Vector<FormalArg>(), emptyBlock())
              );
 
     /*

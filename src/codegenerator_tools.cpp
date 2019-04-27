@@ -8,10 +8,18 @@ namespace dflat
 
 String codeProlog()
 {
+    // DF_NEW(T,C,Args...)
+    //  Allocates and constructs a new T using constructor C with args Args...
+    //  calloc(1, sizeof(struct T)) zeroes out the memory after allocating.
+    //
+    // DF_NEW0(T,C)
+    //  Same but with no arguments (default constructor).
+
     return R"(
 #include <stdlib.h>
 
-#define DF_NEW(T) (struct T*)malloc(sizeof(struct T))
+#define DF_NEW(T,C,...) C((struct T*)calloc(1, sizeof(struct T)), __VA_ARGS__)
+#define DF_NEW0(T,C)    C((struct T*)calloc(1, sizeof(struct T)))
 
 )";
 
@@ -24,6 +32,8 @@ String codeEpilog()
 
     MethodType mainMethodType(voidType, {});
     CanonName mainMethodName("main", mainMethodType);
+    MethodType mainConsType(mainClassType, {});
+    CanonName mainConsName(config::consName, mainConsType); 
 
     return String{}
          + "int main()\n"
@@ -32,8 +42,10 @@ String codeEpilog()
          + mangleTypeName(mainClassType.toString()) 
          + " "
          + mangleVarName(mainClassName)
-         + " = DF_NEW("
+         + " = DF_NEW0("
          + mangleClassDecl(mainClassType.toString())
+         + ", "
+         + mangleConsName(mainConsName)
          + ");\n"
          + "\t"
          + mangleMethodName(mainClassType, mainMethodName)
@@ -72,11 +84,25 @@ String mangleMemberName(String const& x)
     return "df_" + x;
 }
 
-String mangleMethodName(ValueType const& objectName, CanonName const& methodName)
+String mangleMethodName(ValueType const& objectType, 
+        CanonName const& methodName)
 {
-    String s = "dfm_" + objectName.toString() + "_" + methodName.baseName();
+    String s = "dfm_" + objectType.toString() + "_" + methodName.baseName();
 
     for (ValueType const& arg : methodName.type().args())
+    {
+        s += "_" + arg.toString();
+    }
+
+    return s;
+}
+
+String mangleConsName(CanonName const& consName)
+{
+    ValueType const objectType = consName.type().ret();
+    String s = "dfc_" + objectType.toString();
+
+    for (ValueType const& arg : consName.type().args())
     {
         s += "_" + arg.toString();
     }
@@ -162,13 +188,13 @@ MethodMeta const& GenEnv::curMethod() const
     return *_curMethod;
 }
         
-MethodMeta const& GenEnv::getMethodMeta(MethodExp const* methodExp) const
+MethodMeta const& GenEnv::getMethodMeta(ASN const* node) const
 {
-    MethodMeta const* method = _methods.lookupMeta(methodExp);
+    MethodMeta const* method = _methods.lookupMeta(node);
 
     if (!method)
     {
-        throw std::logic_error("No method meta for '" + methodExp->toString() + "'");
+        throw std::logic_error("No method meta for '" + node->toString() + "'");
     }
 
     return *method;
@@ -268,6 +294,12 @@ GenEnv& GenEnv::operator<<(CodeMethodName const& x)
     return *this;
 }
 
+GenEnv& GenEnv::operator<<(CodeConsName const& x)
+{
+    write() << mangleConsName(x.consName);
+    return *this;
+}
+
 GenEnv& GenEnv::operator<<(CodeLiteral const& x)
 {
     write() << x.value;
@@ -323,6 +355,12 @@ GenEnv& GenEnv::operator<<(ASNPtr const& x)
     return *this;
 }
 
+GenEnv& GenEnv::operator<<(BlockPtr const& x)
+{
+    x->generateCode(*this);
+    return *this;
+}
+        
 void GenEnv::emitMemberVar(ValueType const& objectType, String const& memberName)
 {
     Optional<MemberMeta> const member = _classes.lookupVar(objectType, memberName);

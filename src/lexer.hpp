@@ -10,13 +10,10 @@ namespace dflat
 
 Vector<TokenPtr> tokenize(String const&);
 
-class LexerException: public std::exception
+class LexerException: public std::runtime_error
 {
 public:
     LexerException(String msg) noexcept;
-    const char* what() const noexcept;
-private:
-    String message;
 };
 
 } //namespace dflat

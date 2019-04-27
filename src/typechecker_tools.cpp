@@ -20,6 +20,14 @@ void TypeEnv::enterClass(ValueType const& classType)
     }
 
     _classes.enter(classType);
+    
+    // Add a default constructor.
+    addClassMethod(
+        CanonName(
+            config::consName,
+            MethodType(curClass().type, {})
+            )
+        );
 }
 
 void TypeEnv::setClassParent(ValueType const& parentType)
@@ -41,7 +49,7 @@ void TypeEnv::addClassMethod(CanonName const& methodName)
 {
     _classes.addMethod(methodName);
 }
-
+   
 bool TypeEnv::inClass() const
 {
     return _classes.cur() != nullptr;
@@ -63,7 +71,6 @@ void TypeEnv::enterMethod(CanonName const& methodName)
     _curMethod = MethodMeta{ curClass().type, methodName };
     _scopes.push(); // Argument scope.
     _scopes.declLocal(config::thisName, curClass().type);
-    
 }
 
 void TypeEnv::leaveMethod()
@@ -87,7 +94,7 @@ MethodMeta const& TypeEnv::curMethod() const
     return *_curMethod;
 }
 
-void TypeEnv::setMethodMeta(MethodExp const* exp, 
+void TypeEnv::setMethodMeta(ASN const* node, 
         ValueType const& objectType, CanonName const& name)
 {
     Optional<MemberMeta> member = _classes.lookupMethod(objectType, name);
@@ -98,7 +105,7 @@ void TypeEnv::setMethodMeta(MethodExp const* exp,
                 + "' in '" + objectType.toString() + "'");
     }
 
-    _methods.setMeta(exp, MethodMeta{ member->baseClassType, name });
+    _methods.setMeta(node, MethodMeta{ member->baseClassType, name });
 }
 
 void TypeEnv::enterScope()
@@ -147,13 +154,16 @@ MethodType TypeEnv::lookupMethodTypeByClass(ValueType const& classType,
     
     if (!member)
     {
-        throw TypeCheckerException("Undeclared method '" + methodName.canonName() + "'");
+        throw TypeCheckerException("Undeclared method '" 
+                + methodName.canonName() + "' in class '" 
+                + classType.toString() + "'");
     }
     
     if (!member->type.isMethod())
     {
-        throw TypeCheckerException("Referenced method name '" + methodName.canonName()
-            + "' in class " + classType.toString() + " is not a method type");
+        throw TypeCheckerException("Referenced method name '" 
+                + methodName.canonName() + "' in class " 
+                + classType.toString() + " is not a method type");
     }
 
     return member->type.method();

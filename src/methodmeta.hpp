@@ -9,7 +9,7 @@ namespace dflat
 
 // This is metadata for method calls, not methods in general.
 
-struct MethodExp;
+struct ASN;
 
 struct MethodMeta
 {
@@ -20,11 +20,11 @@ struct MethodMeta
 class MethodMetaMan
 {
     public:
-        MethodMeta const* lookupMeta(MethodExp const*) const;
-        void setMeta(MethodExp const*, MethodMeta);
+        MethodMeta const* lookupMeta(ASN const*) const;
+        void setMeta(ASN const*, MethodMeta);
 
     private:
-        Map<void const*, MethodMeta> _canonNames;
+        Map<ASN const*, MethodMeta> _canonNames;
 };
 
 } // namespace dflat
