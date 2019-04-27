@@ -8,19 +8,63 @@ namespace dflat
 
 String codeProlog()
 {
-    // DF_NEW(T,C,Args...)
-    //  Allocates and constructs a new T using constructor C with args Args...
-    //  calloc(1, sizeof(struct T)) zeroes out the memory after allocating.
-    //
-    // DF_NEW0(T,C)
-    //  Same but with no arguments (default constructor).
+/*
+    DF_NEW(T,R,V,C,...)
+        Constructs a T.
+        R is the type to cast to (different from T when polymorphic).
+        V is the vtable function for T.
+        C is the constructor to call.
+        ... are the extra arguments to pass to C.
 
+    DF_NEW0(T,R,V,C)
+        Same but with no extra arguments to C (default constructor).
+
+    DF_VTABLE(x)
+        Gets the vtable for object x.
+
+    DF_FIRST_ARG(x,...)
+        Returns the first of variadic arguments.
+
+    DF_CALL(R,f,...)
+        Calls the function f.
+        R is the return type.
+        ... are the arguments to pass to F, including "this".
+
+    DF_vtablefn
+        Typedef for a function pointer to a vtable function.
+
+    DF_vtable
+        Contains a df_vtablefn.
+        Every root class has this as its first member.
+        As a result, any object can be trivially cast to access its vtable.
+
+    DF_alloc(size_t, DF_vtablefn)
+        Allocates a class object of given size and assigns the given vtable to it.
+        It zeroes the object's memory so that unassigned members are at least predictable.
+
+*/
     return R"(
 #include <stdlib.h>
 
-#define DF_NEW(T,C,...) C((struct T*)calloc(1, sizeof(struct T)), __VA_ARGS__)
-#define DF_NEW0(T,C)    C((struct T*)calloc(1, sizeof(struct T)))
+#define DF_NEW(T,R,V,C,...) C((struct R*)dfalloc(sizeof(struct T), (df_vtablefn)&V), __VA_ARGS__)
+#define DF_NEW0(T,R,VC)     C((struct R*)dfalloc(sizeof(struct T), (df_vtablefn)&V))
+#define DF_VTABLE(x) (((struct df_vtable*)x)->vt)
+#define DF_FIRST_ARG(x,...) x
+#define DF_CALL(R,f,...) (( (R(*)(void*)) ((*DF_VTABLE(DF_FIRST_ARG(__VA_ARGS__)))(f))) (__VA_ARGS__))
 
+typedef void* (*DF_vtablefn)(enum Fns);
+
+struct DF_vtable
+{
+    DF_vtablefn vt;
+};
+
+void* DF_alloc(size_t size, DF_vtablefn vt)
+{
+    void* p = calloc(1, size);
+    DF_VTABLE(p) = vt;
+    return p;
+}
 )";
 
 }

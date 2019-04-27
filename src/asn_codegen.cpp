@@ -5,7 +5,7 @@
 namespace dflat
 {
 
-void VariableExp::generateCode(GenEnv & env)
+void VariableExp::generateCode(GenEnv & env) const
 {
     if (object)
     {
@@ -27,17 +27,17 @@ void VariableExp::generateCode(GenEnv & env)
     }
 }
 
-void NumberExp::generateCode(GenEnv & env)
+void NumberExp::generateCode(GenEnv & env) const
 {
     env << CodeNumber(value);
 }
 
-void BoolExp::generateCode(GenEnv & env)
+void BoolExp::generateCode(GenEnv & env) const
 {
     env << CodeNumber(value ? 1 : 0);
 }
 
-void BinopExp::generateCode(GenEnv & env)
+void BinopExp::generateCode(GenEnv & env) const
 {
     env << CodeLiteral("(")
         << lhs
@@ -46,7 +46,7 @@ void BinopExp::generateCode(GenEnv & env)
         << CodeLiteral(")");
 }
 
-void UnopExp::generateCode(GenEnv & env)
+void UnopExp::generateCode(GenEnv & env) const
 {
     env << CodeLiteral("(") 
         << CodeLiteral(opString(op))
@@ -75,19 +75,19 @@ void endBlock(GenEnv& env)
     env.leaveScope();
 }
 
-void Block::generateCode(GenEnv & env)
+void Block::generateCode(GenEnv & env) const
 {
     startBlock(env);
     
-    for (ASNPtr const& stmt : statements)
+    for (ASNPtr const& stm : statements)
     {
-        env << stmt;
+        env << stm;
     }
 
     endBlock(env);
 }
 
-void IfStm::generateCode(GenEnv & env)
+void IfStm::generateCode(GenEnv & env) const
 {
     env << CodeTabs()
         << CodeLiteral("if (")
@@ -103,7 +103,7 @@ void IfStm::generateCode(GenEnv & env)
     }
 }
 
-void WhileStm::generateCode(GenEnv & env)
+void WhileStm::generateCode(GenEnv & env) const
 {
     env << CodeTabs()
         << CodeLiteral("while (")
@@ -112,52 +112,29 @@ void WhileStm::generateCode(GenEnv & env)
         << statements;
 }
 
-void MethodDef::generateCode(GenEnv & env)
+static
+void emitMethod(GenEnv& env, CanonName const& methodName, 
+        ValueType const& retType, Vector<FormalArg> const& args,
+        Vector<ASNPtr> const& body, bool isCons)
 {
-    CanonName const methodName(name, asnType->method());
     env.enterMethod(methodName);
     ValueType const curClass = env.curClass().type;
     
     env << CodeTabs()
-        << CodeTypeName(retTypeName)
-        << CodeLiteral(" ")
-        << CodeMethodName(curClass, methodName)
-        << CodeLiteral("(")
-        << CodeTypeName(curClass.name())
-        << CodeLiteral(" ")
-        << CodeVarName(config::thisName);
-        
-    for(auto&& ar : args)
+        << CodeTypeName(retType.toString())
+        << CodeLiteral(" ");
+
+    if (isCons)
     {
-        env << CodeLiteral(", ")
-            << CodeTypeName(ar.typeName)
-            << CodeLiteral(" ")
-            << CodeVarName(ar.name);
-        
-        env.declareLocal(ar.name, ValueType(ar.typeName));
+        env << CodeConsName(methodName);
+    }
+    else
+    {
+        env << CodeMethodName(curClass, methodName);
     }
 
-    env << CodeLiteral(")\n")
-        << statements;
-
-    env.leaveMethod();
-}
-
-void ConsDef::generateCode(GenEnv & env)
-{
-    CanonName const consName(config::consName, asnType->method());
-    env.enterMethod(consName);
-    ValueType const curClass = env.curClass().type;
+    env << CodeLiteral("(void* dfthis");
     
-    env << CodeTabs()
-        << CodeTypeName(curClass.toString())
-        << CodeLiteral(" ")
-        << CodeConsName(consName)
-        << CodeLiteral("(")
-        << CodeTypeName(curClass.toString())
-        << CodeLiteral(" ")
-        << CodeVarName(config::thisName);
-        
     for(auto&& ar : args)
     {
         env << CodeLiteral(", ")
@@ -169,26 +146,57 @@ void ConsDef::generateCode(GenEnv & env)
     }
 
     env << CodeLiteral(")\n");
-   
-    // Due to having to insert a statement,
-    //  we're going to do the block manually.
+
+    // Manually emitting the body.
     startBlock(env);
-    
-    for (ASNPtr const& stmt : statements->statements)
+   
+    env << CodeTabs()
+        << CodeTypeName(curClass.name())
+        << CodeLiteral(" ")
+        << CodeVarName(config::thisName)
+        << CodeLiteral(" = dfthis;\n");
+
+    for (ASNPtr const& stm : body)
     {
-        env << stmt;
+        env << stm;
+    }
+   
+    if (isCons)
+    {
+        env << CodeTabs()
+            << CodeLiteral("return ")
+            << CodeVarName(config::thisName)
+            << CodeLiteral(";\n");
     }
     
-    env << CodeTabs()
-        << CodeLiteral("return ")
-        << CodeVarName(config::thisName)
-        << CodeLiteral(";\n");
-
     endBlock(env);
+    // Done with body.
+
     env.leaveMethod();
 }
 
-void MethodExp::generateCode(GenEnv & env)
+void MethodDef::generateCode(GenEnv & env) const
+{
+    CanonName const methodName(name, asnType->method());
+    ValueType const retType(retTypeName);
+    emitMethod(env, methodName, retType, args, statements->statements, false);
+}
+
+static
+void emitConstructor(GenEnv& env, MethodType const& consType, 
+        Vector<FormalArg> const& args, Vector<ASNPtr> const& body)
+{
+    CanonName const consName(config::consName, consType);
+    ValueType const retType = env.curClass().type;
+    emitMethod(env, consName, retType, args, body, true);
+}
+
+void ConsDef::generateCode(GenEnv & env) const
+{
+    emitConstructor(env, asnType->method(), args, statements->statements);
+}
+
+void MethodExp::generateCode(GenEnv & env) const
 {
     String const objectName = method.object ? *method.object 
                                             : config::thisName;
@@ -220,14 +228,14 @@ void MethodExp::generateCode(GenEnv & env)
     env << CodeLiteral(")");
 }
 
-void MethodStm::generateCode(GenEnv& env)
+void MethodStm::generateCode(GenEnv& env) const
 {
     env << CodeTabs()
         << methodExp
         << CodeLiteral(";\n");
 }
 
-void NewExp::generateCode(GenEnv& env)
+void NewExp::generateCode(GenEnv& env) const
 {
     // Need constructor's canonical name.
     auto [thisType, consName] = env.getMethodMeta(this);
@@ -257,9 +265,8 @@ void NewExp::generateCode(GenEnv& env)
     env << CodeLiteral(")");
 }
 
-void AssignStm::generateCode(GenEnv& env)
+void AssignStm::generateCode(GenEnv& env) const
 {
-    // TODO: check if this works for every case (i.e. rhs is new stm)
     env << CodeTabs()
         << lhs
         << CodeLiteral(" = ")
@@ -267,7 +274,7 @@ void AssignStm::generateCode(GenEnv& env)
         << CodeLiteral(";\n");
 }
 
-void VarDecStm::generateCode(GenEnv& env)
+void VarDecStm::generateCode(GenEnv& env) const
 {
     env << CodeTabs()
         << CodeTypeName(typeName)
@@ -281,7 +288,7 @@ void VarDecStm::generateCode(GenEnv& env)
     }
 }
 
-void VarDecAssignStm::generateCode(GenEnv& env)
+void VarDecAssignStm::generateCode(GenEnv& env) const
 {
     env << CodeTabs()
         << CodeTypeName(typeName)
@@ -297,7 +304,7 @@ void VarDecAssignStm::generateCode(GenEnv& env)
     }
 }
 
-void RetStm::generateCode(GenEnv& env)
+void RetStm::generateCode(GenEnv& env) const
 {
     env << CodeTabs()
         << CodeLiteral("return ")
@@ -305,7 +312,7 @@ void RetStm::generateCode(GenEnv& env)
         << CodeLiteral(";\n");
 }
 
-void ClassDecl::generateCode(GenEnv& env)
+void ClassDecl::generateCode(GenEnv& env) const
 {
     ValueType const classType(name);
     env.enterClass(classType);
@@ -325,33 +332,10 @@ void ClassDecl::generateCode(GenEnv& env)
     }
     
     // Emit default constructor.
-    // TODO duplicates a ton of code from ConsDef
-    MethodType const consType(classType, {});
-    CanonName const consName(config::consName, consType);
-    env.enterMethod(consName);
-    
-    env << CodeTabs()
-        << CodeTypeName(classType.toString())
-        << CodeLiteral(" ")
-        << CodeConsName(consName)
-        << CodeLiteral("(")
-        << CodeTypeName(classType.toString())
-        << CodeLiteral(" ")
-        << CodeVarName(config::thisName)
-        << CodeLiteral(")\n");
-   
-    startBlock(env);
-    
-    env << CodeTabs()
-        << CodeLiteral("return ")
-        << CodeVarName(config::thisName)
-        << CodeLiteral(";\n");
-
-    endBlock(env);
-    env.leaveMethod();
+    emitConstructor(env, MethodType(classType, {}), {}, {});
 
     // Emit members.
-    for (ASNPtr& member : members)
+    for (ASNPtr const& member : members)
     {
         env << member;
     }
