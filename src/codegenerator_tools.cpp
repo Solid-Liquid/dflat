@@ -6,71 +6,136 @@
 namespace dflat
 {
 
-String codeProlog()
+String GenEnv::prolog() const
 {
 /*
-    DF_NEW(T,R,V,C,...)
+    NEW(T,R,V,C,...)
         Constructs a T.
         R is the type to cast to (different from T when polymorphic).
         V is the vtable function for T.
         C is the constructor to call.
         ... are the extra arguments to pass to C.
 
-    DF_NEW0(T,R,V,C)
+    NEW0(T,R,V,C)
         Same but with no extra arguments to C (default constructor).
 
-    DF_VTABLE(x)
+    VTABLE(x)
         Gets the vtable for object x.
 
-    DF_FIRST_ARG(x,...)
+    FIRST_ARG(x,...)
         Returns the first of variadic arguments.
 
-    DF_CALL(R,f,...)
+    CALL(R,f,...)
         Calls the function f.
         R is the return type.
         ... are the arguments to pass to F, including "this".
 
-    DF_vtablefn
+    vtablefn
         Typedef for a function pointer to a vtable function.
 
-    DF_vtable
+    vtable
         Contains a df_vtablefn.
         Every root class has this as its first member.
         As a result, any object can be trivially cast to access its vtable.
 
-    DF_alloc(size_t, DF_vtablefn)
+    dfalloc(size_t, vtablefn)
         Allocates a class object of given size and assigns the given vtable to it.
         It zeroes the object's memory so that unassigned members are at least predictable.
 
 */
-    return R"(
+    String s = R"(
 #include <stdlib.h>
 
-#define DF_NEW(T,R,V,C,...) C((struct R*)dfalloc(sizeof(struct T), (df_vtablefn)&V), __VA_ARGS__)
-#define DF_NEW0(T,R,VC)     C((struct R*)dfalloc(sizeof(struct T), (df_vtablefn)&V))
-#define DF_VTABLE(x) (((struct df_vtable*)x)->vt)
-#define DF_FIRST_ARG(x,...) x
-#define DF_CALL(R,f,...) (( (R(*)(void*)) ((*DF_VTABLE(DF_FIRST_ARG(__VA_ARGS__)))(f))) (__VA_ARGS__))
+#define NEW(T,V,C,...) C(dfalloc(sizeof(struct T), (vtablefn)&V), __VA_ARGS__)
+#define NEW0(T,V,C)    C(dfalloc(sizeof(struct T), (vtablefn)&V))
+#define VTABLE(x)        (((struct vtable*)x)->vt)
+#define FIRST_ARG(x,...) x
+#define CALL(R,f,...)    ( ( (R(*)(void*)) ( (*VTABLE(FIRST_ARG(__VA_ARGS__))) (f) ) ) (__VA_ARGS__) )
 
-typedef void* (*DF_vtablefn)(enum Fns);
-
-struct DF_vtable
+enum Methods
 {
-    DF_vtablefn vt;
-};
-
-void* DF_alloc(size_t size, DF_vtablefn vt)
-{
-    void* p = calloc(1, size);
-    DF_VTABLE(p) = vt;
-    return p;
-}
 )";
 
+    for (CanonName const& method : getAllMethods())
+    {
+        s += "\t" + mangleVTableMethodName(method) + ",\n";
+    }
+
+    s += "};\n";
+
+s += R"(
+typedef void* (*vtablefn)(enum Methods);
+
+struct vtable
+{
+    vtablefn vt;
+};
+
+void* dfalloc(size_t size, vtablefn vt)
+{
+    void* p = calloc(1, size);
+    VTABLE(p) = vt;
+    return p;
 }
 
-String codeEpilog()
+)";
+
+    // Emit vtable headers.
+    for (auto [classType, meta] : _classes.allClasses())
+    {
+        (void)meta; // unused
+
+        s = s
+          + "void* "
+          + mangleVTableName(classType)
+          + "(enum Methods);\n";
+    }
+
+    s += "\n";
+    return s;
+}
+
+static
+String vtable(GenEnv const& env, ValueType const& classType)
 {
+    String s;
+    
+    s = s
+      + "void* "
+      + mangleVTableName(classType)
+      + "(enum Methods m)\n"
+      + "{\n"
+      + "\tswitch (m)\n"
+      + "\t{\n";
+
+    for (CanonName const& methodName : env.getClassMethods(classType))
+    {
+        s = s
+          + "\t\tcase "
+          + mangleVTableMethodName(methodName)
+          + ": return &"
+          + mangleMethodName(classType, methodName)
+          + ";\n";
+    }
+    
+    s = s
+      + "\t\tdefault: abort();\n"
+      + "\t}\n"
+      + "}\n\n";
+
+    return s;
+}
+
+String GenEnv::epilog() const
+{
+    String s;
+
+    for (auto [type, meta] : _classes.allClasses())
+    {
+        (void)meta; // unused
+        s += vtable(*this, type);
+    }
+
     ValueType mainClassType("Main");
     String mainClassName("main");
 
@@ -79,43 +144,45 @@ String codeEpilog()
     MethodType mainConsType(mainClassType, {});
     CanonName mainConsName(config::consName, mainConsType); 
 
-    return String{}
-         + "int main()\n"
-         + "{\n"
-         + "\t" 
-         + mangleTypeName(mainClassType.toString()) 
-         + " "
-         + mangleVarName(mainClassName)
-         + " = DF_NEW0("
-         + mangleClassDecl(mainClassType.toString())
-         + ", "
-         + mangleConsName(mainConsName)
-         + ");\n"
-         + "\t"
-         + mangleMethodName(mainClassType, mainMethodName)
-         + "("
-         + mangleVarName(mainClassName)
-         + ");\n"
-         + "}\n";
+    s = s
+      + "int main()\n"
+      + "{\n"
+      + "\t" 
+      + mangleTypeName(mainClassType) 
+      + " "
+      + mangleVarName(mainClassName)
+      + " = NEW0("
+      + mangleClassDecl(mainClassType)
+      + ", "
+      + mangleVTableName(mainClassType)
+      + ", "
+      + mangleConsName(mainConsName)
+      + ");\n"
+      + "\t"
+      + mangleMethodName(mainClassType, mainMethodName)
+      + "("
+      + mangleVarName(mainClassName)
+      + ");\n"
+      + "}\n";
+
+    return s;
 }
 
-String mangleTypeName(String const& x)
+String mangleTypeName(ValueType const& typeName)
 {
-    ValueType typeName(x);
-
     if (isBuiltinType(typeName))
     {
         return translateBuiltinType(typeName);
     }
     else
     {
-        return "struct df_" + x + "*";
+        return "struct df_" + typeName.toString() + "*";
     }
 }
 
-String mangleClassDecl(String const& x)
+String mangleClassDecl(ValueType const& x)
 {
-    return "df_" + x;
+    return "df_" + x.toString();
 }
 
 String mangleVarName(String const& x)
@@ -147,6 +214,23 @@ String mangleConsName(CanonName const& consName)
     String s = "dfc_" + objectType.toString();
 
     for (ValueType const& arg : consName.type().args())
+    {
+        s += "_" + arg.toString();
+    }
+
+    return s;
+}
+
+String mangleVTableName(ValueType const& classType)
+{
+    return "dfv_" + classType.toString();
+}
+
+String mangleVTableMethodName(CanonName const& methodName)
+{
+    String s = "dfvm_" + methodName.baseName();
+
+    for (ValueType const& arg : methodName.type().args())
     {
         s += "_" + arg.toString();
     }
@@ -187,6 +271,11 @@ void GenEnv::enterClass(ValueType const& classType)
 void GenEnv::leaveClass()
 {
     _classes.leave();
+
+    if (_classTabs != 0)
+    {
+        throw std::logic_error("Incorrect tabs on leaving class");
+    }
 }
 
 bool GenEnv::inClass() const
@@ -215,6 +304,11 @@ void GenEnv::leaveMethod()
 {
     _scopes.pop();
     _curMethod = nullopt;
+    
+    if (_methodTabs != 0)
+    {
+        throw std::logic_error("Incorrect tabs on leaving method");
+    }
 }
 
 bool GenEnv::inMethod() const
@@ -242,6 +336,56 @@ MethodMeta const& GenEnv::getMethodMeta(ASN const* node) const
     }
 
     return *method;
+}
+
+Set<CanonName> GenEnv::getClassMethods(ValueType const& classType) const
+{
+    Set<CanonName> methods;
+    ClassMeta const* meta = _classes.lookup(classType);
+
+    if (!meta)
+    {
+        throw std::logic_error("No class of type '" + classType.toString() + "'");
+    }
+
+    while (true)
+    {
+        for (CanonName const& methodName : meta->methods)
+        {
+            methods.insert(methodName);
+        }
+
+        if (!meta->parent)
+        {
+            break;
+        }
+
+        meta = _classes.lookup(*meta->parent);
+
+        if (!meta)
+        {
+            throw std::logic_error("No class of type '" + meta->parent->toString() + "'");
+        }
+    }
+
+    return methods;
+}
+
+Set<CanonName> GenEnv::getAllMethods() const
+{
+    Set<CanonName> methods;
+
+    for (auto [type, meta] : _classes.allClasses())
+    {
+        (void)type; // unused
+
+        for (CanonName const& methodName : meta.methods)
+        {
+            methods.insert(methodName);
+        }
+    }
+
+    return methods;
 }
 
 void GenEnv::enterScope()
@@ -310,13 +454,13 @@ ValueType const* GenEnv::lookupLocalType(String const& name) const
 
 GenEnv& GenEnv::operator<<(CodeTypeName const& x)
 {
-    write() << mangleTypeName(x.value);
+    write() << mangleTypeName(x.type);
     return *this;
 }
 
 GenEnv& GenEnv::operator<<(CodeClassDecl const& x)
 {
-    write() << mangleClassDecl(x.value);
+    write() << mangleClassDecl(x.type);
     return *this;
 }
 
@@ -344,6 +488,18 @@ GenEnv& GenEnv::operator<<(CodeConsName const& x)
     return *this;
 }
 
+GenEnv& GenEnv::operator<<(CodeVTableName const& x)
+{
+    write() << mangleVTableName(x.classType);
+    return *this;
+}
+
+GenEnv& GenEnv::operator<<(CodeVTableMethodName const& x)
+{
+    write() << mangleVTableMethodName(x.methodName);
+    return *this;
+}
+
 GenEnv& GenEnv::operator<<(CodeLiteral const& x)
 {
     write() << x.value;
@@ -358,7 +514,7 @@ GenEnv& GenEnv::operator<<(CodeNumber const& x)
 
 GenEnv& GenEnv::operator<<(CodeParent const&)
 {
-    write() << "dfparent";
+    write() << "parent";
     return *this;
 }
 
@@ -366,11 +522,11 @@ GenEnv& GenEnv::operator<<(CodeTabs const&)
 {
     if (_curMethod)
     {
-        write() << String(_tabs, '\t');
+        write() << String(_methodTabs, '\t');
     }
     else
     {
-        write() << '\t';
+        write() << String(_classTabs, '\t');
     }
     
     return *this;
@@ -378,18 +534,39 @@ GenEnv& GenEnv::operator<<(CodeTabs const&)
 
 GenEnv& GenEnv::operator<<(CodeTabIn const&)
 {
-    ++_tabs;
+    if (_curMethod)
+    {
+        ++_methodTabs;
+    }
+    else
+    {
+        ++_classTabs;
+    }
+    
     return *this;
 }
 
 GenEnv& GenEnv::operator<<(CodeTabOut const&)
 {
-    if (_tabs == 0)
+    if (_curMethod)
     {
-        throw std::logic_error("tabbed below zero");
+        if (_methodTabs == 0)
+        {
+            throw std::logic_error("tabbed below zero");
+        }
+    
+        --_methodTabs;
+    }
+    else
+    {
+        if (_classTabs == 0)
+        {
+            throw std::logic_error("tabbed below zero");
+        }
+    
+        --_classTabs;
     }
 
-    --_tabs;
     return *this;
 }
 

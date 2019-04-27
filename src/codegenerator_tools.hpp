@@ -26,18 +26,18 @@ using BlockPtr = std::unique_ptr<Block>;
 // Something like "struct T*"
 struct CodeTypeName     
 { 
-    String value; 
-    CodeTypeName(String _value)
-        : value(std::move(_value))
+    ValueType type; 
+    CodeTypeName(ValueType _type)
+        : type(std::move(_type))
     {}
 };
 
 // Something like "T"
 struct CodeClassDecl
 { 
-    String value; 
-    CodeClassDecl(String _value)
-        : value(std::move(_value))
+    ValueType type; 
+    CodeClassDecl(ValueType _type)
+        : type(std::move(_type))
     {}
 };
 
@@ -60,6 +60,26 @@ struct CodeConsName
 
     CodeConsName(CanonName _consName)
         : consName(std::move(_consName))
+    {}
+};
+    
+// Something like "dfv_T"
+struct CodeVTableName
+{
+    ValueType classType;
+
+    CodeVTableName(ValueType _classType)
+        : classType(std::move(_classType))
+    {}
+};
+
+// Something like "dfvm_f_int_int"
+struct CodeVTableMethodName
+{ 
+    CanonName methodName;
+
+    CodeVTableMethodName(CanonName _methodName)
+        : methodName(std::move(_methodName))
     {}
 };
 
@@ -107,14 +127,14 @@ struct CodeTabIn
 struct CodeTabOut
 {};
         
-String codeProlog();
-String codeEpilog();
-String mangleTypeName(String const&);
-String mangleClassDecl(String const&);
+String mangleTypeName(ValueType const&);
+String mangleClassDecl(ValueType const&);
 String mangleVarName(String const&);
 String mangleMemberName(String const&);
 String mangleMethodName(ValueType const& objectType, CanonName const& methodName);
-String mangleConsName(CanonName const& consName);
+String mangleConsName(CanonName const&);
+String mangleVTableName(ValueType const&);
+String mangleVTableMethodName(CanonName const&);
 
 class GenEnv
 {
@@ -127,6 +147,8 @@ class GenEnv
         GenEnv& operator<<(CodeMemberName const&);
         GenEnv& operator<<(CodeMethodName const&);
         GenEnv& operator<<(CodeConsName const&);
+        GenEnv& operator<<(CodeVTableName const&);
+        GenEnv& operator<<(CodeVTableMethodName const&);
         GenEnv& operator<<(CodeLiteral const&);
         GenEnv& operator<<(CodeNumber const&);
         GenEnv& operator<<(CodeParent const&);
@@ -135,6 +157,9 @@ class GenEnv
         GenEnv& operator<<(CodeTabOut const&);
         GenEnv& operator<<(ASNPtr const&);
         GenEnv& operator<<(BlockPtr const&);
+
+        String prolog() const;
+        String epilog() const;
         String concat() const;
         
         void enterClass(ValueType const& classType);
@@ -147,6 +172,8 @@ class GenEnv
         bool inMethod() const;
         MethodMeta const& curMethod() const;
         MethodMeta const& getMethodMeta(ASN const*) const;
+        Set<CanonName> getClassMethods(ValueType const& classType) const;
+        Set<CanonName> getAllMethods() const;
 
         void startBlock();
         void endBlock();
@@ -164,7 +191,8 @@ class GenEnv
         
         std::stringstream _structDef;
         std::stringstream _funcDef;
-        unsigned _tabs = 0;
+        unsigned _methodTabs = 0;
+        unsigned _classTabs = 0;
         ScopeMetaMan _scopes;
         ClassMetaMan _classes;
         MethodMetaMan _methods;

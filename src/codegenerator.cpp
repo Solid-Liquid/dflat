@@ -6,14 +6,15 @@ namespace dflat
 String generateCode(Vector<ASNPtr> const& program, TypeEnv const& typeEnv)
 {
     GenEnv env(typeEnv);
-    for(size_t i = 0; i < program.size(); i++)
+
+    for (ASNPtr const& node : program)
     {
-
-          program[i]->generateCode(env);
-
+        node->generateCode(env);
     }
 
-    return env.concat();
+    return env.prolog()
+         + env.concat()
+         + env.epilog();
 }
 
 } //namespace dflat

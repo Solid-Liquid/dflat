@@ -120,29 +120,32 @@ void emitMethod(GenEnv& env, CanonName const& methodName,
     env.enterMethod(methodName);
     ValueType const curClass = env.curClass().type;
     
-    env << CodeTabs()
-        << CodeTypeName(retType.toString())
-        << CodeLiteral(" ");
-
     if (isCons)
     {
-        env << CodeConsName(methodName);
+        env << CodeTabs()
+            << CodeLiteral("void* ")
+            << CodeConsName(methodName);
     }
     else
     {
-        env << CodeMethodName(curClass, methodName);
+        env << CodeTabs()
+            << CodeTypeName(retType)
+            << CodeLiteral(" ")
+            << CodeMethodName(curClass, methodName);
     }
 
-    env << CodeLiteral("(void* dfthis");
+    env << CodeLiteral("(void* this");
     
-    for(auto&& ar : args)
+    for(auto&& arg : args)
     {
+        ValueType const argType(arg.typeName);
+
         env << CodeLiteral(", ")
-            << CodeTypeName(ar.typeName)
+            << CodeTypeName(argType)
             << CodeLiteral(" ")
-            << CodeVarName(ar.name);
+            << CodeVarName(arg.name);
         
-        env.declareLocal(ar.name, ValueType(ar.typeName));
+        env.declareLocal(arg.name, argType);
     }
 
     env << CodeLiteral(")\n");
@@ -151,10 +154,10 @@ void emitMethod(GenEnv& env, CanonName const& methodName,
     startBlock(env);
    
     env << CodeTabs()
-        << CodeTypeName(curClass.name())
+        << CodeTypeName(curClass)
         << CodeLiteral(" ")
         << CodeVarName(config::thisName)
-        << CodeLiteral(" = dfthis;\n");
+        << CodeLiteral(" = this;\n");
 
     for (ASNPtr const& stm : body)
     {
@@ -204,25 +207,17 @@ void MethodExp::generateCode(GenEnv & env) const
     auto [thisType, methodName] = env.getMethodMeta(this);
     ValueType objectType = env.getLocalType(objectName);
 
-    env << CodeMethodName(thisType, methodName)
-        << CodeLiteral("(");
-
-    // Base-cast if necessary.
-    if (objectType != thisType)
-    {
-        env << CodeLiteral("(")
-            << CodeTypeName(thisType.toString())
-            << CodeLiteral(")");
-    }
-
-    env << CodeVarName(objectName);
+    env << CodeLiteral("CALL(")
+        << CodeTypeName(asnType->value())
+        << CodeLiteral(", ")
+        << CodeVTableMethodName(methodName)
+        << CodeLiteral(", ")
+        << CodeVarName(objectName);
     
-    for (auto&& ar : args)
+    for (auto&& arg : args)
     {
         env << CodeLiteral(", ")
-            << ar;
-        
-        ar->generateCode(env);
+            << arg;
     }
    
     env << CodeLiteral(")");
@@ -237,22 +232,30 @@ void MethodStm::generateCode(GenEnv& env) const
 
 void NewExp::generateCode(GenEnv& env) const
 {
+    ValueType const resultType(typeName);
+
     // Need constructor's canonical name.
     auto [thisType, consName] = env.getMethodMeta(this);
     (void)thisType; // unused.
+    if (resultType != thisType) //TODO ?
+    {
+        throw std::logic_error(resultType.toString() + " != " + thisType.toString());
+    }
 
-    // DF_NEW(T,C,Args...) is a macro (see codegenerator_tools.cpp).
+    // NEW(T,C,Args...) is a macro (see codegenerator_tools.cpp).
 
     if (args.empty())
     {
-        env << CodeLiteral("DF_NEW0(");
+        env << CodeLiteral("NEW0(");
     }
     else
     {
-        env << CodeLiteral("DF_NEW(");
+        env << CodeLiteral("NEW(");
     }
-
-    env << CodeClassDecl(typeName)
+   
+    env << CodeClassDecl(resultType)
+        << CodeLiteral(", ")
+        << CodeVTableName(resultType)
         << CodeLiteral(", ")
         << CodeConsName(consName);
 
@@ -276,22 +279,26 @@ void AssignStm::generateCode(GenEnv& env) const
 
 void VarDecStm::generateCode(GenEnv& env) const
 {
+    ValueType const varType(typeName);
+
     env << CodeTabs()
-        << CodeTypeName(typeName)
+        << CodeTypeName(varType)
         << CodeLiteral(" ")
         << CodeVarName(name)
         << CodeLiteral(";\n");
 
     if (env.inMethod())
     {
-        env.declareLocal(name, ValueType(typeName));
+        env.declareLocal(name, varType);
     }
 }
 
 void VarDecAssignStm::generateCode(GenEnv& env) const
 {
+    ValueType const varType(typeName);
+    
     env << CodeTabs()
-        << CodeTypeName(typeName)
+        << CodeTypeName(varType)
         << CodeLiteral(" ")
         << CodeVarName(name)
         << CodeLiteral(" = ")
@@ -300,7 +307,7 @@ void VarDecAssignStm::generateCode(GenEnv& env) const
 
     if (env.inMethod())
     {
-        env.declareLocal(name, ValueType(typeName)); 
+        env.declareLocal(name, varType); 
     }
 }
 
@@ -318,17 +325,25 @@ void ClassDecl::generateCode(GenEnv& env) const
     env.enterClass(classType);
                        
     env << CodeLiteral("struct ")
-        << CodeClassDecl(name)
-        << CodeLiteral("\n{\n");
+        << CodeClassDecl(classType)
+        << CodeLiteral("\n{\n")
+        << CodeTabIn();
 
-    if(parent) 
+    if (parent) 
     {
+        ValueType const parentType(parent->name);
+
         env << CodeTabs()
             << CodeLiteral("struct ")
-            << CodeClassDecl(parent->name)
+            << CodeClassDecl(parentType)
             << CodeLiteral(" ")
             << CodeParent()
             << CodeLiteral(";\n");
+    }
+    else
+    {
+        env << CodeTabs()
+            << CodeLiteral("struct vtable vtable;\n");
     }
     
     // Emit default constructor.
@@ -340,7 +355,9 @@ void ClassDecl::generateCode(GenEnv& env) const
         env << member;
     }
 
-    env << CodeLiteral("};\n\n");
+    env << CodeTabOut()
+        << CodeLiteral("};\n");
+
     env.leaveClass();
 }
 

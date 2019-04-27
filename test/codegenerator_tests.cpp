@@ -100,7 +100,14 @@ String codeGenProg(String const& input)
 {
     Vector<ASNPtr> program = parse(tokenize(input));
     TypeEnv typeEnv = typeCheck(program);
-    return strip(generateCode(program, typeEnv));
+    GenEnv genEnv(typeEnv);
+
+    for (ASNPtr const& node : program)
+    {
+        node->generateCode(genEnv);
+    }
+
+    return strip(genEnv.concat());
 }
 
 TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
@@ -121,7 +128,7 @@ TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
 
 
     //Tests for variables:
-    REQUIRE( codeGenExp("var") == "df_var"); //TODO: Append to variable/obj names
+    REQUIRE( codeGenExp("var") == "df_var");
 
     REQUIRE( codeGenExp("obj.member") == "df_obj->df_member");
 
@@ -263,12 +270,13 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
         )") == strip(R"( 
             struct df_Base
             {
+                struct vtable vtable;
                 int df_x;
             };
             
-            struct df_Base* dfc_Base(void* dfthis)
+            void* dfc_Base(void* this)
             {
-                struct df_Base* df_this = dfthis;
+                struct df_Base* df_this = this;
                 return df_this;
             }
         )"));
@@ -285,16 +293,17 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
         )") == strip(R"(
             struct df_Base
             {
+                struct vtable vtable;
             };
             
-            struct df_Base* dfc_Base(void* dfthis)
+            void* dfc_Base(void* this)
             {
-                struct df_Base* df_this = dfthis;
+                struct df_Base* df_this = this;
                 return df_this;
             }
-            int dfm_Base_f(void* dfthis)
+            int dfm_Base_f(void* this)
             {
-                struct df_Base* df_this = dfthis;
+                struct df_Base* df_this = this;
                 return 1;
             }
         )"));
@@ -315,28 +324,29 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
         )") == strip(R"(
             struct df_Base
             {
+                struct vtable vtable;
                 int df_x;
             };
             struct df_Sub
             {
-                struct df_Base dfparent;
+                struct df_Base parent;
             };
             
-            struct df_Base* dfc_Base(void* dfthis)
+            void* dfc_Base(void* this)
             {
-                struct df_Base* df_this = dfthis;
+                struct df_Base* df_this = this;
                 return df_this;
             }
            
-            struct df_Sub* dfc_Sub(void* dfthis)
+            void* dfc_Sub(void* this)
             {
-                struct df_Sub* df_this = dfthis;
+                struct df_Sub* df_this = this;
                 return df_this;
             }
-            int dfm_Sub_f(void* dfthis)
+            int dfm_Sub_f(void* this)
             {
-                struct df_Sub* df_this = dfthis;
-                return df_this->dfparent.df_x;
+                struct df_Sub* df_this = this;
+                return df_this->parent.df_x;
             }
         )"));
     
@@ -359,38 +369,39 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
         )") == strip(R"(
             struct df_Base1
             {
+                struct vtable vtable;
                 int df_x;
             };
             struct df_Base2
             {
-                struct df_Base1 dfparent;
+                struct df_Base1 parent;
             };
             struct df_Sub
             {
-                struct df_Base2 dfparent;
+                struct df_Base2 parent;
             };
             
-            struct df_Base1* dfc_Base1(void* dfthis)
+            void* dfc_Base1(void* this)
             {
-                struct df_Base1* df_this = dfthis;
+                struct df_Base1* df_this = this;
                 return df_this;
             }
            
-            struct df_Base2* dfc_Base2(void* dfthis)
+            void* dfc_Base2(void* this)
             {
-                struct df_Base2* df_this = dfthis;
+                struct df_Base2* df_this = this;
                 return df_this;
             }
            
-            struct df_Sub* dfc_Sub(void* dfthis)
+            void* dfc_Sub(void* this)
             {
-                struct df_Sub* df_this = dfthis;
+                struct df_Sub* df_this = this;
                 return df_this;
             }
-            int dfm_Sub_f(void* dfthis)
+            int dfm_Sub_f(void* this)
             {
-                struct df_Sub* df_this = dfthis;
-                return df_this->dfparent.dfparent.df_x;
+                struct df_Sub* df_this = this;
+                return df_this->parent.parent.df_x;
             }
         )"));
 
@@ -413,32 +424,33 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
         )") == strip(R"(
             struct df_Base
             {
+                struct vtable vtable;
             };
             struct df_Sub
             {
-                struct df_Base dfparent;
+                struct df_Base parent;
             };
             
-            struct df_Base* dfc_Base(void* dfthis)
+            void* dfc_Base(void* this)
             {
-                struct df_Base* df_this = dfthis;
+                struct df_Base* df_this = this;
                 return df_this;
             }
-            int dfm_Base_f(void* dfthis)
+            int dfm_Base_f(void* this)
             {
-                struct df_Base* df_this = dfthis;
+                struct df_Base* df_this = this;
                 return 1;
             }
            
-            struct df_Sub* dfc_Sub(void* dfthis)
+            void* dfc_Sub(void* this)
             {
-                struct df_Sub* df_this = dfthis;
+                struct df_Sub* df_this = this;
                 return df_this;
             }
-            int dfm_Sub_g(void* dfthis)
+            int dfm_Sub_g(void* this)
             {
-                struct df_Sub* df_this = dfthis;
-                return dfm_Base_f((struct df_Base*)df_this);
+                struct df_Sub* df_this = this;
+                return CALL(int, dfvm_f, df_this);
             }
         )"));
     
@@ -454,17 +466,18 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
         )") == strip(R"(
             struct df_Base
             {
+                struct vtable vtable;
             };
             
-            struct df_Base* dfc_Base(void* dfthis)
+            void* dfc_Base(void* this)
             {
-                struct df_Base* df_this = dfthis;
+                struct df_Base* df_this = this;
                 return df_this;
             }
-            struct df_Base* dfm_Base_f(void* dfthis)
+            struct df_Base* dfm_Base_f(void* this)
             {
-                struct df_Base* df_this = dfthis;
-                return DF_NEW0(df_Base, dfc_Base);
+                struct df_Base* df_this = this;
+                return NEW0(df_Base, dfv_Base, dfc_Base);
             }
         )"));
 
@@ -483,93 +496,102 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
         )") == strip(R"(
             struct df_Base
             {
+                struct vtable vtable;
             };
             
-            struct df_Base* dfc_Base(void* dfthis)
+            void* dfc_Base(void* this)
             {
-                struct df_Base* df_this = dfthis;
+                struct df_Base* df_this = this;
                 return df_this;
             }
-            struct df_Base* dfc_Base_int_int(void* dfthis, int df_x, int df_y)
+            void* dfc_Base_int_int(void* this, int df_x, int df_y)
             {
-                struct df_Base* df_this = dfthis;
+                struct df_Base* df_this = this;
                 return df_this;
             }
-            struct df_Base* dfm_Base_f(void* dfthis)
+            struct df_Base* dfm_Base_f(void* this)
             {
-                struct df_Base* df_this = dfthis;
-                return DF_NEW(df_Base, dfc_Base_int_int, 1, 2);
+                struct df_Base* df_this = this;
+                return NEW(df_Base, dfv_Base, dfc_Base_int_int, 1, 2);
             }
         )"));
-//
-//    // Virtual construction and call.
-//    // TODO C virtual call.
-//    REQUIRE( codeGenProg(R"(
-//            class Base
-//            {
-//                int f()
-//                {
-//                    return 1;
-//                }
-//            };
-//            class Sub extends Base
-//            {
-//                int f()
-//                {
-//                    return 2;
-//                }
-//            };
-//            class Main
-//            {
-//                void main()
-//                {
-//                    Base base = new Base();
-//                    Base sub  = new Sub();
-//                    base.f();
-//                    sub.f();
-//                }
-//            };
-//        )") == strip(R"(
-//            struct df_Base
-//            {
-//            };
-//            struct df_Sub
-//            {
-//                struct df_Base dfparent;
-//            };
-//            struct df_Main
-//            {
-//            };
-//            
-//            struct df_Base* dfc_Base(struct df_Base* df_this)
-//            {
-//                return df_this;
-//            }
-//            int dfm_Base_f(struct df_Base* df_this)
-//            {
-//                return 1;
-//            }
-//            
-//            struct df_Sub* dfc_Sub(struct df_Sub* df_this)
-//            {
-//                return df_this;
-//            }
-//            int dfm_Sub_f(struct df_Sub* df_this)
-//            {
-//                return 2;
-//            }
-//            
-//            struct df_Main* dfc_Main(struct df_Main* df_this)
-//            {
-//                return df_this;
-//            }
-//            void dfm_Main_main(struct df_Main* df_this)
-//            {
-//                struct df_Base* df_base = DF_NEW0(df_Base, dfc_Base);
-//                struct df_Base* df_sub = DF_NEW0(df_Sub, dfc_Sub);
-//                dfm_Base_f(df_base);
-//                dfm_Sub_f(df_sub);
-//            }
-//        )"));
+
+    // Virtual construction and call.
+    // TODO C virtual call.
+    REQUIRE( codeGenProg(R"(
+            class Base
+            {
+                int f()
+                {
+                    return 1;
+                }
+            };
+            class Sub extends Base
+            {
+                int f()
+                {
+                    return 2;
+                }
+            };
+            class Main
+            {
+                void main()
+                {
+                    Base base = new Base();
+                    Base sub  = new Sub();
+                    base.f();
+                    sub.f();
+                }
+            };
+        )") == strip(R"(
+            struct df_Base
+            {
+                struct vtable vtable;
+            };
+            struct df_Sub
+            {
+                struct df_Base parent;
+            };
+            struct df_Main
+            {
+                struct vtable vtable;
+            };
+            
+            void* dfc_Base(void* this)
+            {
+                struct df_Base* df_this = this;
+                return df_this;
+            }
+            int dfm_Base_f(void* this)
+            {
+                struct df_Base* df_this = this;
+                return 1;
+            }
+            
+            void* dfc_Sub(void* this)
+            {
+                struct df_Sub* df_this = this;
+                return df_this;
+            }
+            int dfm_Sub_f(void* this)
+            {
+                struct df_Sub* df_this = this;
+                return 2;
+            }
+           
+            void* dfc_Main(void* this)
+            {
+                struct df_Main* df_this = this;
+                return df_this;
+            }
+            void dfm_Main_main(void* this)
+            {
+                struct df_Main* df_this = this;
+                struct df_Base* df_base = NEW0(df_Base, dfv_Base, dfc_Base);
+                struct df_Base* df_sub = NEW0(df_Sub, dfv_Sub, dfc_Sub);
+                CALL(int, dfvm_f, df_base);
+                CALL(int, dfvm_f, df_sub);
+            }
+        )"));
 
 }

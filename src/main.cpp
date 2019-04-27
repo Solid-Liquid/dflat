@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
 
         // Run CodeGenerator:
         String output = generateCode(program, typeEnv);
-        std::cout << codeProlog() << output << codeEpilog() << endl;
+        std::cout << output << endl;
     }
     catch(std::runtime_error& e)
     {

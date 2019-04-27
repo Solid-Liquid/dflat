@@ -1,5 +1,6 @@
 #include "classmeta.hpp"
 #include "asn.hpp"
+#include "config.hpp"
 #include "typechecker.hpp"
 #include <iostream>
 
@@ -77,6 +78,11 @@ Optional<MemberMeta> ClassMetaMan::lookupMethod(ValueType const& classType,
 {
     return lookupVar(classType, methodName.canonName());
 }
+        
+Map<ValueType, ClassMeta> const& ClassMetaMan::allClasses() const
+{
+    return _classes;
+}
 
 ClassMeta const* ClassMetaMan::cur() const
 {
@@ -108,6 +114,11 @@ void ClassMetaMan::addMethod(CanonName const& methodName)
 
     ClassMeta* classMeta = _lookup(cur()->type);
     classMeta->members.insert({ methodName.canonName(), methodName.type() });
+
+    if (methodName.baseName() != config::consName)
+    {
+        classMeta->methods.insert(methodName);
+    }
 }
 
 void ClassMetaMan::setParent(ValueType const& parentType)
