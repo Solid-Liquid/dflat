@@ -124,16 +124,37 @@ decltype(auto) deref(T& t)
 Optional<String> Parser::parseName()
 {
     TRACE;
-    if (NameToken const* tok = match<NameToken>())
+    MATCH(nameToken, NameToken);
+    SUCCESS;
+    return nameToken.name;
+}
+
+Optional<ValueType> Parser::parseValueType()
+{
+    TRACE;
+    MATCH(nameToken, NameToken);
+    Vector<ValueType> tvars;
+
+    if (match<LeftSquareToken>())
     {
-        SUCCESS;
-        return tok->name;
+        Optional<ValueType> tv = parseValueType();
+
+        if (tv)
+        {
+            tvars.push_back(*tv);
+
+            while (match<CommaToken>())
+            {
+                MUST_PARSE(tv1, parseValueType(), "Expected type after comma");
+                tvars.push_back(tv1);
+            }
+
+            MUST_MATCH_(RightSquareToken);
+        }
     }
-    else
-    {
-        FAILURE;
-        return nullopt;
-    }
+
+    SUCCESS;
+    return ValueType(nameToken.name, move(tvars));
 }
 
 Optional<OpType> Parser::parseUnaryOp()
@@ -250,7 +271,7 @@ Optional<FormalArg> Parser::parseFormalArg()
 {
     TRACE;
     ENABLE_ROLLBACK;
-    PARSE(type, parseName());
+    PARSE(type, parseValueType());
     PARSE(var, parseName());
     CANCEL_ROLLBACK;
     SUCCESS;
@@ -333,7 +354,7 @@ ASNPtr Parser::parseNew()
     ASNPtr temp;
 
     MATCH_(NewToken);
-    MUST_PARSE(var, parseName(), "type declaration for new");
+    MUST_PARSE(type, parseValueType(), "type declaration for new");
     MATCH_(LeftParenToken);
     temp = parseExp();
     if(temp)
@@ -349,7 +370,7 @@ ASNPtr Parser::parseNew()
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<NewExp>(var, move(exps));
+    return make_unique<NewExp>(move(type), move(exps));
 }
 
 /**
@@ -554,15 +575,15 @@ ASNPtr Parser::parseVarAssignDecl()
     TRACE;
     ENABLE_ROLLBACK;
 
-    PARSE(varType, parseName());
-    PARSE(varName, parseName());
+    PARSE(type, parseValueType());
+    PARSE(name, parseName());
     MATCH_(AssignToken);
     MUST_PARSE(exp, parseExp(), "Expected expression in assignment");
     MUST_MATCH_(SemiToken);
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<VarDecAssignStm>(varType, varName, move(exp));
+    return make_unique<VarDecAssignStm>(move(type), move(name), move(exp));
 }
 
 ASNPtr Parser::parseVarDecl()
@@ -570,13 +591,13 @@ ASNPtr Parser::parseVarDecl()
     TRACE;
     ENABLE_ROLLBACK;
 
-    PARSE(varType, parseName());
-    PARSE(varName, parseName());
+    PARSE(type, parseValueType());
+    PARSE(name, parseName());
     MUST_MATCH_(SemiToken);
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<VarDecStm>(varType, varName);
+    return make_unique<VarDecStm>(move(type), move(name));
 }
 
 ASNPtr Parser::parseAssignStm()
@@ -619,17 +640,14 @@ ASNPtr Parser::parseIfStm()
     MUST_MATCH_(RightParenToken);
     MUST_PARSE(trueStatements, parseBlock(), "Expected block{} after if statement");
     BlockPtr elseBlock;
-    bool hasElse;
     if( match<ElseToken>() )
     {
         MUST_PARSE(falseStatements, parseBlock(), "Expected block{} after else statement");
         elseBlock = move(falseStatements);
-        hasElse = true;
     }
     else
     {
         elseBlock = make_unique<Block>(Vector<ASNPtr>{});
-        hasElse = false;
     }
 
     CANCEL_ROLLBACK;
@@ -637,7 +655,6 @@ ASNPtr Parser::parseIfStm()
     return make_unique<IfStm>(
         move(logicExp),
         move(trueStatements),
-        hasElse,
         move(elseBlock)
         );
 }
@@ -750,8 +767,8 @@ ASNPtr Parser::parseMethodDecl()
     Vector<FormalArg> exps;
     Optional<FormalArg> temp;
 
-    PARSE(typeName, parseName());
-    PARSE(functionName, parseName());
+    PARSE(retType, parseValueType());
+    PARSE(name, parseName());
     MATCH_(LeftParenToken);
     temp = parseFormalArg();
     if(temp)
@@ -768,8 +785,9 @@ ASNPtr Parser::parseMethodDecl()
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    return make_unique<MethodDef>(typeName, functionName,
-                                  move(exps), move(body));
+    return make_unique<MethodDef>(
+            move(retType), move(name), move(exps), move(body)
+            );
 }
 
 ASNPtr Parser::parseConsDecl()
@@ -804,13 +822,6 @@ ASNPtr Parser::parseConsDecl()
 
 ASNPtr Parser::parseClassDecl()
 {
-    //distinguish variable from methods
-    /*
-    class name {
-        block
-        block
-    }\n
-    */
     TRACE;
     ENABLE_ROLLBACK;
 
@@ -819,20 +830,22 @@ ASNPtr Parser::parseClassDecl()
     ClassDecl* parent = nullptr;
 
     MATCH_(ClassToken);
-    MUST_PARSE(className, parseName(), "Expected class name");
+    MUST_PARSE(classType, parseValueType(), "Expected class type");
 
-    if(match<ExtendsToken>())
+    // Parse optional parent class.
+    if (match<ExtendsToken>())
     {
-        MUST_PARSE(extName, parseName(), "Expected base class name");
-        parent = _classes[extName];
+        MUST_PARSE(parentType, parseValueType(), "Expected base class type");
+        parent = _classes[parentType];
         if(!parent) 
         {
-            throw ParserException("Undeclared Base class: " + extName);
+            throw ParserException("Undeclared Base class: " + parentType.toString());
         }
     }
 
     MUST_MATCH_(LeftBraceToken)
 
+    // Parse class body.
     while(curstm = parseClassStm())
     {
         stm.push_back(move(curstm));
@@ -842,8 +855,8 @@ ASNPtr Parser::parseClassDecl()
 
     CANCEL_ROLLBACK;
     SUCCESS;
-    auto result = make_unique<ClassDecl>(className, move(stm), parent);
-    _classes.insert({className, result.get()});
+    auto result = make_unique<ClassDecl>(classType, move(stm), move(parent));
+    _classes.insert({ classType, result.get() });
     return result;
 }
 

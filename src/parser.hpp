@@ -53,7 +53,7 @@ class Parser
     TokenPtr const _end;
     Tracer _tracer;
 
-    Map<String, ClassDecl*> _classes;
+    Map<ValueType, ClassDecl*> _classes;
 
     TokenPtr const& cur() const;
     void next();
@@ -73,6 +73,7 @@ class Parser
     
 public:
     Optional<String> parseName();
+    Optional<ValueType> parseValueType();
     Optional<OpType> parseUnaryOp();
     Optional<OpType> parseMultiveOp();
     Optional<OpType> parseAdditiveOp();

@@ -128,6 +128,8 @@ TokenPtr Lexer::lookupPunct1(char c) const
     {
         case '(':   return make_unique<LeftParenToken>();
         case ')':   return make_unique<RightParenToken>();
+        case '[':   return make_unique<LeftSquareToken>();
+        case ']':   return make_unique<RightSquareToken>();
         case ',':   return make_unique<CommaToken>();
         case '{':   return make_unique<LeftBraceToken>();
         case '}':   return make_unique<RightBraceToken>();

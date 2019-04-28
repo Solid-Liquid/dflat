@@ -107,10 +107,10 @@ Type IfStm::typeCheckPrv(TypeEnv& env)
     Type condType = logicExp->typeCheck(env);
     env.assertTypeIs(condType, boolType);
 
-    Type trueBlockType = trueStatements->typeCheck(env);
+    Type trueBlockType = trueBlock->typeCheck(env);
     env.assertTypeIs(trueBlockType, voidType);
 
-    Type falseBlockType = falseStatements->typeCheck(env);
+    Type falseBlockType = falseBlock->typeCheck(env);
     env.assertTypeIs(falseBlockType, voidType);
 
     return voidType;
@@ -124,7 +124,7 @@ Type WhileStm::typeCheckPrv(TypeEnv& env)
     Type condType = logicExp->typeCheck(env);
     env.assertTypeIs(condType, boolType);
 
-    Type bodyType = statements->typeCheck(env);
+    Type bodyType = body->typeCheck(env);
     env.assertTypeIs(bodyType, voidType);
 
     return voidType;
@@ -132,13 +132,12 @@ Type WhileStm::typeCheckPrv(TypeEnv& env)
 
 Type MethodDef::typeCheckPrv(TypeEnv& env)
 {
-    MethodType methodType(ValueType(retTypeName), {});
+    MethodType methodType(retType, {});
     ValueType const curClass = env.curClass().type;
 
     for (FormalArg const& arg : args)
     {
-        ValueType argType(arg.typeName);
-        methodType.addArgType(argType);
+        methodType.addArgType(arg.type);
     }
 
     CanonName const methodName(name, methodType);
@@ -146,11 +145,11 @@ Type MethodDef::typeCheckPrv(TypeEnv& env)
 
     for (FormalArg const& arg : args)
     {
-        env.declareLocal(arg.name, ValueType(arg.typeName));
+        env.declareLocal(arg.name, arg.type);
     }
 
     // Typecheck body.
-    statements->typeCheck(env);
+    body->typeCheck(env);
 
     // No longer in a method.
     env.leaveMethod();
@@ -165,8 +164,7 @@ Type ConsDef::typeCheckPrv(TypeEnv& env)
 
     for (FormalArg const& arg : args)
     {
-        ValueType argType(arg.typeName);
-        consType.addArgType(argType);
+        consType.addArgType(arg.type);
     }
 
     CanonName const consName(config::consName, consType);
@@ -174,11 +172,11 @@ Type ConsDef::typeCheckPrv(TypeEnv& env)
 
     for (FormalArg const& arg : args)
     {
-        env.declareLocal(arg.name, ValueType(arg.typeName));
+        env.declareLocal(arg.name, arg.type);
     }
 
     // Typecheck body.
-    statements->typeCheck(env);
+    body->typeCheck(env);
 
     // No longer in a method.
     env.leaveMethod();
@@ -232,7 +230,6 @@ Type MethodStm::typeCheckPrv(TypeEnv& env)
 
 Type NewExp::typeCheckPrv(TypeEnv& env)
 {
-    ValueType const type(typeName);
     env.assertValidType(type);
 
     // Construct method type to get canonical name for constructor.
@@ -281,16 +278,15 @@ Type AssignStm::typeCheckPrv(TypeEnv& env)
 
 Type VarDecStm::typeCheckPrv(TypeEnv& env)
 {
-    ValueType lhsType(typeName);
-    env.assertValidType(lhsType); //make sure that "type" is a declared type
+    env.assertValidType(type); //make sure that "type" is a declared type
     
     if (env.inMethod())
     {
-        env.declareLocal(name, ValueType(typeName)); 
+        env.declareLocal(name, type); 
     }
     else
     {
-        env.addClassVar(name, ValueType(typeName));
+        env.addClassVar(name, type);
     }
     
     return voidType;
@@ -298,9 +294,8 @@ Type VarDecStm::typeCheckPrv(TypeEnv& env)
 
 Type VarDecAssignStm::typeCheckPrv(TypeEnv& env)
 {
-    ValueType lhsType(typeName);
-    env.assertValidType(lhsType); //make sure that "type" is a declared type
-    Type rhsType = value->typeCheck(env);
+    env.assertValidType(lhsType); //make is a declared type
+    Type rhsType = rhs->typeCheck(env);
     env.assertTypeIsOrBase(lhsType, rhsType);
 
     //TODO reinstate this helpful error somehow.
@@ -316,11 +311,11 @@ Type VarDecAssignStm::typeCheckPrv(TypeEnv& env)
 
     if (env.inMethod())
     {
-        env.declareLocal(name, ValueType(typeName)); 
+        env.declareLocal(lhsName, lhsType); 
     }
     else
     {
-        env.addClassVar(name, ValueType(typeName));
+        env.addClassVar(lhsName, lhsType);
     }
     
     return voidType;
@@ -351,28 +346,21 @@ Type RetStm::typeCheckPrv(TypeEnv& env)
 
 Type ClassDecl::typeCheckPrv(TypeEnv& env)
 {
-    // Entering new class.
-    ValueType myType(name);
-    env.enterClass(myType);
+    env.enterClass(type); // Set class context.
 
     if (parent)
     {
-        ValueType baseType(parent->name);
-        env.assertValidType(baseType); //check if the base class is valid
-        env.setClassParent(baseType);
+        env.assertValidType(parent->type);
+        env.setClassParent(parent->type);
     }
     
-    // Typecheck member vars/methods.
     for (ASNPtr& member : members)
     {
         member->typeCheck(env);
     }
 
-    // No longer in a class.
-    env.leaveClass();
-
-    // Final type is just the class name.
-    return myType;
+    env.leaveClass(); // Clear class context.
+    return type;
 }
 
 } //namespace dflat

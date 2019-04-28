@@ -9,25 +9,27 @@ namespace dflat
 
 using TypeName = String;
 
-// A simple type consisting only of a name.
-// Can be used as a key in a Set or Map.
+// A "single" type. 
+// This may contain arguments representing either
+//  free type variables or applied type arguments.
 class ValueType
 {
     private:
         TypeName _name;
+        Vector<ValueType> _tvars;
 
     public:
-        explicit ValueType(TypeName const&);
+        explicit ValueType(TypeName);
+        ValueType(TypeName, Vector<ValueType>);
         
         TypeName const& name() const;
-        String toString() const; // Identical to name().
+        Vector<ValueType> const& tvars() const;
+        String toString() const;
         bool operator==(ValueType const&) const;
         bool operator!=(ValueType const&) const;
-        bool operator<(ValueType const&) const;
 };
 
-// A complex type consisting of a return type and argument types.
-// Its types are themselves ValueTypes.
+// A method type consisting of a return type and argument types.
 class MethodType
 {
     private:

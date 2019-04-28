@@ -27,15 +27,15 @@ String opString(OpType);
 // Type for method definition arguments.
 struct FormalArg
 {
-    TypeName typeName;
+    ValueType type;
     String name;
 };
 
 inline
 bool operator ==(FormalArg const& a, FormalArg const& b)
 {
-    return a.typeName == b.typeName
-        && a.name     == b.name;
+    return a.type == b.type
+        && a.name == b.name;
 }
 
 class ASN
@@ -97,8 +97,8 @@ class VariableExp : public ASN
         Optional<String> object;
         String name;
 
-        VariableExp(String const&); // var or implicit this.member
-        VariableExp(String const&, String const&); // object, member
+        VariableExp(String); // var or implicit this.member
+        VariableExp(String, String); // object, member
         ASNType getType() const { return expVariable; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -203,6 +203,7 @@ class Block : public ASN
 {
     public:
         Vector<ASNPtr> statements;
+    
         Block() = default;
         Block(Vector<ASNPtr>&&);
         ASNType getType() const { return block; }
@@ -222,12 +223,11 @@ class IfStm : public ASN
 {
     //Example Input: if(x == y) { statement } else { statement }
     public:
-        ASNPtr logicExp;
-        BlockPtr trueStatements;
-        bool hasFalse;          //check if there is an else{} block
-        BlockPtr falseStatements;
+        ASNPtr   logicExp;
+        BlockPtr trueBlock;
+        BlockPtr falseBlock;
 
-        IfStm(ASNPtr&&, BlockPtr&&, bool, BlockPtr&&);
+        IfStm(ASNPtr&&, BlockPtr&&, BlockPtr&&);
         ASNType getType() const { return stmIf; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -235,10 +235,9 @@ class IfStm : public ASN
 
         bool operator==(IfStm const& other) const
         {
-            return logicExp        == other.logicExp
-                && trueStatements  == other.trueStatements
-                && hasFalse        == other.hasFalse
-                && falseStatements == other.falseStatements;
+            return logicExp   == other.logicExp
+                && trueBlock  == other.trueBlock
+                && falseBlock == other.falseBlock;
         }
 
         DECLARE_CMP(IfStm)
@@ -248,8 +247,8 @@ class WhileStm : public ASN
 {
     //Example Input: while(x == y) { statement }
     public:
-        ASNPtr logicExp;
-        BlockPtr statements;
+        ASNPtr   logicExp;
+        BlockPtr body;
 
         WhileStm(ASNPtr&&, BlockPtr&&);
         ASNType getType() const { return stmWhile; }
@@ -259,8 +258,8 @@ class WhileStm : public ASN
 
         bool operator==(WhileStm const& other) const
         {
-            return logicExp   == other.logicExp
-                && statements == other.statements;
+            return logicExp == other.logicExp
+                && body     == other.body;
         }
 
         DECLARE_CMP(WhileStm)
@@ -270,12 +269,12 @@ class MethodDef : public ASN
 {
     //Example Input: int func(int x, int y) { statement }
     public:
-        String retTypeName;
+        ValueType retType;
         String name;
         Vector<FormalArg> args;
-        BlockPtr statements;
+        BlockPtr body;
 
-        MethodDef(String, String, Vector<FormalArg>&&, BlockPtr&&);
+        MethodDef(ValueType, String, Vector<FormalArg>&&, BlockPtr&&);
         ASNType getType() const { return defMethod; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -283,10 +282,10 @@ class MethodDef : public ASN
 
         bool operator==(MethodDef const& other) const
         {
-            return retTypeName == other.retTypeName
-                && name       == other.name
-                && args       == other.args
-                && statements == other.statements;
+            return retType == other.retType
+                && name    == other.name
+                && args    == other.args
+                && body    == other.body;
         }
 
         DECLARE_CMP(MethodDef)
@@ -297,7 +296,7 @@ class ConsDef : public ASN
     //Example Input: cons(int x, int y) { statements }
     public:
         Vector<FormalArg> args;
-        BlockPtr statements;
+        BlockPtr body;
 
         ConsDef(Vector<FormalArg>&&, BlockPtr&&);
         ASNType getType() const { return defMethod; }
@@ -307,8 +306,8 @@ class ConsDef : public ASN
 
         bool operator==(ConsDef const& other) const
         {
-            return args       == other.args
-                && statements == other.statements;
+            return args == other.args
+                && body == other.body;
         }
 
         DECLARE_CMP(ConsDef)
@@ -383,11 +382,11 @@ class VarDecStm : public ASN
 {
     //Example Input: int x;
     public:
-        String typeName;
+        ValueType type;
         String name;
 
         // first: type, second: name, third: exp
-        VarDecStm(String, String);
+        VarDecStm(ValueType, String);
         ASNType getType() const { return stmVarDec; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -395,7 +394,7 @@ class VarDecStm : public ASN
 
         bool operator==(VarDecStm const& other) const
         {
-            return typeName == other.typeName
+            return type == other.type
                 && name == other.name;
         }
 
@@ -406,12 +405,12 @@ class VarDecAssignStm : public ASN
 {
     //Example Input: int x = 5;
     public:
-        String typeName;
-        String name;
-        ASNPtr value;
+        ValueType lhsType;
+        String lhsName;
+        ASNPtr rhs;
 
         // first: type, second: name, third: exp
-        VarDecAssignStm(String, String, ASNPtr&&);
+        VarDecAssignStm(ValueType, String, ASNPtr&&);
         ASNType getType() const { return stmVarDecAssign; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -419,9 +418,9 @@ class VarDecAssignStm : public ASN
 
         bool operator==(VarDecAssignStm const& other) const
         {
-            return typeName == other.typeName
-                && name == other.name
-                && value == other.value;
+            return lhsType == other.lhsType
+                && lhsName == other.lhsName
+                && rhs     == other.rhs;
         }
 
         DECLARE_CMP(VarDecAssignStm)
@@ -451,10 +450,10 @@ class NewExp : public ASN
 {
     //Example Input: new type(exp, exp)
     public:
-        String typeName;
+        ValueType type;
         Vector<ASNPtr> args;
 
-        NewExp(String, Vector<ASNPtr>&&);
+        NewExp(ValueType, Vector<ASNPtr>&&);
         ASNType getType() const { return expNew; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -462,7 +461,7 @@ class NewExp : public ASN
 
         bool operator==(NewExp const& other) const
         {
-            return typeName == other.typeName
+            return type == other.type
                 && args == other.args;
         }
 
@@ -471,18 +470,12 @@ class NewExp : public ASN
 
 class ClassDecl : public ASN
 {
-    /*
-    class name              (optional): extends baseClass
-    {
-        block
-    };
-    */
     public:
-        String name;
+        ValueType type;
         Vector<ASNPtr> members;
         ClassDecl* parent;
 
-        ClassDecl(String, Vector<ASNPtr>&&, ClassDecl*); 
+        ClassDecl(ValueType, Vector<ASNPtr>&&, ClassDecl*); 
         ASNType getType() const { return declClass; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -490,9 +483,9 @@ class ClassDecl : public ASN
         
         bool operator==(ClassDecl const& other) const
         {
-            return name   == other.name
+            return type    == other.type
                 && members == other.members
-                && parent == other.parent;
+                && parent  == other.parent;
         }
         
         DECLARE_CMP(ClassDecl)

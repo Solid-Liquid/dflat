@@ -342,7 +342,6 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ==
              ~IfStm(~NumberExp(1),
                       emptyBlock(),
-                      false,
                       emptyBlock())
              );
 
@@ -360,7 +359,6 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ==
              ~IfStm(~NumberExp(1),
                     emptyBlock(),
-                    true,
                     emptyBlock())
              );
 
@@ -378,7 +376,6 @@ TEST_CASE( "Parser works correctly", "[parser]" )
              ==
              ~IfStm(~BoolExp(true),
                     emptyBlock(),
-                    true,
                     emptyBlock())
              );
 
@@ -438,7 +435,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 SemiToken()
                 )
              ==
-             ~VarDecStm("type", "name")
+             ~VarDecStm(ValueType("type"), "name")
              );
 
     REQUIRE( PT(parseVarDecl,           //int var;  -> variable declaration
@@ -447,7 +444,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 SemiToken()
                 )
              ==
-             ~VarDecStm("int", "var")
+             ~VarDecStm(intType, "var")
              );
 
     REQUIRE( PT(parseVarAssignDecl,           //type name = 1;  -> variable declaration/assignment
@@ -458,7 +455,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 SemiToken()
                 )
              ==
-             ~VarDecAssignStm("type", "name", ~NumberExp(1))
+             ~VarDecAssignStm(ValueType("type"), "name", ~NumberExp(1))
              );
 
     REQUIRE( PT(parseVarAssignDecl,           //bool name = true;  -> variable declaration with bool
@@ -469,7 +466,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 SemiToken()
                 )
              ==
-             ~VarDecAssignStm("bool", "name", ~BoolExp(true))
+             ~VarDecAssignStm(boolType, "name", ~BoolExp(true))
              );
 
 
@@ -480,8 +477,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 RightParenToken()
                 )
              ==
-             ~NewExp("int",
-                      Vector<ASNPtr>{})
+             ~NewExp(intType, Vector<ASNPtr>{})
              );
 
 
@@ -493,8 +489,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 RightParenToken()
                 )
              ==
-             ~NewExp("int",
-                      asns(NumberExp(3)))
+             ~NewExp(intType, asns(NumberExp(3)))
              );
 
 
@@ -508,7 +503,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 RightParenToken()
                 )
              ==
-             ~NewExp("int",
+             ~NewExp(intType,
                       asns(NumberExp(3), VariableExp("suh")))
              );
 
@@ -596,7 +591,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 SemiToken()
                 )
              ==
-             ~ClassDecl("MyClass",Vector<ASNPtr>(),nullptr)
+             ~ClassDecl(ValueType("MyClass"), Vector<ASNPtr>(), nullptr)
             );
 
     // TODO: 
@@ -624,7 +619,7 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 RightBraceToken()
                 )
              ==
-             ~MethodDef("int","func",Vector<FormalArg>(), emptyBlock())
+             ~MethodDef(intType, "func", Vector<FormalArg>(), emptyBlock())
              );
 
     /*

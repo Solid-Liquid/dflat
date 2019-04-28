@@ -73,13 +73,14 @@ ASN::~ASN()
 }
 
 //VariableExp:
-VariableExp::VariableExp(String const& name_)
-    : name(name_)
+VariableExp::VariableExp(String name_)
+    : name(move(name_))
 {
 }
 
-VariableExp::VariableExp(String const& object_, String const& member_)
-    : object(object_), name(member_)
+VariableExp::VariableExp(String object_, String member_)
+    : object(move(object_))
+    , name(move(member_))
 {
 }
 
@@ -122,8 +123,8 @@ String BoolExp::toString() const
 
 //BinopExp:
 BinopExp::BinopExp(ASNPtr&& _lhs, OpType _op, ASNPtr&& _rhs)
-    : lhs(std::move(_lhs))
-    , rhs(std::move(_rhs))
+    : lhs(move(_lhs))
+    , rhs(move(_rhs))
     , op(_op)
 {
 }
@@ -136,7 +137,8 @@ String BinopExp::toString() const
 
 //UnopExp:
 UnopExp::UnopExp(ASNPtr&& _rhs, OpType _op)
-    : rhs(move(_rhs)), op(_op)
+    : rhs(move(_rhs))
+    , op(_op)
 {
 }
 
@@ -163,69 +165,73 @@ String Block::toString() const
 }
 
 //IfBlock:
-IfStm::IfStm(ASNPtr&& _logicExp, BlockPtr&& _trueStatements, bool _hasFalse, BlockPtr&& _falseStatements)
+IfStm::IfStm(ASNPtr&& _logicExp, BlockPtr&& _trueBlock, BlockPtr&& _falseBlock)
     : logicExp(move(_logicExp))
-    , trueStatements(move(_trueStatements))
-    , hasFalse(_hasFalse)
-    , falseStatements(move(_falseStatements))
+    , trueBlock(move(_trueBlock))
+    , falseBlock(move(_falseBlock))
 {
 }
 
 String IfStm::toString() const
 {
     String str = "if(" + logicExp->toString() + ")\n";
-    str += trueStatements->toString();
-    if(hasFalse)
+    str += trueBlock->toString(); 
+
+    if (!falseBlock->statements.empty())
     {
         str += "\nelse\n";
-        str += falseStatements->toString();
+        str += falseBlock->toString();
     }
     return str;
 }
 
 //WhileStm:
-WhileStm::WhileStm(ASNPtr&& _logicExp, BlockPtr&& _statements)
-    : logicExp(move(_logicExp)), statements(move(_statements))
+WhileStm::WhileStm(ASNPtr&& _logicExp, BlockPtr&& _body)
+    : logicExp(move(_logicExp))
+    , body(move(_body))
 {
 }
 
 String WhileStm::toString() const
 {
     String str = "while(" + logicExp->toString() + ")\n";
-    str += statements->toString();
+    str += body->toString();
     return str;
 }
 
 //MethodDef:
-MethodDef::MethodDef(String _retTypeName, String _name,
-             Vector<FormalArg>&& _args, BlockPtr&& _statements)
-    : retTypeName(_retTypeName)
-    , name(_name)
+MethodDef::MethodDef(ValueType _retType, String _name,
+             Vector<FormalArg>&& _args, BlockPtr&& _body)
+    : retType(move(_retType))
+    , name(move(_name))
     , args(move(_args))
-    , statements(move(_statements))
+    , body(move(_body))
 {
 }
 
 String MethodDef::toString() const
 {
-    String str = retTypeName + " " + name + "(";
+    String str = retType.toString() + " " + name + "(";
     int track = 0;
-    for(auto&& ar : args)
+    for(FormalArg const& arg : args)
     {
         if(track > 0)
+        {
             str += ", ";
-        str += ar.typeName + " " + ar.name;
+        }
+
+        str += arg.type.toString() + " " + arg.name;
         ++track;
     }
     str += ")\n";
-    str += statements->toString();
+    str += body->toString();
     return str;
 }
 
 //ConsDef:
-ConsDef::ConsDef(Vector<FormalArg>&& _args, BlockPtr&& _statements)
+ConsDef::ConsDef(Vector<FormalArg>&& _args, BlockPtr&& _body)
     : args(move(_args))
-    , statements(move(_statements))
+    , body(move(_body))
 {
 }
 
@@ -233,21 +239,27 @@ String ConsDef::toString() const
 {
     String str = "cons(";
     int track = 0;
-    for(auto&& ar : args)
+    
+    for (FormalArg const& arg : args)
     {
-        if(track > 0)
+        if (track > 0)
+        {
             str += ", ";
-        str += ar.typeName + " " + ar.name;
+        }
+
+        str += arg.type.toString() + " " + arg.name;
         ++track;
     }
+
     str += ")\n";
-    str += statements->toString();
+    str += body->toString();
     return str;
 }
 
 //MethodExp:
 MethodExp::MethodExp(Variable _method, Vector<ASNPtr>&& _args)
-    : method(move(_method)), args(move(_args))
+    : method(move(_method))
+    , args(move(_args))
 {
 }
 
@@ -255,13 +267,18 @@ String MethodExp::toString() const
 {
     String str = method.toString() + "(";
     int track = 0;
-    for(auto&& ar : args)
+   
+    for (ASNPtr const& arg : args)
     {
-        if(track > 0)
+        if (track > 0)
+        {
             str += ", ";
-        str += ar->toString();
+        }
+
+        str += arg->toString();
         ++track;
     }
+    
     str += ")";
     return str;
 }
@@ -278,29 +295,36 @@ String MethodStm::toString() const
 }
 
 //NewExp:
-NewExp::NewExp(String _typeName, Vector<ASNPtr>&& _args)
-    : typeName(_typeName), args(move(_args))
+NewExp::NewExp(ValueType _type, Vector<ASNPtr>&& _args)
+    : type(move(_type))
+    , args(move(_args))
 {
 }
 
 String NewExp::toString() const
 {
-    String str = "new " + typeName + " (";
+    String str = "new " + type.toString() + " (";
     size_t track = 0;
-    for(auto&& ar : args)
+
+    for(ASNPtr const& arg : args)
     {
-        if(track > 0)
+        if (track > 0)
+        {
             str += ", ";
-        str += ar -> toString();
+        }
+
+        str += arg->toString();
         ++track;
     }
+
     str += ")";
     return str;
 }
 
 //AssignStm:
 AssignStm::AssignStm(ASNPtr&& _lhs, ASNPtr&& _rhs)
-    : lhs(move(_lhs)), rhs(move(_rhs))
+    : lhs(move(_lhs))
+    , rhs(move(_rhs))
 {
 }
 
@@ -310,25 +334,28 @@ String AssignStm::toString() const
 }
 
 //VarDecStm:
-VarDecStm::VarDecStm(String _typeName, String _name)
-    : typeName(_typeName), name(_name)
+VarDecStm::VarDecStm(ValueType _type, String _name)
+    : type(move(_type))
+    , name(move(_name))
 {
 }
 
 String VarDecStm::toString() const
 {
-    return typeName + " " + name + ";";
+    return type.toString() + " " + name + ";";
 }
 
 //VarDecAssignStm:
-VarDecAssignStm::VarDecAssignStm(String _typeName, String _name, ASNPtr&& _value)
-    : typeName(_typeName), name(_name), value(move(_value))
+VarDecAssignStm::VarDecAssignStm(ValueType _lhsType, String _lhsName, ASNPtr&& _rhs)
+    : lhsType(move(_lhsType))
+    , lhsName(move(_lhsName))
+    , rhs(move(_rhs))
 {
 }
 
 String VarDecAssignStm::toString() const
 {
-    return typeName + " " + name + " = " + value->toString() + ";";
+    return lhsType.toString() + " " + lhsName + " = " + rhs->toString() + ";";
 }
 
 //RetStm:
@@ -343,19 +370,29 @@ String RetStm::toString() const
 }
 
 // Class Definition
-ClassDecl::ClassDecl(String _name, Vector<ASNPtr>&& _members, ClassDecl* _parent)
-    : name(_name), members(move(_members)), parent(_parent)
+ClassDecl::ClassDecl(ValueType _type, Vector<ASNPtr>&& _members, ClassDecl* _parent)
+    : type(move(_type))
+    , members(move(_members))
+    , parent(_parent)
 {
 }
 
 String ClassDecl::toString() const
 {
-    String str = "class " + name;
-    if(parent)
-        str += " extends " + parent->name;
+    String str = "class " + type.toString();
+
+    if (parent)
+    {
+        str += " extends " + parent->type.toString();
+    }
+    
     str += "\n{\n";
-    for(auto&& ex : members)
-        str += ex->toString() + "\n\n";
+    
+    for (ASNPtr const& m : members)
+    {
+        str += m->toString() + "\n\n";
+    }
+    
     str += "};";
     return str;
 }

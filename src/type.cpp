@@ -83,8 +83,13 @@ bool Type::operator!=(Type const& other) const
 }
 
 
-ValueType::ValueType(TypeName const& name)
-    : _name(name)
+ValueType::ValueType(TypeName name)
+    : _name(std::move(name))
+{}
+
+ValueType::ValueType(TypeName name, Vector<ValueType> tvars)
+    : _name(std::move(name))
+    , _tvars(std::move(tvars))
 {}
 
 TypeName const& ValueType::name() const
@@ -92,24 +97,49 @@ TypeName const& ValueType::name() const
     return _name;
 }
 
+Vector<ValueType> const& ValueType::tvars() const
+{
+    return _tvars;
+}
+
 String ValueType::toString() const
 {
-    return _name;
+    String s = _name;
+    
+    if (!_tvars.empty())
+    {
+        s += "[";
+        bool first = true;
+
+        for (ValueType const& tv : _tvars)
+        {
+            if (first) 
+            {
+                first = false;
+            }
+            else
+            {
+                s += ",";
+            }
+
+            s += tv.toString();
+        }
+
+        s += "]";
+    }
+
+    return s;
 }
 
 bool ValueType::operator==(ValueType const& other) const
 {
-    return _name == other._name;
+    return _name == other._name
+        && _tvars == other._tvars;
 }
 
 bool ValueType::operator!=(ValueType const& other) const
 {
     return !(*this == other);
-}
-
-bool ValueType::operator<(ValueType const& other) const
-{
-    return _name < other._name;
 }
 
 
@@ -134,7 +164,7 @@ String MethodType::toString() const
             s += ",";
         }
 
-        s += arg.name();
+        s += arg.toString();
     }
 
     s += ")";

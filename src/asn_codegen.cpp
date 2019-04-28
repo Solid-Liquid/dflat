@@ -93,13 +93,13 @@ void IfStm::generateCode(GenEnv & env) const
         << CodeLiteral("if (")
         << logicExp
         << CodeLiteral(")\n")
-        << trueStatements;
+        << trueBlock;
 
-    if (hasFalse)
+    if (!falseBlock->statements.empty())
     {
         env << CodeTabs()
             << CodeLiteral("else\n")
-            << falseStatements;
+            << falseBlock;
     }
 }
 
@@ -109,7 +109,7 @@ void WhileStm::generateCode(GenEnv & env) const
         << CodeLiteral("while (")
         << logicExp
         << CodeLiteral(")\n")
-        << statements;
+        << body;
 }
 
 static
@@ -136,16 +136,14 @@ void emitMethod(GenEnv& env, CanonName const& methodName,
 
     env << CodeLiteral("(void* this");
     
-    for(auto&& arg : args)
+    for(FormalArg const& arg : args)
     {
-        ValueType const argType(arg.typeName);
-
         env << CodeLiteral(", ")
-            << CodeTypeName(argType)
+            << CodeTypeName(arg.type)
             << CodeLiteral(" ")
             << CodeVarName(arg.name);
         
-        env.declareLocal(arg.name, argType);
+        env.declareLocal(arg.name, arg.type);
     }
 
     env << CodeLiteral(")\n");
@@ -181,8 +179,7 @@ void emitMethod(GenEnv& env, CanonName const& methodName,
 void MethodDef::generateCode(GenEnv & env) const
 {
     CanonName const methodName(name, asnType->method());
-    ValueType const retType(retTypeName);
-    emitMethod(env, methodName, retType, args, statements->statements, false);
+    emitMethod(env, methodName, retType, args, body->statements, false);
 }
 
 static
@@ -196,7 +193,7 @@ void emitConstructor(GenEnv& env, MethodType const& consType,
 
 void ConsDef::generateCode(GenEnv & env) const
 {
-    emitConstructor(env, asnType->method(), args, statements->statements);
+    emitConstructor(env, asnType->method(), args, body->statements);
 }
 
 void MethodExp::generateCode(GenEnv & env) const
@@ -207,6 +204,7 @@ void MethodExp::generateCode(GenEnv & env) const
     auto [thisType, methodName] = env.getMethodMeta(this);
     ValueType objectType = env.getLocalType(objectName);
 
+    // CALL is a macro (see codegenerator_tools.cpp).
     env << CodeLiteral("CALL(")
         << CodeTypeName(asnType->value())
         << CodeLiteral(", ")
@@ -232,18 +230,15 @@ void MethodStm::generateCode(GenEnv& env) const
 
 void NewExp::generateCode(GenEnv& env) const
 {
-    ValueType const resultType(typeName);
-
     // Need constructor's canonical name.
     auto [thisType, consName] = env.getMethodMeta(this);
-    (void)thisType; // unused.
-    if (resultType != thisType) //TODO ?
+
+    if (type != thisType) // Small sanity check.
     {
-        throw std::logic_error(resultType.toString() + " != " + thisType.toString());
+        throw std::logic_error("new: " + type.toString() + " != " + thisType.toString());
     }
 
-    // NEW(T,C,Args...) is a macro (see codegenerator_tools.cpp).
-
+    // NEW/NEW0 are macros (see codegenerator_tools.cpp).
     if (args.empty())
     {
         env << CodeLiteral("NEW0(");
@@ -253,9 +248,9 @@ void NewExp::generateCode(GenEnv& env) const
         env << CodeLiteral("NEW(");
     }
    
-    env << CodeClassDecl(resultType)
+    env << CodeClassDecl(type)
         << CodeLiteral(", ")
-        << CodeVTableName(resultType)
+        << CodeVTableName(type)
         << CodeLiteral(", ")
         << CodeConsName(consName);
 
@@ -279,35 +274,31 @@ void AssignStm::generateCode(GenEnv& env) const
 
 void VarDecStm::generateCode(GenEnv& env) const
 {
-    ValueType const varType(typeName);
-
     env << CodeTabs()
-        << CodeTypeName(varType)
+        << CodeTypeName(type)
         << CodeLiteral(" ")
         << CodeVarName(name)
         << CodeLiteral(";\n");
 
     if (env.inMethod())
     {
-        env.declareLocal(name, varType);
+        env.declareLocal(name, type);
     }
 }
 
 void VarDecAssignStm::generateCode(GenEnv& env) const
 {
-    ValueType const varType(typeName);
-    
     env << CodeTabs()
-        << CodeTypeName(varType)
+        << CodeTypeName(lhsType)
         << CodeLiteral(" ")
-        << CodeVarName(name)
+        << CodeVarName(lhsName)
         << CodeLiteral(" = ")
-        << value
+        << rhs
         << CodeLiteral(";\n");
 
     if (env.inMethod())
     {
-        env.declareLocal(name, varType); 
+        env.declareLocal(lhsName, lhsType); 
     }
 }
 
@@ -321,21 +312,18 @@ void RetStm::generateCode(GenEnv& env) const
 
 void ClassDecl::generateCode(GenEnv& env) const
 {
-    ValueType const classType(name);
-    env.enterClass(classType);
+    env.enterClass(type);
                        
     env << CodeLiteral("struct ")
-        << CodeClassDecl(classType)
+        << CodeClassDecl(type)
         << CodeLiteral("\n{\n")
         << CodeTabIn();
 
     if (parent) 
     {
-        ValueType const parentType(parent->name);
-
         env << CodeTabs()
             << CodeLiteral("struct ")
-            << CodeClassDecl(parentType)
+            << CodeClassDecl(parent->type)
             << CodeLiteral(" ")
             << CodeParent()
             << CodeLiteral(";\n");
@@ -347,7 +335,7 @@ void ClassDecl::generateCode(GenEnv& env) const
     }
     
     // Emit default constructor.
-    emitConstructor(env, MethodType(classType, {}), {}, {});
+    emitConstructor(env, MethodType(type, {}), {}, {});
 
     // Emit members.
     for (ASNPtr const& member : members)

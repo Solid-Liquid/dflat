@@ -7,12 +7,42 @@
 
 namespace dflat
 {
-    enum TokType { tokNum, tokVar, tokIf, tokElse, tokPlus, tokMinus,
-                    tokDiv, tokAssign, tokMult, tokRBrace, tokLBrace,
-                    tokLParen, tokRParen, tokComma, tokSemi, tokWhile,
-                    tokAnd, tokOr, tokEq, tokNotEq, tokNot, tokMember,
-                    tokTrue, tokFalse, tokEnd, tokNew, tokReturn,
-                    tokThis, tokClass, tokExtends, tokCons};
+    enum TokType 
+    { 
+        tokNum, 
+        tokVar, 
+        tokIf, 
+        tokElse, 
+        tokPlus, 
+        tokMinus,
+        tokDiv, 
+        tokAssign, 
+        tokMult, 
+        tokRBrace, 
+        tokLBrace,
+        tokLParen, 
+        tokRParen, 
+        tokLSquare, 
+        tokRSquare, 
+        tokComma, 
+        tokSemi, 
+        tokWhile,
+        tokAnd, 
+        tokOr, 
+        tokEq, 
+        tokNotEq, 
+        tokNot, 
+        tokMember,
+        tokTrue, 
+        tokFalse, 
+        tokEnd, 
+        tokNew, 
+        tokReturn,
+        tokThis, 
+        tokClass, 
+        tokExtends, 
+        tokCons,
+    };
 
     class Token
     {
@@ -128,6 +158,20 @@ namespace dflat
     {
     public:
         TokType getType() const { return tokRParen; }
+        String toString() const { return ")"; }
+    };
+    
+    class LeftSquareToken : public Token
+    {
+    public:
+        TokType getType() const { return tokLSquare; }
+        String toString() const { return "("; }
+    };
+
+    class RightSquareToken : public Token
+    {
+    public:
+        TokType getType() const { return tokRSquare; }
         String toString() const { return ")"; }
     };
 
