@@ -133,7 +133,7 @@ String ValueType::toString() const
 
 bool ValueType::operator==(ValueType const& other) const
 {
-    return _name == other._name
+    return _name  == other._name
         && _tvars == other._tvars;
 }
 

@@ -583,7 +583,8 @@ TEST_CASE( "Parser works correctly", "[parser]" )
             ~RetStm(~NumberExp(1))
              );
 
-    REQUIRE( PT(parseClassDecl, // class MyClass { };  -> ClassDeclaration
+    // Class declaration.
+    REQUIRE( PT(parseClassDecl,
                 ClassToken(),
                 NameToken("MyClass"),
                 LeftBraceToken(),
@@ -591,10 +592,35 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 SemiToken()
                 )
              ==
-             ~ClassDecl(ValueType("MyClass"), Vector<ASNPtr>(), nullopt)
+             ~ClassDecl(
+                 ValueType("MyClass"), 
+                 Vector<ASNPtr>(), nullopt
+                 )
             );
     
-    REQUIRE( PT(parseClassDecl, // class MyClass extends BaseClass { };  -> ClassDeclaration
+    // Class with type variables.
+    REQUIRE( PT(parseClassDecl,
+                ClassToken(),
+                NameToken("MyClass"),
+                LeftSquareToken(),
+                NameToken("a"),
+                CommaToken(),
+                NameToken("b"),
+                RightSquareToken(),
+                LeftBraceToken(),
+                RightBraceToken(),
+                SemiToken()
+                )
+             ==
+             ~ClassDecl(
+                 ValueType("MyClass", { ValueType("a"), ValueType("b") }), 
+                 Vector<ASNPtr>(), 
+                 nullopt
+                 )
+            );
+    
+    // Class with parent class.
+    REQUIRE( PT(parseClassDecl,
                 ClassToken(),
                 NameToken("MyClass"),
                 ExtendsToken(),
@@ -604,10 +630,12 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 SemiToken()
                 )
              ==
-             ~ClassDecl(ValueType("MyClass"),
-                 Vector<ASNPtr>(), ValueType("BaseClass"))
+             ~ClassDecl(
+                 ValueType("MyClass"),
+                 Vector<ASNPtr>(), 
+                 ValueType("BaseClass")
+                 )
             );
-    /**/
 
     REQUIRE( PT(parseMethodDecl,            //int func(){ }  -> MethodDef
                 NameToken("int"),
