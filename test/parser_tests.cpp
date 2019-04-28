@@ -591,23 +591,22 @@ TEST_CASE( "Parser works correctly", "[parser]" )
                 SemiToken()
                 )
              ==
-             ~ClassDecl(ValueType("MyClass"), Vector<ASNPtr>(), nullptr)
+             ~ClassDecl(ValueType("MyClass"), Vector<ASNPtr>(), nullopt)
             );
-
-    // TODO: 
     
-//    REQUIRE( PT(parseClassDecl, // class MyClass extends BaseClass { };  -> ClassDeclaration
-//                ClassToken(),
-//                NameToken("MyClass"),
-//                ExtendsToken(),
-//                NameToken("BaseClass"),
-//                LeftBraceToken(),
-//                RightBraceToken(),
-//                SemiToken()
-//                )
-//             ==
-//             ~ClassDecl("MyClass",Vector<ASNPtr>(),nullptr)
-//            );
+    REQUIRE( PT(parseClassDecl, // class MyClass extends BaseClass { };  -> ClassDeclaration
+                ClassToken(),
+                NameToken("MyClass"),
+                ExtendsToken(),
+                NameToken("BaseClass"),
+                LeftBraceToken(),
+                RightBraceToken(),
+                SemiToken()
+                )
+             ==
+             ~ClassDecl(ValueType("MyClass"),
+                 Vector<ASNPtr>(), ValueType("BaseClass"))
+            );
     /**/
 
     REQUIRE( PT(parseMethodDecl,            //int func(){ }  -> MethodDef

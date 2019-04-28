@@ -348,10 +348,10 @@ Type ClassDecl::typeCheckPrv(TypeEnv& env)
 {
     env.enterClass(type); // Set class context.
 
-    if (parent)
+    if (parentType)
     {
-        env.assertValidType(parent->type);
-        env.setClassParent(parent->type);
+        env.assertValidType(*parentType);
+        env.setClassParent(*parentType);
     }
     
     for (ASNPtr& member : members)

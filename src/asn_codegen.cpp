@@ -319,11 +319,11 @@ void ClassDecl::generateCode(GenEnv& env) const
         << CodeLiteral("\n{\n")
         << CodeTabIn();
 
-    if (parent) 
+    if (parentType) 
     {
         env << CodeTabs()
             << CodeLiteral("struct ")
-            << CodeClassDecl(parent->type)
+            << CodeClassDecl(*parentType)
             << CodeLiteral(" ")
             << CodeParent()
             << CodeLiteral(";\n");

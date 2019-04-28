@@ -370,10 +370,11 @@ String RetStm::toString() const
 }
 
 // Class Definition
-ClassDecl::ClassDecl(ValueType _type, Vector<ASNPtr>&& _members, ClassDecl* _parent)
+ClassDecl::ClassDecl(ValueType _type, Vector<ASNPtr>&& _members,
+       Optional<ValueType> _parentType)
     : type(move(_type))
     , members(move(_members))
-    , parent(_parent)
+    , parentType(move(_parentType))
 {
 }
 
@@ -381,9 +382,9 @@ String ClassDecl::toString() const
 {
     String str = "class " + type.toString();
 
-    if (parent)
+    if (parentType)
     {
-        str += " extends " + parent->type.toString();
+        str += " extends " + parentType->toString();
     }
     
     str += "\n{\n";

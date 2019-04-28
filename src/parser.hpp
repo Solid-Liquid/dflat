@@ -53,8 +53,6 @@ class Parser
     TokenPtr const _end;
     Tracer _tracer;
 
-    Map<ValueType, ClassDecl*> _classes;
-
     TokenPtr const& cur() const;
     void next();
 

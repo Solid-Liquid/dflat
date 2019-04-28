@@ -473,9 +473,9 @@ class ClassDecl : public ASN
     public:
         ValueType type;
         Vector<ASNPtr> members;
-        ClassDecl* parent;
+        Optional<ValueType> parentType;
 
-        ClassDecl(ValueType, Vector<ASNPtr>&&, ClassDecl*); 
+        ClassDecl(ValueType, Vector<ASNPtr>&&, Optional<ValueType>); 
         ASNType getType() const { return declClass; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -483,9 +483,9 @@ class ClassDecl : public ASN
         
         bool operator==(ClassDecl const& other) const
         {
-            return type    == other.type
-                && members == other.members
-                && parent  == other.parent;
+            return type       == other.type
+                && members    == other.members
+                && parentType == other.parentType;
         }
         
         DECLARE_CMP(ClassDecl)
