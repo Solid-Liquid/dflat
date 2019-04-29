@@ -200,7 +200,7 @@ String WhileStm::toString() const
 }
 
 //MethodDef:
-MethodDef::MethodDef(ValueType _retType, String _name,
+MethodDef::MethodDef(Type _retType, String _name,
              Vector<FormalArg>&& _args, BlockPtr&& _body)
     : retType(move(_retType))
     , name(move(_name))
@@ -295,7 +295,7 @@ String MethodStm::toString() const
 }
 
 //NewExp:
-NewExp::NewExp(ValueType _type, Vector<ASNPtr>&& _args)
+NewExp::NewExp(TClass _type, Vector<ASNPtr>&& _args)
     : type(move(_type))
     , args(move(_args))
 {
@@ -334,7 +334,7 @@ String AssignStm::toString() const
 }
 
 //VarDecStm:
-VarDecStm::VarDecStm(ValueType _type, String _name)
+VarDecStm::VarDecStm(Type _type, String _name)
     : type(move(_type))
     , name(move(_name))
 {
@@ -346,7 +346,7 @@ String VarDecStm::toString() const
 }
 
 //VarDecAssignStm:
-VarDecAssignStm::VarDecAssignStm(ValueType _lhsType, String _lhsName, ASNPtr&& _rhs)
+VarDecAssignStm::VarDecAssignStm(Type _lhsType, String _lhsName, ASNPtr&& _rhs)
     : lhsType(move(_lhsType))
     , lhsName(move(_lhsName))
     , rhs(move(_rhs))
@@ -370,8 +370,8 @@ String RetStm::toString() const
 }
 
 // Class Definition
-ClassDecl::ClassDecl(ValueType _type, Vector<ASNPtr>&& _members,
-       Optional<ValueType> _parentType)
+ClassDecl::ClassDecl(TClass _type, Vector<ASNPtr>&& _members,
+       Optional<TClass> _parentType)
     : type(move(_type))
     , members(move(_members))
     , parentType(move(_parentType))

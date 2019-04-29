@@ -3,86 +3,144 @@
 #include "string.hpp"
 #include "vector.hpp"
 #include "variant.hpp"
+#include "valueptr.hpp"
 
 namespace dflat
 {
 
-using TypeName = String;
+class TUndefined;
+class TVar;
+class TConst;
+class TClass;
+class TMethod;
+class TFunc;
 
-// A "single" type. 
-// This may contain arguments representing either
-//  free type variables or applied type arguments.
-class ValueType
+using TType = Variant<TUndefined, TVar, TConst, TClass, TMethod, TFunc>;
+
+class Type;
+
+class TUndefined
 {
+    public:
+        TUndefined() = default;
+        String toString() const;
+        bool isConcrete() const;
+};
+
+class TVar
+{
+    public:
+        TVar(String);
+        String toString() const;
+        bool isConcrete() const;
+        String const& name() const;
+
     private:
-        TypeName _name;
-        Vector<ValueType> _tvars;
-
-    public:
-        explicit ValueType(TypeName);
-        ValueType(TypeName, Vector<ValueType>);
-        
-        TypeName const& name() const;
-        Vector<ValueType> const& tvars() const;
-        String toString() const;
-        bool operator==(ValueType const&) const;
-        bool operator!=(ValueType const&) const;
+        String _name;
 };
 
-// A method type consisting of a return type and argument types.
-class MethodType
+bool operator==(TVar const&, TVar const&);
+bool operator!=(TVar const&, TVar const&);
+
+class TConst
 {
+    public:
+        TConst(String);
+        String toString() const;
+        bool isConcrete() const;
+        String const& name() const;
+
     private:
-        ValueType _ret;
-        Vector<ValueType> _args;
-
-    public:
-        MethodType(ValueType const&, Vector<ValueType> const&);
-        void addArgType(ValueType const&);
-       
-        ValueType const& ret() const;
-        Vector<ValueType> const& args() const;
-        String toString() const;
-        bool operator==(MethodType const&) const;
-        bool operator!=(MethodType const&) const;
+        String _name;
 };
 
-// Either a ValueType or MethodType.
-class Type : private Variant<ValueType, MethodType>
+bool operator==(TConst const&, TConst const&);
+bool operator!=(TConst const&, TConst const&);
+
+class TClass
 {
-    using Base = Variant<ValueType, MethodType>;
-
-    void assertValue() const;
-    void assertMethod() const;
-
     public:
-        Type(ValueType const&);
-        Type(MethodType const&);
-
-        // SubType selectors. They throw when wrong.
-        ValueType const& value() const;
-        ValueType& value();
-        MethodType const& method() const;
-        MethodType& method();
-
-        bool isValue() const;
-        bool isMethod() const;
+        TClass(String, Vector<Type>);
         String toString() const;
-        bool operator==(Type const&) const;
-        bool operator!=(Type const&) const;
+        bool isConcrete() const;
+        String const& name() const;
+        Vector<Type> const& vars() const;
+
+    private:
+        String _name;
+        Vector<Type> _vars;
 };
 
-// Type that can't be used.
-ValueType const undefinedType("undefined");
+bool operator==(TClass const&, TClass const&);
+bool operator!=(TClass const&, TClass const&);
+
+class TMethod
+{
+    public:
+        TMethod(TClass, Type, Vector<Type>);
+        String toString() const;
+        bool isConcrete() const;
+        TClass const& owner() const;
+        Type const& ret() const;
+        Vector<Type> const& args() const;
+
+    private:
+        TClass _owner;
+        ValuePtr<Type> _ret;
+        Vector<Type> _args;
+};
+
+bool operator==(TMethod const&, TMethod const&);
+bool operator!=(TMethod const&, TMethod const&);
+
+class TFunc
+{
+    public:
+        TFunc(Type, Vector<Type>);
+        String toString() const;
+        bool isConcrete() const;
+        Type const& ret() const;
+        Vector<Type> const& args() const;
+
+    private:
+        ValuePtr<Type> _ret;
+        Vector<Type> _args;
+};
+
+bool operator==(TFunc const&, TFunc const&);
+bool operator!=(TFunc const&, TFunc const&);
+
+class Type : public TType
+{
+    public:
+        using TType::TType;
+        String toString() const;
+        bool isConcrete() const;
+
+        template <typename T>
+        T* as()
+        {
+            if (!TType::is<T>())
+            {
+                return nullptr;
+            }
+            else
+            {
+                return &TType::get_unchecked<T>();
+            }
+        }
+};
+
+bool operator==(Type const&, Type const&);
+bool operator!=(Type const&, Type const&);
 
 // Builtin types
-ValueType const intType("int");
-ValueType const boolType("bool");
-ValueType const voidType("void");
+TConst const intType("int");
+TConst const boolType("bool");
+TConst const voidType("void");
 
-bool isBuiltinType(ValueType const&);
-char const* translateBuiltinType(ValueType const&);
-
+bool isBuiltinType(Type const&);
+char const* translateBuiltinType(Type const&);
 
 } // namespace dflat
 
@@ -91,13 +149,16 @@ char const* translateBuiltinType(ValueType const&);
 namespace std
 {
 
-template <>
-struct hash<dflat::ValueType>
-{
-    size_t operator()(dflat::ValueType const& x) const
-    {
-        return std::hash<dflat::TypeName>{}(x.name());
-    }
-};
+#define TYPEHASHER(T) template <> struct hash<dflat::T> {\
+    size_t operator()(dflat::T const& x) const {\
+    return std::hash<dflat::String>{}(x.toString());\
+    }}
+
+TYPEHASHER(TUndefined);
+TYPEHASHER(TVar);
+TYPEHASHER(TConst);
+TYPEHASHER(TClass);
+TYPEHASHER(TMethod);
+TYPEHASHER(Type);
 
 } // namespace std

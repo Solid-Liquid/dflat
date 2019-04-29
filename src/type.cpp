@@ -5,63 +5,264 @@
 namespace dflat
 {
 
-Type::Type(ValueType const& value)
-    : Base(value)
+static
+bool isConcrete(Vector<Type> const& ts)
+{
+    for (Type const& t : ts)
+    {
+        if (!t.isConcrete())
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+// TUndefined
+
+String TUndefined::toString() const
+{
+    return "#undefined";
+}
+
+bool TUndefined::isConcrete() const
+{
+    return false;
+}
+
+
+// TVar
+
+TVar::TVar(String name)
+    : _name(std::move(name))
 {}
 
-Type::Type(MethodType const& method)
-    : Base(method)
+String TVar::toString() const
+{
+    return "`" + name();
+}
+bool TVar::isConcrete() const
+{
+    return false;
+}
+
+String const& TVar::name() const
+{
+    return _name;
+}
+
+bool operator==(TVar const& a, TVar const& b)
+{
+    return a.name() == b.name();
+}
+
+bool operator!=(TVar const& a, TVar const& b)
+{
+    return !(a == b);
+}
+
+
+// TConst
+
+TConst::TConst(String name)
+    : _name(std::move(name))
 {}
 
-void Type::assertValue() const
+String TConst::toString() const
 {
-    if (!isValue())
+    return name();
+}
+bool TConst::isConcrete() const
+{
+    return true;
+}
+
+String const& TConst::name() const
+{
+    return _name;
+}
+
+bool operator==(TConst const& a, TConst const& b)
+{
+    return a.name() == b.name();
+}
+
+bool operator!=(TConst const& a, TConst const& b)
+{
+    return !(a == b);
+}
+
+
+// TClass
+
+TClass::TClass(String name, Vector<Type> vars)
+    : _name(std::move(name))
+    , _vars(std::move(vars))
+{}
+
+String TClass::toString() const
+{
+    String s = _name + "[";
+    bool first = true;
+
+    for (Type const& v : _vars)
     {
-        throw std::logic_error("Type '" + toString() + "' is not ValueType");
+        if (first) { first = false; }
+        else       { s += ","; }
+
+        s += v.toString();
     }
+
+    s += "]";
+    return s;
 }
 
-void Type::assertMethod() const
+bool TClass::isConcrete() const
 {
-    if (!isMethod())
+    return dflat::isConcrete(_vars);
+}
+
+String const& TClass::name() const
+{
+    return _name;
+}
+
+Vector<Type> const& TClass::vars() const
+{
+    return _vars;
+}
+
+bool operator==(TClass const& a, TClass const& b)
+{
+    return a.name() == b.name()
+        && a.vars() == b.vars();
+}
+
+bool operator!=(TClass const& a, TClass const& b)
+{
+    return !(a == b);
+}
+
+
+// TMethod
+
+TMethod::TMethod(TClass owner, Type ret, Vector<Type> args)
+    : _owner(std::move(owner))
+    , _ret(std::move(ret))
+    , _args(std::move(args))
+{}
+
+String TMethod::toString() const
+{
+    String s = _owner.toString() 
+             + "::" 
+             + _ret->toString() 
+             + "(";
+    bool first = true;
+
+    for (Type const& a : _args)
     {
-        throw std::logic_error("Type '" + toString() + "' is not MethodType");
+        if (first) { first = false; }
+        else       { s += ","; }
+
+        s += a.toString();
     }
+
+    s += ")";
+    return s;
 }
 
-ValueType const& Type::value() const
+bool TMethod::isConcrete() const
 {
-    assertValue();
-    return get_unchecked<ValueType>();
+    return _owner.isConcrete()
+        && _ret->isConcrete()
+        && dflat::isConcrete(_args);
 }
 
-ValueType& Type::value()
+TClass const& TMethod::owner() const
 {
-    assertValue();
-    return get_unchecked<ValueType>();
+    return _owner;
 }
 
-MethodType const& Type::method() const
+Type const& TMethod::ret() const
 {
-    assertMethod();
-    return get_unchecked<MethodType>();
+    return _ret;
 }
 
-MethodType& Type::method()
+Vector<Type> const& TMethod::args() const
 {
-    assertMethod();
-    return get_unchecked<MethodType>();
+    return _args;
 }
 
-bool Type::isValue() const
+bool operator==(TMethod const& a, TMethod const& b)
 {
-    return is<ValueType>();
+    return a.owner() == b.owner()
+        && a.ret()   == b.ret()
+        && a.args()  == b.args();
 }
 
-bool Type::isMethod() const
+bool operator!=(TMethod const& a, TMethod const& b)
 {
-    return is<MethodType>();
+    return !(a == b);
 }
+
+
+// TFunc
+
+TFunc::TFunc(Type ret, Vector<Type> args)
+    : _ret(std::move(ret))
+    , _args(std::move(args))
+{}
+
+String TFunc::toString() const
+{
+    String s = _ret->toString() 
+             + "(";
+    bool first = true;
+
+    for (Type const& a : _args)
+    {
+        if (first) { first = false; }
+        else       { s += ","; }
+
+        s += a.toString();
+    }
+
+    s += ")";
+    return s;
+}
+
+bool TFunc::isConcrete() const
+{
+    return _ret->isConcrete()
+        && dflat::isConcrete(_args);
+}
+
+Type const& TFunc::ret() const
+{
+    return _ret;
+}
+
+Vector<Type> const& TFunc::args() const
+{
+    return _args;
+}
+
+bool operator==(TFunc const& a, TFunc const& b)
+{
+    return a.ret()   == b.ret()
+        && a.args()  == b.args();
+}
+
+bool operator!=(TFunc const& a, TFunc const& b)
+{
+    return !(a == b);
+}
+
+
+// Type
 
 String Type::toString() const
 {
@@ -71,134 +272,28 @@ String Type::toString() const
     });
 }
 
-bool Type::operator==(Type const& other) const
+bool Type::isConcrete() const
 {
-    return static_cast<Base const&>(*this)
-        == static_cast<Base const&>(other);
-}
-
-bool Type::operator!=(Type const& other) const
-{
-    return !(*this == other);
-}
-
-
-ValueType::ValueType(TypeName name)
-    : _name(std::move(name))
-{}
-
-ValueType::ValueType(TypeName name, Vector<ValueType> tvars)
-    : _name(std::move(name))
-    , _tvars(std::move(tvars))
-{}
-
-TypeName const& ValueType::name() const
-{
-    return _name;
-}
-
-Vector<ValueType> const& ValueType::tvars() const
-{
-    return _tvars;
-}
-
-String ValueType::toString() const
-{
-    String s = _name;
-    
-    if (!_tvars.empty())
+    return this->match([](auto const& t)
     {
-        s += "[";
-        bool first = true;
-
-        for (ValueType const& tv : _tvars)
-        {
-            if (first) 
-            {
-                first = false;
-            }
-            else
-            {
-                s += ",";
-            }
-
-            s += tv.toString();
-        }
-
-        s += "]";
-    }
-
-    return s;
+        return t.isConcrete();
+    });
 }
 
-bool ValueType::operator==(ValueType const& other) const
+bool operator==(Type const& a, Type const& b)
 {
-    return _name  == other._name
-        && _tvars == other._tvars;
+    return static_cast<TType const&>(a)
+        == static_cast<TType const&>(b);
 }
 
-bool ValueType::operator!=(ValueType const& other) const
+bool operator!=(Type const& a, Type const& b)
 {
-    return !(*this == other);
-}
-
-
-MethodType::MethodType(ValueType const& ret, Vector<ValueType> const& args)
-    : _ret(ret)
-    , _args(args)
-{}
-
-String MethodType::toString() const
-{
-    String s = _ret.name() + "(";
-    bool first = true;
-
-    for (ValueType const& arg : _args)
-    {
-        if (first) 
-        {
-            first = false;
-        }
-        else
-        {
-            s += ",";
-        }
-
-        s += arg.toString();
-    }
-
-    s += ")";
-    return s;
-}
-
-void MethodType::addArgType(ValueType const& typeName)
-{
-    _args.push_back(typeName);
-}
-
-ValueType const& MethodType::ret() const
-{
-    return _ret;
-}
-
-Vector<ValueType> const& MethodType::args() const
-{
-    return _args;
-}
-
-bool MethodType::operator==(MethodType const& other) const
-{
-    return _ret  == other._ret
-        && _args == other._args;
-}
-
-bool MethodType::operator!=(MethodType const& other) const
-{
-    return !(*this == other);
+    return !(a == b);
 }
 
 
 // Builtin types
+
 namespace 
 {
     struct BuiltinType
@@ -206,7 +301,7 @@ namespace
         char const* translation;
     };
 
-    const Map<ValueType, BuiltinType> s_builtinTypes
+    const Map<TConst, BuiltinType> s_builtinTypes
     {
         { intType, {"int"} },
         { boolType, {"int"} },
@@ -214,12 +309,12 @@ namespace
     };
 }
 
-bool isBuiltinType(ValueType const& type)
+bool isBuiltinType(TConst const& type)
 {
     return s_builtinTypes.count(type) != 0;
 }
 
-char const* translateBuiltinType(ValueType const& type)
+char const* translateBuiltinType(TConst const& type)
 {
     BuiltinType const* bt = lookup(s_builtinTypes, type);
 

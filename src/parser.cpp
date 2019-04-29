@@ -129,32 +129,43 @@ Optional<String> Parser::parseName()
     return nameToken.name;
 }
 
-Optional<ValueType> Parser::parseValueType()
+Optional<TClass> Parser::parseClassType()
 {
+    //TODO
     TRACE;
-    MATCH(nameToken, NameToken);
-    Vector<ValueType> tvars;
+    FAILURE;
+    return nullopt;
+}
 
-    if (match<LeftSquareToken>())
-    {
-        Optional<ValueType> tv = parseValueType();
-
-        if (tv)
-        {
-            tvars.push_back(*tv);
-
-            while (match<CommaToken>())
-            {
-                MUST_PARSE(tv1, parseValueType(), "Expected type after comma");
-                tvars.push_back(tv1);
-            }
-
-            MUST_MATCH_(RightSquareToken);
-        }
-    }
-
-    SUCCESS;
-    return ValueType(nameToken.name, move(tvars));
+Optional<Type> Parser::parseType()
+{
+    //TODO
+    TRACE;
+//    MATCH(nameToken, NameToken);
+//    Vector<ValueType> tvars;
+//
+//    if (match<LeftSquareToken>())
+//    {
+//        Optional<ValueType> tv = parseValueType();
+//
+//        if (tv)
+//        {
+//            tvars.push_back(*tv);
+//
+//            while (match<CommaToken>())
+//            {
+//                MUST_PARSE(tv1, parseValueType(), "Expected type after comma");
+//                tvars.push_back(tv1);
+//            }
+//
+//            MUST_MATCH_(RightSquareToken);
+//        }
+//    }
+//
+//    SUCCESS;
+//    return ValueType(nameToken.name, move(tvars));
+    FAILURE;
+    return nullopt;
 }
 
 Optional<OpType> Parser::parseUnaryOp()
@@ -271,7 +282,7 @@ Optional<FormalArg> Parser::parseFormalArg()
 {
     TRACE;
     ENABLE_ROLLBACK;
-    PARSE(type, parseValueType());
+    PARSE(type, parseType());
     PARSE(var, parseName());
     CANCEL_ROLLBACK;
     SUCCESS;
@@ -354,7 +365,7 @@ ASNPtr Parser::parseNew()
     ASNPtr temp;
 
     MATCH_(NewToken);
-    MUST_PARSE(type, parseValueType(), "type declaration for new");
+    MUST_PARSE(type, parseClassType(), "type declaration for new");
     MATCH_(LeftParenToken);
     temp = parseExp();
     if(temp)
@@ -575,7 +586,7 @@ ASNPtr Parser::parseVarAssignDecl()
     TRACE;
     ENABLE_ROLLBACK;
 
-    PARSE(type, parseValueType());
+    PARSE(type, parseType());
     PARSE(name, parseName());
     MATCH_(AssignToken);
     MUST_PARSE(exp, parseExp(), "Expected expression in assignment");
@@ -591,7 +602,7 @@ ASNPtr Parser::parseVarDecl()
     TRACE;
     ENABLE_ROLLBACK;
 
-    PARSE(type, parseValueType());
+    PARSE(type, parseType());
     PARSE(name, parseName());
     MUST_MATCH_(SemiToken);
 
@@ -767,7 +778,7 @@ ASNPtr Parser::parseMethodDecl()
     Vector<FormalArg> exps;
     Optional<FormalArg> temp;
 
-    PARSE(retType, parseValueType());
+    PARSE(retType, parseType());
     PARSE(name, parseName());
     MATCH_(LeftParenToken);
     temp = parseFormalArg();
@@ -827,15 +838,15 @@ ASNPtr Parser::parseClassDecl()
 
     Vector<ASNPtr> stm;
     ASNPtr curstm = nullptr;
-    Optional<ValueType> parentType;
+    Optional<TClass> parentType;
 
     MATCH_(ClassToken);
-    MUST_PARSE(classType, parseValueType(), "Expected class type");
+    MUST_PARSE(classType, parseClassType(), "Expected class type");
 
     // Parse optional parent class.
     if (match<ExtendsToken>())
     {
-        MUST_PARSE(type, parseValueType(), "Expected base class type");
+        MUST_PARSE(type, parseClassType(), "Expected base class type");
         parentType = type;
     }
 

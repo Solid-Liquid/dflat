@@ -10,15 +10,14 @@ namespace dflat
 class CanonName
 {
     public:
-        CanonName(String, MethodType const&);
-        String const& baseName() const;
-        String const& canonName() const;
-        MethodType const& type() const;
+        String toString() const;
 
     private:
-        String _baseName;
-        MethodType _type;
-        String _canonName;
+        CanonName(String);
+
+        String _name;
+
+    friend CanonName canonize(String);
 };
 
 bool operator==(CanonName const&, CanonName const&);
@@ -35,7 +34,7 @@ struct hash<dflat::CanonName>
 {
     size_t operator()(dflat::CanonName const& x) const
     {
-        return std::hash<dflat::String>{}(x.canonName());
+        return std::hash<dflat::String>{}(x.toString());
     }
 };
 

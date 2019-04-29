@@ -24,20 +24,6 @@ enum OpType { opPlus, opMinus, opMult, opDiv, opNot, opAnd, opOr,
 
 String opString(OpType);
 
-// Type for method definition arguments.
-struct FormalArg
-{
-    ValueType type;
-    String name;
-};
-
-inline
-bool operator ==(FormalArg const& a, FormalArg const& b)
-{
-    return a.type == b.type
-        && a.name == b.name;
-}
-
 class ASN
 {
     //Base class for all ASN types
@@ -269,12 +255,12 @@ class MethodDef : public ASN
 {
     //Example Input: int func(int x, int y) { statement }
     public:
-        ValueType retType;
+        Type retType;
         String name;
         Vector<FormalArg> args;
         BlockPtr body;
 
-        MethodDef(ValueType, String, Vector<FormalArg>&&, BlockPtr&&);
+        MethodDef(Type, String, Vector<FormalArg>&&, BlockPtr&&);
         ASNType getType() const { return defMethod; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -382,11 +368,11 @@ class VarDecStm : public ASN
 {
     //Example Input: int x;
     public:
-        ValueType type;
+        Type type;
         String name;
 
         // first: type, second: name, third: exp
-        VarDecStm(ValueType, String);
+        VarDecStm(Type, String);
         ASNType getType() const { return stmVarDec; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -405,12 +391,12 @@ class VarDecAssignStm : public ASN
 {
     //Example Input: int x = 5;
     public:
-        ValueType lhsType;
+        Type lhsType;
         String lhsName;
         ASNPtr rhs;
 
         // first: type, second: name, third: exp
-        VarDecAssignStm(ValueType, String, ASNPtr&&);
+        VarDecAssignStm(Type, String, ASNPtr&&);
         ASNType getType() const { return stmVarDecAssign; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -450,10 +436,10 @@ class NewExp : public ASN
 {
     //Example Input: new type(exp, exp)
     public:
-        ValueType type;
+        TClass type;
         Vector<ASNPtr> args;
 
-        NewExp(ValueType, Vector<ASNPtr>&&);
+        NewExp(TClass, Vector<ASNPtr>&&);
         ASNType getType() const { return expNew; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
@@ -471,11 +457,11 @@ class NewExp : public ASN
 class ClassDecl : public ASN
 {
     public:
-        ValueType type;
+        TClass type;
         Vector<ASNPtr> members;
-        Optional<ValueType> parentType;
+        Optional<TClass> parentType;
 
-        ClassDecl(ValueType, Vector<ASNPtr>&&, Optional<ValueType>); 
+        ClassDecl(TClass, Vector<ASNPtr>&&, Optional<TClass>); 
         ASNType getType() const { return declClass; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);

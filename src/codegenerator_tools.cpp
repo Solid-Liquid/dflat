@@ -6,42 +6,40 @@
 namespace dflat
 {
 
+/*
 String GenEnv::prolog() const
 {
-/*
-    NEW(T,V,C,...)
-        Constructs a T.
-        V is the vtable function for T.
-        C is the constructor to call.
-        ... are the extra arguments to pass to C.
-
-    NEW0(T,V,C)
-        Same but with no extra arguments to C (default constructor).
-
-    VTABLE(x)
-        Gets the vtable for object x.
-
-    FIRST_ARG(x,...)
-        Returns the first of variadic arguments.
-
-    CALL(R,f,...)
-        Calls the function f.
-        R is the return type.
-        ... are the arguments to pass to F, including "this".
-
-    vtablefn
-        Typedef for a function pointer to a vtable function.
-
-    vtable
-        Contains a df_vtablefn.
-        Every root class has this as its first member.
-        As a result, any object can be trivially cast to access its vtable.
-
-    dfalloc(size_t, vtablefn)
-        Allocates a class object of given size and assigns the given vtable to it.
-        It zeroes the object's memory so that unassigned members are at least predictable.
-
-*/
+//    NEW(T,V,C,...)
+//        Constructs a T.
+//        V is the vtable function for T.
+//        C is the constructor to call.
+//        ... are the extra arguments to pass to C.
+//
+//    NEW0(T,V,C)
+//        Same but with no extra arguments to C (default constructor).
+//
+//    VTABLE(x)
+//        Gets the vtable for object x.
+//
+//    FIRST_ARG(x,...)
+//        Returns the first of variadic arguments.
+//
+//    CALL(R,f,...)
+//        Calls the function f.
+//        R is the return type.
+//        ... are the arguments to pass to F, including "this".
+//
+//    vtablefn
+//        Typedef for a function pointer to a vtable function.
+//
+//    vtable
+//        Contains a df_vtablefn.
+//        Every root class has this as its first member.
+//        As a result, any object can be trivially cast to access its vtable.
+//
+//    dfalloc(size_t, vtablefn)
+//        Allocates a class object of given size and assigns the given vtable to it.
+//        It zeroes the object's memory so that unassigned members are at least predictable.
     String s = R"(
 #include <stdlib.h>
 
@@ -90,7 +88,7 @@ void* dfalloc(size_t size, vtablefn vt)
           + "(enum Methods);\n";
     }
 
-    s += "\n/****************END PROLOG****************/\n\n";
+    s += "\n/""****************END PROLOG****************""/\n\n";
     return s;
 }
 
@@ -127,7 +125,7 @@ String vtable(GenEnv const& env, ValueType const& classType)
 
 String GenEnv::epilog() const
 {
-    String s = "/***************BEGIN EPILOG***************/\n\n";
+    String s = "/""***************BEGIN EPILOG***************""/\n\n";
 
     for (auto [type, meta] : _classes.allClasses())
     {
@@ -306,6 +304,56 @@ ClassMeta const& GenEnv::curClass() const
     return *_classes.cur();
 }
 
+void GenEnv::instantiate(ValueType const& type)
+{
+    std::cout << "DEBUG: coding " << type.toString() << "\n";
+    ClassDecl* decl = _classes.lookupClassDecl(type);
+    
+    if (!decl)
+    {
+        throw std::logic_error("Instantiating unknown type '"
+                + type.toString() + "'");
+    }
+    
+    enterClass(type);
+                       
+    *this << CodeLiteral("struct ")
+          << CodeClassDecl(type)
+          << CodeLiteral("\n{\n")
+          << CodeTabIn();
+
+    if (decl->parentType) 
+    {
+        *this << CodeTabs()
+              << CodeLiteral("struct ")
+              << CodeClassDecl(*decl->parentType)
+              << CodeLiteral(" ")
+              << CodeParent()
+              << CodeLiteral(";\n");
+    }
+    else
+    {
+        *this << CodeTabs()
+              << CodeLiteral("struct vtable vtable;\n");
+    }
+    
+    // Emit default constructor.
+    emitConstructor(MethodType(type, {}), {}, {});
+
+    // Emit members.
+    for (ASNPtr const& member : decl->members)
+    {
+        *this << member;
+    }
+
+    *this << CodeTabOut()
+          << CodeLiteral("};\n");
+
+    leaveClass();
+    
+    std::cout << "DEBUG: done coding " << type.toString() << "\n";
+}
+
 void GenEnv::enterMethod(CanonName const& methodName)
 {
     _curMethod = MethodMeta{ curClass().type, methodName };
@@ -399,6 +447,24 @@ Set<CanonName> GenEnv::getAllMethods() const
     }
 
     return methods;
+}
+
+void GenEnv::startBlock()
+{
+    enterScope();
+
+    *this << CodeTabs()
+          << CodeLiteral("{\n")
+          << CodeTabIn();
+}
+
+void GenEnv::endBlock()
+{
+    *this << CodeTabOut()
+          << CodeTabs()
+          << CodeLiteral("}\n\n");
+
+    leaveScope();
 }
 
 void GenEnv::enterScope()
@@ -628,5 +694,78 @@ void GenEnv::emitObject(String const& objectName, String const& memberName)
     *this << CodeVarName(objectName);
     emitMemberVar(decl->type.value(), memberName);
 }
+
+void GenEnv::emitMethod(CanonName const& methodName, 
+        ValueType const& retType, Vector<FormalArg> const& args,
+        Vector<ASNPtr> const& body, bool isCons)
+{
+    enterMethod(methodName);
+    ValueType const classType = curClass().type;
+    
+    if (isCons)
+    {
+        *this << CodeTabs()
+              << CodeLiteral("void* ")
+              << CodeConsName(methodName);
+    }
+    else
+    {
+        *this << CodeTabs()
+              << CodeTypeName(retType)
+              << CodeLiteral(" ")
+              << CodeMethodName(classType, methodName);
+    }
+
+    *this << CodeLiteral("(void* this");
+    
+    for(FormalArg const& arg : args)
+    {
+        *this << CodeLiteral(", ")
+              << CodeTypeName(arg.type)
+              << CodeLiteral(" ")
+              << CodeVarName(arg.name);
+        
+        declareLocal(arg.name, arg.type);
+    }
+
+    *this << CodeLiteral(")\n");
+
+    // Manually emitting the body.
+    startBlock();
+   
+    *this << CodeTabs()
+          << CodeTypeName(classType)
+          << CodeLiteral(" ")
+          << CodeVarName(config::thisName)
+          << CodeLiteral(" = this;\n");
+
+    for (ASNPtr const& stm : body)
+    {
+        *this << stm;
+    }
+   
+    if (isCons)
+    {
+        *this << CodeTabs()
+              << CodeLiteral("return ")
+              << CodeVarName(config::thisName)
+              << CodeLiteral(";\n");
+    }
+    
+    endBlock();
+    // Done with body.
+
+    leaveMethod();
+}
+
+void GenEnv::emitConstructor(MethodType const& consType, 
+        Vector<FormalArg> const& args, Vector<ASNPtr> const& body)
+{
+    CanonName const consName(config::consName, consType);
+    ValueType const retType = curClass().type;
+    emitMethod(consName, retType, args, body, true);
+}
+
+*/
 
 } // namespace dflat

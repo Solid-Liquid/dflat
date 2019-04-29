@@ -24,13 +24,16 @@ Type VariableExp::typeCheckPrv(TypeEnv& env)
     if (object)
     {
         // Lookup as a member of object.
-        ValueType objectType = env.lookupVarType(*object);
-        return env.lookupVarTypeByClass(objectType, name);
+        CanonName const objectName = canonizeLocal(*object);
+        TClass const objectType = env.getClassType(objectName);
+        CanonName const memberName = canonizeMember(name, objectType);
+        return env.getType(memberName);
     }
     else
     {
         // Lookup as a local or a member of the current class.
-        return env.lookupVarType(name);
+        CanonName const varName = canonizeLocal(name);
+        return env.getType(varName);
     }
 }
 
@@ -52,20 +55,9 @@ Type BinopExp::typeCheckPrv(TypeEnv& env)
     // e.g. "1 + 2" might be "+(int,int)" with type int.
     Type lhsType = lhs->typeCheck(env);
     Type rhsType = rhs->typeCheck(env);
-        
-    if (!lhsType.isValue())
-    {
-        throw TypeCheckerException("Using method as operator lhs");
-    }
-    
-    if (!rhsType.isValue())
-    {
-        throw TypeCheckerException("Using method as operator rhs");
-    }
-
-    MethodType const type(undefinedType, { lhsType.value(), rhsType.value() });
-    CanonName const canonName(opString(op), type);
-    return env.lookupRuleType(canonName);
+   
+    CanonName const opName = canonizeOp(op, { lhsType, rhsType });
+    return env.getReturnType(opName);
 }
 
 Type UnopExp::typeCheckPrv(TypeEnv& env)
@@ -74,28 +66,22 @@ Type UnopExp::typeCheckPrv(TypeEnv& env)
     // e.g. "-1" might be "-(int)" with type int.
     Type rhsType = rhs->typeCheck(env);
     
-    if (!rhsType.isValue())
-    {
-        throw TypeCheckerException("Using method as operator rhs");
-    }
-   
-    MethodType const type(undefinedType, { rhsType.value() });
-    CanonName const canonName(opString(op), type);
-    return env.lookupRuleType(canonName);
+    CanonName const opName = canonizeOp(op, { rhsType });
+    return env.getReturnType(opName);
 }
 
 Type Block::typeCheckPrv(TypeEnv& env)
 {
     // Make sure all statements typecheck (in a new scope).
     // Final type is void.
-    env.enterScope();
+    Scope s = env.newScope();
 
     for (ASNPtr const& stm : statements)
     {
         stm->typeCheck(env);
     }
 
-    env.leaveScope();
+    env.leaveScope(s);
     return voidType;
 }
 
@@ -132,138 +118,112 @@ Type WhileStm::typeCheckPrv(TypeEnv& env)
 
 Type MethodDef::typeCheckPrv(TypeEnv& env)
 {
-    MethodType methodType(retType, {});
-    ValueType const curClass = env.curClass().type;
-
+    ClassMeta const curClass = env.getCurClass();
+    Vector<Type> argTypes;
+    
     for (FormalArg const& arg : args)
     {
-        methodType.addArgType(arg.type);
+        argTypes.push_back(arg.type);
     }
-
-    CanonName const methodName(name, methodType);
-    env.enterMethod(methodName); // New current method
+    
+    TMethod const methodType(curClass.type, retType, argTypes);
+    CanonName const methodName = canonizeMethod(name, methodType);
+    Scope scope = env.newMethod(methodName, methodType);
 
     for (FormalArg const& arg : args)
-    {
-        env.declareLocal(arg.name, arg.type);
+    { 
+        CanonName const argName = canonizeLocal(arg.name);
+        env.newLocal(argName, arg.type);
     }
 
-    // Typecheck body.
     body->typeCheck(env);
-
-    // No longer in a method.
-    env.leaveMethod();
-
+    env.leaveMethod(scope);
     return methodType;
 }
 
 Type ConsDef::typeCheckPrv(TypeEnv& env)
 {
-    ValueType const curClass = env.curClass().type;
-    MethodType consType(curClass, {});
+    ClassMeta const curClass = env.getCurClass();
+    Vector<Type> argTypes;
 
     for (FormalArg const& arg : args)
     {
-        consType.addArgType(arg.type);
+        argTypes.push_back(arg.type);
     }
 
-    CanonName const consName(config::consName, consType);
-    env.enterMethod(consName); // New current method
+    TMethod const consType(curClass.type, curClass.type, argTypes);
+    CanonName const consName = canonizeCons(consType);
+    Scope scope = env.newMethod(consName, consType);
 
     for (FormalArg const& arg : args)
     {
-        env.declareLocal(arg.name, arg.type);
+        CanonName const argName = canonizeLocal(arg.name);
+        env.newLocal(argName, arg.type);
     }
 
-    // Typecheck body.
     body->typeCheck(env);
-
-    // No longer in a method.
-    env.leaveMethod();
-
+    env.leaveMethod(scope);
     return consType;
 }
 
 Type MethodExp::typeCheckPrv(TypeEnv& env)
 {
     // If no name, use implicit "this".
-    String objectName = (method.object ? *method.object : config::thisName);
+    CanonName const objectName = canonizeLocal(
+        method.object ? *method.object : config::thisName
+        );
 
-    // Get method's class.
-    ValueType objectType = env.lookupVarType(objectName);
+    // Get class we're calling method on.
+    TClass const objectType = env.getClassType(objectName);
 
-    // Construct method type to get canonical name.
-    // Return type is left undefined.
-    Vector<ValueType> argTypes;
-    int argNum = 1;
+    // Construct a canonical name for this call.
+    Vector<Type> argTypes;
 
     for (ASNPtr& arg : args)
     {
-        Type argType = arg->typeCheck(env);
-
-        if (!argType.isValue())
-        {
-            throw TypeCheckerException("Passing method as argument " 
-                    + to_string(argNum));
-        }
-        
-        argTypes.push_back(argType.value());
-        ++argNum;
+        argTypes.push_back(arg->typeCheck(env));
     }
-
-    MethodType const methodType(undefinedType, argTypes);
-    CanonName const methodName(method.variable, methodType);
     
-    // Get return type for whatever has this canonical name.
-    Type resultType = env.lookupMethodTypeByClass(objectType, methodName).ret();
-    env.setMethodMeta(this, objectType, methodName); // Needed later.
-    return resultType;
+    // Return type isn't known/needed to look up.
+    TMethod const methodType(objectType, TUndefined{}, argTypes);
+    CanonName const methodName = canonizeMethod(method.variable, methodType);
+    env.newMethodCall(this, methodName); // Needed later.
+    return env.getReturnType(methodName);
 }
 
 Type MethodStm::typeCheckPrv(TypeEnv& env)
 {
-    // Make sure the call typechecks.
-    // Final type is void.
     methodExp->typeCheck(env);
-    return voidType;
+    return voidType; // Statements are void type.
 }
 
 Type NewExp::typeCheckPrv(TypeEnv& env)
 {
-    env.assertValidType(type);
+    env.realize(type);
 
     // Construct method type to get canonical name for constructor.
-    Vector<ValueType> argTypes;
-    int argNum = 1;
+    Vector<Type> argTypes;
 
     for (ASNPtr& arg : args)
     {
-        Type argType = arg->typeCheck(env);
-
-        if (!argType.isValue())
-        {
-            throw TypeCheckerException("Passing method as argument " 
-                    + to_string(argNum));
-        }
-        
-        argTypes.push_back(argType.value());
-        ++argNum;
+        argTypes.push_back(arg->typeCheck(env));
     }
+    
+    // Return type isn't needed.
+    TMethod const consType(type, TUndefined{}, argTypes);
+    CanonName const consName = canonizeCons(consType);
+    env.newMethodCall(this, consName); // Needed later.
 
-    MethodType const consType(type, argTypes);
-    CanonName const consName(config::consName, consType);
+    // Check this exists.
+    Type const retType = env.getReturnType(consName);
 
-    // Check existence of such a constructor.
-    Type resultType = env.lookupMethodTypeByClass(type, consName).ret();
-
-    if (resultType != type)
+    if (retType != type)
     {
         throw std::logic_error("Constructor for '" + type.toString()
-                + "' returns '" + resultType.toString() + "'");
+                + "' returns '" + retType.toString() + "'");
     }
 
-    env.setMethodMeta(this, type, consName); // Needed later.
-    return type;
+    return retType;
 }
 
 Type AssignStm::typeCheckPrv(TypeEnv& env)
@@ -278,15 +238,18 @@ Type AssignStm::typeCheckPrv(TypeEnv& env)
 
 Type VarDecStm::typeCheckPrv(TypeEnv& env)
 {
-    env.assertValidType(type); //make sure that "type" is a declared type
+    env.realize(type);
     
     if (env.inMethod())
     {
-        env.declareLocal(name, type); 
+        CanonName const varName = canonizeLocal(name);
+        env.newLocal(varName, type); 
     }
     else
     {
-        env.addClassVar(name, type);
+        ClassMeta const curClass = env.getCurClass();
+        CanonName const memberName = canonizeMember(name, curClass.type);
+        env.newMember(memberName, type);
     }
     
     return voidType;
@@ -294,7 +257,7 @@ Type VarDecStm::typeCheckPrv(TypeEnv& env)
 
 Type VarDecAssignStm::typeCheckPrv(TypeEnv& env)
 {
-    env.assertValidType(lhsType); //make is a declared type
+    env.realize(lhsType);
     Type rhsType = rhs->typeCheck(env);
     env.assertTypeIsOrBase(lhsType, rhsType);
 
@@ -311,11 +274,14 @@ Type VarDecAssignStm::typeCheckPrv(TypeEnv& env)
 
     if (env.inMethod())
     {
-        env.declareLocal(lhsName, lhsType); 
+        CanonName const varName = canonizeLocal(lhsName);
+        env.newLocal(varName, lhsType); 
     }
     else
     {
-        env.addClassVar(lhsName, lhsType);
+        ClassMeta const curClass = env.getCurClass();
+        CanonName const memberName = canonizeMember(lhsName, curClass.type);
+        env.newMember(memberName, lhsType);
     }
     
     return voidType;
@@ -323,37 +289,28 @@ Type VarDecAssignStm::typeCheckPrv(TypeEnv& env)
 
 Type RetStm::typeCheckPrv(TypeEnv& env)
 {
-    MethodType methodType = env.lookupMethodType(env.curMethod().methodName);
+    MethodMeta const curMethod = env.getCurMethod();
+    ClassMeta const curClass = env.getCurClass();
 
-    // Make a new type consisting only of the return type
-    //   so that it can be correctly compared to mine.
-    Type methodRetType = ValueType(methodType.ret());
-    Type myRetType     = value->typeCheck(env);
+    // Confirm return types match.
+    Type const declaredRet = curMethod.type.ret();
+    Type const actualRet = value->typeCheck(env);
 
-    if (methodRetType == myRetType)
+    if (declaredRet == actualRet)
     {
-        return myRetType;
+        return declaredRet;
     }
-    else
-    {
-        throw TypeCheckerException(
-                    "Attempting to return type '" + myRetType.toString() + 
-                    "' in method '" + env.curMethod().methodName.canonName()
-                    + "' which has return type '" + methodRetType.toString() +
-                    "' in class '" + env.curClass().type.toString() + "'");
-    }
+
+    throw TypeCheckerException(
+            "Attempting to return type '" + actualRet.toString() 
+            + "' in method '" + curMethod.name.toString()
+            + "' which has return type '" + declaredRet.toString() 
+            + "' in class '" + curClass.type.toString() + "'");
 }
 
 Type ClassDecl::typeCheckPrv(TypeEnv& env)
 {
-    env.declareClass(type, this);
-
-    if (type.tvars().empty())
-    {
-        // Non-parametric type, instantiate it now.
-        env.instantiate(type);
-    }
-
+    env.registerClass(type, this);
     return type;
 }
 

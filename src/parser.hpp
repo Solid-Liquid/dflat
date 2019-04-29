@@ -71,7 +71,8 @@ class Parser
     
 public:
     Optional<String> parseName();
-    Optional<ValueType> parseValueType();
+    Optional<Type>   parseType();
+    Optional<TClass> parseClassType();
     Optional<OpType> parseUnaryOp();
     Optional<OpType> parseMultiveOp();
     Optional<OpType> parseAdditiveOp();

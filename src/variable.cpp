@@ -32,4 +32,15 @@ bool operator!=(Variable const& a, Variable const& b)
     return !(a == b);
 }
 
+bool operator ==(FormalArg const& a, FormalArg const& b)
+{
+    return a.type == b.type
+        && a.name == b.name;
+}
+
+bool operator!=(FormalArg const& a, FormalArg const& b)
+{
+    return !(a == b);
+}
+
 } // namespace dflat

@@ -16,6 +16,242 @@ TypeEnv::TypeEnv()
     initialize();
 }
 
+Type TypeEnv::getType(CanonName const& name) const
+{
+    Type const* type = _meta.lookupType(name);
+
+    if (type)
+    {
+        return *type;
+    }
+
+    throw TypeCheckerException("Undefined '" + name.toString() + "'");
+}
+
+TClass TypeEnv::getClassType(CanonName const& name) const
+{
+    Type type = getType(name);
+    TClass* t = type.as<TClass>();
+
+    if (t)
+    {
+        return *t;
+    }
+     
+    throw TypeCheckerException("'" + name.toString() 
+            + "' does not have class type");
+}
+
+TMethod TypeEnv::getMethodType(CanonName const& name) const
+{
+    Type type = getType(name);
+    TMethod* t = type.as<TMethod>();
+
+    if (t)
+    {
+        return *t;
+    }
+    
+    throw TypeCheckerException("'" + name.toString() 
+            + "' does not have method type");
+}
+
+TFunc TypeEnv::getFuncType(CanonName const& name) const
+{
+    Type type = getType(name);
+    TFunc* t = type.as<TFunc>();
+
+    if (t)
+    {
+        return *t;
+    }
+        
+    throw TypeCheckerException("'" + name.toString() 
+            + "' does not have function type");
+}
+
+Type TypeEnv::getReturnType(CanonName const& name) const
+{
+    Type type = getType(name);
+    TMethod* m = type.as<TMethod>();
+
+    if (m)
+    {
+        return m->ret();
+    }
+
+    TFunc* f = type.as<TFunc>();
+
+    if (f)
+    {
+        return f->ret();
+    }
+
+    throw TypeCheckerException("'" + name.toString() 
+            + "' does not have a return type");
+}
+
+bool TypeEnv::inMethod() const
+{
+    return _meta.curMethod() != nullopt;
+}
+
+ClassMeta TypeEnv::getCurClass() const
+{
+   Optional<ClassMeta> m = _meta.curClass();
+
+   if (!m)
+   {
+       // TODO possibly should be a logic_error
+       throw TypeCheckerException("Not in a class");
+   }
+
+   return *m;
+}
+
+MethodMeta TypeEnv::getCurMethod() const
+{
+    Optional<MethodMeta> m = _meta.curMethod();
+
+    if (!m)
+    {
+       // TODO possibly should be a logic_error
+        throw TypeCheckerException("Not in a method");
+    }
+
+    return *m;
+}
+
+void TypeEnv::assertTypeIs(Type const& t1, Type const& t2) const
+{
+    if (t1 != t2)
+    {
+        throw TypeCheckerException("Type '" + t1.toString()
+                + "' must be equal to '" + t2.toString() + "'");
+    }
+}
+
+void TypeEnv::assertTypeIsOrBase(Type const& t1, Type const& t2) const
+{
+    if (t1 != t2)
+    {
+        if (!_meta.isTypeBaseOf(t1, t2))
+        {
+            throw TypeCheckerException("Type '" + t1.toString()
+                    + "' must be equal to or a base of '" + t2.toString() 
+                    + "'");
+        }
+    }
+}
+
+Scope TypeEnv::newScope()
+{
+    return _meta.newScope();
+}
+
+void TypeEnv::leaveScope(Scope const& scope)
+{
+    _meta.leaveScope(scope);
+}
+
+static
+void assertConcrete(Type const& type)
+{
+    if (!type.isConcrete())
+    {
+        throw TypeCheckerException("Type '" + type.toString()
+                + "' is not a concrete type");
+    }
+}
+
+void TypeEnv::registerClass(TClass const& type, ClassDecl* node)
+{
+    //TODO error if duplicate
+    _meta.registerClass(type, node);
+}
+
+Scope TypeEnv::newMethod(CanonName const& name, Type const& type)
+{
+    //TODO error if duplicate
+    assertConcrete(type);
+    return _meta.newMethod(name, type);
+}
+
+void TypeEnv::leaveMethod(Scope const& scope)
+{
+    _meta.leaveMethod(scope);
+}
+
+void TypeEnv::newMethodCall(ASN* node, CanonName const& name)
+{
+    _meta.newMethodCall(node, name);
+}
+
+void TypeEnv::newMember(CanonName const& name, Type const& type)
+{
+    //TODO error if duplicate
+    assertConcrete(type);
+    _meta.newMember(name, type);
+}
+
+void TypeEnv::newLocal(CanonName const& name, Type const& type)
+{
+    //TODO error if duplicate
+    assertConcrete(type);
+    _meta.newLocal(name, type);
+}
+
+void TypeEnv::realize(Type const& type)
+{
+    //TODO this
+    assertConcrete(type);
+}
+
+void TypeEnv::initialize()
+{
+    auto binop = [&](OpType op, Type const& ret, 
+            Type const& lhs, Type const& rhs)
+    {
+        CanonName opName = canonizeOp(op, { lhs, rhs });
+        TFunc opType(ret, { lhs, rhs });
+        _meta.newFunc(opName, opType);
+    };
+    
+    auto unop = [&](OpType op, Type const& ret, 
+            Type const& rhs)
+    {
+        CanonName opName = canonizeOp(op, { rhs });
+        TFunc opType(ret, { rhs });
+        _meta.newFunc(opName, opType);
+    };
+
+    Type const i = intType;
+    Type const b = boolType;
+    Type const v = voidType;
+
+    // Predefined function types. 
+    binop(opPlus,  i, i, i); // int +(int,int)
+    binop(opMinus, i, i, i);
+    binop(opMult,  i, i, i);
+    binop(opDiv,   i, i, i);
+    
+    binop(opLogEq,    b, i, i); // bool ==(int,int)
+    binop(opLogNotEq, b, i, i);
+    
+    binop(opLogEq,    b, b, b);
+    binop(opLogNotEq, b, b, b);
+   
+    binop(opAnd,      b, b, b); // bool &&(bool,bool)
+    binop(opOr,       b, b, b);
+    
+    binop(opAnd,      b, i, i); // bool &&(int,int)
+    binop(opOr,       b, i, i);
+
+    unop(opMinus, i, i); // int -(int)
+    unop(opNot,   b, b); // bool !(bool)
+}
+
+/*
 // TODO possibly make these private
 void TypeEnv::enterClass(ValueType const& classType)
 {
@@ -41,37 +277,7 @@ void TypeEnv::setClassParent(ValueType const& parentType)
 {
     _classes.setParent(parentType);
 }
-
-void TypeEnv::leaveClass()
-{
-    _classes.leave();
-}
-
-void TypeEnv::addClassVar(String const& name, ValueType const& type)
-{
-    _classes.addVar(name, type);
-}
-
-void TypeEnv::addClassMethod(CanonName const& methodName)
-{
-    _classes.addMethod(methodName);
-}
    
-bool TypeEnv::inClass() const
-{
-    return _classes.cur() != nullptr;
-}
-
-ClassMeta const& TypeEnv::curClass() const
-{
-    if (!_classes.cur())
-    {
-        throw std::logic_error("no curClass");
-    }
-
-    return *_classes.cur();
-}
-
 void TypeEnv::enterMethod(CanonName const& methodName)
 {
     addClassMethod(methodName);
@@ -86,196 +292,32 @@ void TypeEnv::leaveMethod()
     _curMethod = nullopt;
 }
 
-bool TypeEnv::inMethod() const
+// If t is a bound typevar, returns the type u that t maps to.
+// Otherwise returns whatever t is.
+ValueType TypeEnv::mappedType(ValueType const& t) const
 {
-    return _curMethod != nullopt;
-}
-
-MethodMeta const& TypeEnv::curMethod() const
-{
-    if (!_curMethod)
+    if (!t.tvars().empty())
     {
-        throw std::logic_error("no curMethod");
+        // This can't be a type variable.
+        return t;
     }
 
-    return *_curMethod;
-}
+    ValueType const* u = lookup(_tvars, t.name());
 
-void TypeEnv::setMethodMeta(ASN const* node, 
-        ValueType const& objectType, CanonName const& name)
-{
-    Optional<MemberMeta> member = _classes.lookupMethod(objectType, name);
-
-    if (!member)
+    if (u)
     {
-        throw std::logic_error("setMethodMeta: no method '" + name.canonName() 
-                + "' in '" + objectType.toString() + "'");
-    }
-
-    _methods.setMeta(node, MethodMeta{ member->baseClassType, name });
-}
-
-void TypeEnv::enterScope()
-{
-    _scopes.push();
-}
-
-void TypeEnv::leaveScope()
-{
-    _scopes.pop();
-}
-
-void TypeEnv::declareLocal(String const& name, ValueType const& type)
-{
-    if (!_curMethod)
-    {
-        throw std::logic_error("declareLocal with no curMethod");
-    }
-
-    _scopes.declLocal(name, type);
-}
-
-Type TypeEnv::lookupRuleType(CanonName const& name) const
-{
-    Type const* type = lookup(_rules, name);
-
-    if (type)
-    {
-        return *type;
+        // It was a type variable. Here's the real type.
+        return *u;
     }
     else
     {
-        throw TypeCheckerException("Invalid operands to operator: " + name.canonName());
+        // Either an unbound type variable or just a normal type.
+        // If unbound, error will surface eventually.
+        return t;
     }
 }
 
-MethodType TypeEnv::lookupMethodType(CanonName const& methodName) const
-{
-    return lookupMethodTypeByClass(_classes.cur()->type, methodName);
-}
-
-MethodType TypeEnv::lookupMethodTypeByClass(ValueType const& classType,
-        CanonName const& methodName) const
-{
-    Optional<MemberMeta> member = _classes.lookupMethod(classType, methodName);
-    
-    if (!member)
-    {
-        throw TypeCheckerException("Undeclared method '" 
-                + methodName.canonName() + "' in class '" 
-                + classType.toString() + "'");
-    }
-    
-    if (!member->type.isMethod())
-    {
-        throw TypeCheckerException("Referenced method name '" 
-                + methodName.canonName() + "' in class " 
-                + classType.toString() + " is not a method type");
-    }
-
-    return member->type.method();
-}
-            
-ValueType TypeEnv::lookupVarType(String const& varName) const
-{
-    Decl const* decl = _scopes.lookup(varName);
-
-    if (decl && decl->declType == DeclType::local)
-    {
-        Type varType = decl->type;
-
-        if (!varType.isValue())
-        {
-            throw TypeCheckerException("Referenced var name '" + varName
-                + " is not a variable type");
-        }
-
-        return varType.value();
-    }
-    else
-    {
-        Decl const* thisDecl = _scopes.lookup(config::thisName);
-
-        if (thisDecl)
-        {
-            // It's probably our fault if "this" isn't a value type.
-            ValueType classType = thisDecl->type.value();
-            return lookupVarTypeByClass(classType, varName);
-        }
-        else
-        {
-            throw TypeCheckerException("Undeclared var name '" + varName + "'");
-        }
-    }
-}
-
-ValueType TypeEnv::lookupVarTypeByClass(ValueType const& classType,
-        String const& memberName) const
-{
-    Optional<MemberMeta> member = _classes.lookupVar(classType, memberName);
-
-    if (!member)
-    {
-        throw TypeCheckerException("Undeclared member var name '" + memberName + "'");
-    }
-
-    if (!member->type.isValue())
-    {
-        throw TypeCheckerException("Referenced member var name '" + memberName
-            + "' in class " + classType.toString() 
-            + " is not a variable type");
-    }
-
-    return member->type.value();
-}
-
-void TypeEnv::declareClass(ValueType const& type, ClassDecl* decl)
-{
-    if (_classes.lookupClassDecl(type))
-    {
-        throw TypeCheckerException("Already declared class '" 
-                + type.name() + "'");
-    }
-
-    _classes.newClassDecl(type, decl);
-}
-
-// Saves and clears the current class context.
-// Note: Must be very careful that this doesn't mess up any state.
-TypeEnv::SavedClass TypeEnv::saveClass()
-{
-    SavedClass c;
-
-    ClassMeta const* cur = _classes.cur();
-
-    if (cur)
-    {
-        c.type = cur->type;
-        _classes.leave();
-    }
-
-    c.tvars = std::move(_tvars);
-    _tvars.clear();
-
-    return c;
-}
-
-// Restores the current class context.
-void TypeEnv::restoreClass(TypeEnv::SavedClass const& c)
-{
-    if (_classes.cur())
-    {
-        throw std::logic_error("restoreClass when in class");
-    }
-
-    if (c.type)
-    {
-        _classes.enter(*c.type);
-    }
-
-    _tvars = std::move(c.tvars);
-}
-
+// Instantiate a class type with concrete type variables.
 void TypeEnv::instantiate(ValueType const& type)
 {
     std::cout << "DEBUG: instantiating " << type.toString() << "\n";
@@ -379,19 +421,6 @@ void TypeEnv::assertValidType(ValueType const& type)
     }
 }
 
-void TypeEnv::assertTypeIs(Type const &test, Type const &against) const
-{
-    if (test == against)
-    {
-        return;
-    }
-
-    throw TypeCheckerException(
-        "Type '" + test.toString() + 
-        "' must be '" + against.toString() + "'"
-        );
-}
-
 void TypeEnv::assertTypeIsOrBase(Type const& t1, Type const& t2) const
 {
     if (t1 == t2)
@@ -432,49 +461,5 @@ void TypeEnv::assertTypeIsOrBase(Type const& t1, Type const& t2) const
         );
 }
 
-void TypeEnv::initialize() 
-{
-    auto binopRule = [&](OpType op, ValueType const& ret, 
-            ValueType const& lhs, ValueType const& rhs)
-    {
-        String name(opString(op));
-        MethodType type(ret, { lhs, rhs });
-        CanonName canonName(name, type);
-        _rules.insert({ canonName, ret });
-    };
-    
-    auto unopRule = [&](OpType op, ValueType const& ret, ValueType const& rhs)
-    {
-        String name(opString(op));
-        MethodType type(ret, { rhs });
-        CanonName canonName(name, type);
-        _rules.insert({ canonName, ret });
-    };
-
-    ValueType const i = intType;
-    ValueType const b = boolType;
-    ValueType const v = voidType;
-
-    // Predefined function types. 
-    binopRule(opPlus,  i, i, i); // int +(int,int)
-    binopRule(opMinus, i, i, i);
-    binopRule(opMult,  i, i, i);
-    binopRule(opDiv,   i, i, i);
-    
-    binopRule(opLogEq,    b, i, i); // bool ==(int,int)
-    binopRule(opLogNotEq, b, i, i);
-    
-    binopRule(opLogEq,    b, b, b);
-    binopRule(opLogNotEq, b, b, b);
-   
-    binopRule(opAnd,      b, b, b); // bool &&(bool,bool)
-    binopRule(opOr,       b, b, b);
-    
-    binopRule(opAnd,      b, i, i); // bool &&(int,int)
-    binopRule(opOr,       b, i, i);
-
-    unopRule(opMinus, i, i); // int -(int)
-    unopRule(opNot,   b, b); // bool !(bool)
-}
-
+*/
 } //namespace dflat
