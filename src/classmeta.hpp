@@ -41,9 +41,12 @@ struct MemberMeta
     ValueType baseClassType;
 };
 
+struct ClassDecl;
+
 class ClassMetaMan
 {
     Map<ValueType, ClassMeta> _classes;
+    Map<TypeName, ClassDecl*> _decls;
     Optional<ValueType> _curClass;
 
     public:
@@ -57,6 +60,10 @@ class ClassMetaMan
         void addVar(String const&, ValueType const&);
         void addMethod(CanonName const&);
         void setParent(ValueType const& parentType);
+        
+        void newClassDecl(ValueType const& classType, ClassDecl*);
+        ClassDecl* lookupClassDecl(ValueType const&);
+
         ClassMeta const* cur() const;
         void print() const;
 

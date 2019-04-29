@@ -16,6 +16,7 @@ TypeEnv::TypeEnv()
     initialize();
 }
 
+// TODO possibly make these private
 void TypeEnv::enterClass(ValueType const& classType)
 {
     if (_classes.lookup(classType))
@@ -24,6 +25,7 @@ void TypeEnv::enterClass(ValueType const& classType)
                 + classType.toString());
     }
 
+    _classes.declare(classType);
     _classes.enter(classType);
     
     // Add a default constructor.
@@ -227,23 +229,153 @@ ValueType TypeEnv::lookupVarTypeByClass(ValueType const& classType,
     return member->type.value();
 }
 
-void TypeEnv::assertValidType(ValueType const& type) const
+void TypeEnv::declareClass(ValueType const& type, ClassDecl* decl)
 {
-    // NOTE: You actuall can do this.
-//    if (_classes.cur() && _classes.cur()->type == type)
-//    {
-//        throw TypeCheckerException("Cannot use an instance of a class inside its own definition. Inside class: " + _classes.cur()->type.toString());
-//    }
+    if (_classes.lookupClassDecl(type))
+    {
+        throw TypeCheckerException("Already declared class '" 
+                + type.name() + "'");
+    }
 
+    _classes.newClassDecl(type, decl);
+}
+
+// Saves and clears the current class context.
+// Note: Must be very careful that this doesn't mess up any state.
+TypeEnv::SavedClass TypeEnv::saveClass()
+{
+    SavedClass c;
+
+    ClassMeta const* cur = _classes.cur();
+
+    if (cur)
+    {
+        c.type = cur->type;
+        _classes.leave();
+    }
+
+    c.tvars = std::move(_tvars);
+    _tvars.clear();
+
+    return c;
+}
+
+// Restores the current class context.
+void TypeEnv::restoreClass(TypeEnv::SavedClass const& c)
+{
+    if (_classes.cur())
+    {
+        throw std::logic_error("restoreClass when in class");
+    }
+
+    if (c.type)
+    {
+        _classes.enter(*c.type);
+    }
+
+    _tvars = std::move(c.tvars);
+}
+
+void TypeEnv::instantiate(ValueType const& type)
+{
+    std::cout << "DEBUG: instantiating " << type.toString() << "\n";
+    ClassDecl* decl = _classes.lookupClassDecl(type);
+    
+    if (!decl)
+    {
+        throw TypeCheckerException("Cannot instantiate unknown type '"
+                + type.toString() + "'");
+    }
+    
+    // Instanciate parent first if necessary.
+    if (decl->parentType)
+    {
+        assertValidType(*decl->parentType);
+    }
+   
+    // Save and leave the current class context.
+    auto oldClass = saveClass();
+
+    // Map the type vars.
+    Vector<ValueType> const formalTVars = decl->type.tvars();
+    Vector<ValueType> const actualTVars = type.tvars();
+
+    if (formalTVars.size() != actualTVars.size())
+    {
+        throw TypeCheckerException("Cannot instantiate '"
+                + decl->type.toString() + "' as '"
+                + type.toString() + "'");
+    }
+
+    for (unsigned i = 0; i < formalTVars.size(); ++i)
+    {
+        if (!formalTVars[i].tvars().empty())
+        {
+            throw TypeCheckerException("Type variable '"
+                    + formalTVars[i].toString()
+                    + "' of class '"
+                    + decl->type.toString()
+                    + "' is not a simple type variable");
+        }
+
+        _tvars.insert({ formalTVars[i].name(), actualTVars[i] });
+    }
+
+    // Set the new class context.
+    enterClass(type);
+
+    // Process parent class.
+    if (decl->parentType)
+    {
+        setClassParent(*decl->parentType);
+    }
+    
+    // Typecheck members.
+    for (ASNPtr& member : decl->members)
+    {
+        member->typeCheck(*this);
+    }
+
+    // Clear the class context.
+    leaveClass();
+
+    // Restore the old class context.
+    restoreClass(oldClass);
+    
+    std::cout << "DEBUG: done instantiating " << type.toString() << "\n";
+}
+
+void TypeEnv::assertValidType(ValueType const& type)
+{
     if (isBuiltinType(type))
     {
+        // It's an int or something.
         return;
     }
 
     if (!_classes.lookup(type))
     {
-        throw TypeCheckerException("Invalid reference to unknown type: " 
-                + type.toString());
+        if (type.tvars().empty())
+        {
+            ValueType const* mappedType = lookup(_tvars, type.name());
+
+            if (mappedType)
+            {
+                // It's a type var that maps to some real type. Rerun on that.
+                assertValidType(*mappedType);
+            }
+            else
+            {
+                // It's really a type we've never heard of.
+                throw TypeCheckerException("Invalid reference to unknown type: " 
+                        + type.toString());
+            }
+        }
+        else
+        {
+            // It's a parametric type.
+            instantiate(type);
+        }
     }
 }
 

@@ -41,6 +41,8 @@ class TypeEnv
         void leaveScope();
         
         void declareLocal(String const& name, ValueType const& type);
+        void declareClass(ValueType const&, ClassDecl*);
+        void instantiate(ValueType const&);
         
         Type lookupRuleType(CanonName const&) const;
         MethodType lookupMethodType(CanonName const&) const;
@@ -50,8 +52,8 @@ class TypeEnv
         ValueType lookupVarTypeByClass(ValueType const& classType,
                 String const& varName) const;
 
-        // Throws on failure.
-        void assertValidType(ValueType const& type) const;
+        // Throws on failure. Instanciates parametric types.
+        void assertValidType(ValueType const& type);
 
         // t1 must equal t2. Throws on failure.
         void assertTypeIs(Type const& t1, Type const& t2) const;
@@ -60,7 +62,15 @@ class TypeEnv
         void assertTypeIsOrBase(Type const& t1, Type const& t2) const;
 
     private:
+        struct SavedClass
+        {
+            Optional<ValueType> type;
+            Map<TypeName, ValueType> tvars;
+        };
+
         void initialize();
+        SavedClass saveClass();
+        void restoreClass(SavedClass const&);
 
         ClassMetaMan _classes;
         ScopeMetaMan _scopes;
@@ -69,6 +79,9 @@ class TypeEnv
         /// rules - Map of valid rules for how types interact with operators:
         ///     Map: String canonical name -> String expressions return type.
         Map<CanonName,Type> _rules;
+
+        // Special map from type variable to concrete type.
+        Map<TypeName, ValueType> _tvars;
 
         Optional<MethodMeta> _curMethod;
 

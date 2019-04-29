@@ -346,20 +346,14 @@ Type RetStm::typeCheckPrv(TypeEnv& env)
 
 Type ClassDecl::typeCheckPrv(TypeEnv& env)
 {
-    env.enterClass(type); // Set class context.
+    env.declareClass(type, this);
 
-    if (parentType)
+    if (type.tvars().empty())
     {
-        env.assertValidType(*parentType);
-        env.setClassParent(*parentType);
-    }
-    
-    for (ASNPtr& member : members)
-    {
-        member->typeCheck(env);
+        // Non-parametric type, instantiate it now.
+        env.instantiate(type);
     }
 
-    env.leaveClass(); // Clear class context.
     return type;
 }
 

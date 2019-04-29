@@ -9,12 +9,21 @@ namespace dflat
 
 void ClassMetaMan::enter(ValueType const& classType)
 {
-    declare(classType);
+    if (_curClass)
+    {
+        throw std::logic_error("enter: already in a class");
+    }
+
     _curClass = classType;
 }
 
 void ClassMetaMan::leave()
 {
+    if (!_curClass)
+    {
+        throw std::logic_error("leave: not in a class");
+    }
+
     _curClass = nullopt;
 }
 
@@ -130,6 +139,34 @@ void ClassMetaMan::setParent(ValueType const& parentType)
     
     ClassMeta* classMeta = _lookup(cur()->type);
     classMeta->parent = parentType;
+}
+
+static
+TypeName const& declName(ValueType const& t)
+{
+    return t.name();
+}
+
+void ClassMetaMan::newClassDecl(ValueType const& type, ClassDecl* decl)
+{
+    if (dflat::lookup(_decls, declName(type)))
+    {
+        throw std::logic_error("already declared '" + declName(type) + "'");
+    }
+
+    _decls.insert({ declName(type), decl });
+}
+ 
+ClassDecl* ClassMetaMan::lookupClassDecl(ValueType const& type)
+{
+    ClassDecl** p = dflat::lookup(_decls, declName(type));
+
+    if (!p)
+    {
+        return nullptr;
+    }
+
+    return *p;
 }
 
 void ClassMetaMan::print() const

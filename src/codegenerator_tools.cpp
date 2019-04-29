@@ -90,7 +90,7 @@ void* dfalloc(size_t size, vtablefn vt)
           + "(enum Methods);\n";
     }
 
-    s += "\n";
+    s += "\n/****************END PROLOG****************/\n\n";
     return s;
 }
 
@@ -127,7 +127,7 @@ String vtable(GenEnv const& env, ValueType const& classType)
 
 String GenEnv::epilog() const
 {
-    String s;
+    String s = "/***************BEGIN EPILOG***************/\n\n";
 
     for (auto [type, meta] : _classes.allClasses())
     {
@@ -167,21 +167,34 @@ String GenEnv::epilog() const
     return s;
 }
 
-String mangleTypeName(ValueType const& typeName)
+static
+String mangleValueType(ValueType const& x)
 {
-    if (isBuiltinType(typeName))
+    String s = x.name();
+    
+    for (ValueType const& tv : x.tvars())
     {
-        return translateBuiltinType(typeName);
+        s += "_" + mangleValueType(tv);
+    }
+
+    return s;
+}
+
+String mangleTypeName(ValueType const& x)
+{
+    if (isBuiltinType(x))
+    {
+        return translateBuiltinType(x);
     }
     else
     {
-        return "struct df_" + typeName.toString() + "*";
+        return "struct df_" + mangleValueType(x) + "*";
     }
 }
 
 String mangleClassDecl(ValueType const& x)
 {
-    return "df_" + x.toString();
+    return "df_" + mangleValueType(x);
 }
 
 String mangleVarName(String const& x)
@@ -197,11 +210,11 @@ String mangleMemberName(String const& x)
 String mangleMethodName(ValueType const& objectType, 
         CanonName const& methodName)
 {
-    String s = "dfm_" + objectType.toString() + "_" + methodName.baseName();
+    String s = "dfm_" + mangleValueType(objectType) + "_" + methodName.baseName();
 
     for (ValueType const& arg : methodName.type().args())
     {
-        s += "_" + arg.toString();
+        s += "_" + mangleValueType(arg);
     }
 
     return s;
@@ -210,11 +223,11 @@ String mangleMethodName(ValueType const& objectType,
 String mangleConsName(CanonName const& consName)
 {
     ValueType const objectType = consName.type().ret();
-    String s = "dfc_" + objectType.toString();
+    String s = "dfc_" + mangleValueType(objectType);
 
     for (ValueType const& arg : consName.type().args())
     {
-        s += "_" + arg.toString();
+        s += "_" + mangleValueType(arg);
     }
 
     return s;
@@ -222,7 +235,7 @@ String mangleConsName(CanonName const& consName)
 
 String mangleVTableName(ValueType const& classType)
 {
-    return "dfv_" + classType.toString();
+    return "dfv_" + mangleValueType(classType);
 }
 
 String mangleVTableMethodName(CanonName const& methodName)
@@ -231,7 +244,7 @@ String mangleVTableMethodName(CanonName const& methodName)
 
     for (ValueType const& arg : methodName.type().args())
     {
-        s += "_" + arg.toString();
+        s += "_" + mangleValueType(arg);
     }
 
     return s;
@@ -264,17 +277,18 @@ String GenEnv::concat() const
         
 void GenEnv::enterClass(ValueType const& classType)
 {
+    _classes.declare(classType);
     _classes.enter(classType);
 }
 
 void GenEnv::leaveClass()
 {
-    _classes.leave();
-
     if (_classTabs != 0)
     {
         throw std::logic_error("Incorrect tabs on leaving class");
     }
+    
+    _classes.leave();
 }
 
 bool GenEnv::inClass() const

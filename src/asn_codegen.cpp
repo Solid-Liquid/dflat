@@ -312,6 +312,12 @@ void RetStm::generateCode(GenEnv& env) const
 
 void ClassDecl::generateCode(GenEnv& env) const
 {
+    if (!type.tvars().empty())
+    {
+        // Defer codegen to later.
+        return;
+    }
+    
     env.enterClass(type);
                        
     env << CodeLiteral("struct ")
