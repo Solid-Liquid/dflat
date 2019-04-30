@@ -27,10 +27,10 @@ GenEnv testGenEnv()
     return genEnv;
 }
 
-// Strip tabs and newlines from string
-// Note: This will break testing strings with \t or \n in them
 String strip(String const& s)
 {
+    // Strip tabs and newlines from string for testing purposes
+    // Note: This will break testing strings with \t or \n in them
     String t;
     t.reserve(s.size());
     bool nl = true;
@@ -110,6 +110,7 @@ String codeGenProg(String const& input)
     return strip(genEnv.concat());
 }
 
+
 TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
 {
     /*
@@ -171,12 +172,11 @@ TEST_CASE( "Expression Code Generation Tests", "[CodeGenerator]" )
     REQUIRE( codeGenExp("true != false") == "(1!=0)"); //no bool in C code
 }
 
+
 TEST_CASE( "Statement Code Generation Tests", "[CodeGenerator]" )
 {
     /*
      *   Tests for properly generating code for statements (only):
-     *   Resulting code is one line to avoid white space that
-     *   shouldn't be there.
      */
 
     //Integer Declaration Statement:
@@ -198,12 +198,11 @@ TEST_CASE( "Statement Code Generation Tests", "[CodeGenerator]" )
 
 }
 
+
 TEST_CASE( "Control Stuctures/Block Code Generation Tests", "[CodeGenerator]" )
 {
     /*
      *   Tests for properly generating code for control structures/blocks:
-     *   Resulting code is one line to avoid white space that
-     *   shouldn't be there.
      */
 
     //If statement:
@@ -218,9 +217,15 @@ TEST_CASE( "Control Stuctures/Block Code Generation Tests", "[CodeGenerator]" )
 
              ==
 
-             "if ((!1)){int df_var = (1+2);}"
+             strip(R"(
 
-             );
+                   if ((!1))
+                   {
+                        int df_var = (1+2);
+                   }
+
+             )"));
+
 
     //If else statement:
     REQUIRE( codeGenStm(R"(
@@ -238,9 +243,19 @@ TEST_CASE( "Control Stuctures/Block Code Generation Tests", "[CodeGenerator]" )
 
              ==
 
-             "if ((1==0)){int df_var = (1+2);}else{int df_var = (1-2);}"
+             strip(R"(
 
-             );
+                   if ((1==0))
+                   {
+                        int df_var = (1+2);
+                   }
+                   else
+                   {
+                        int df_var = (1-2);
+                   }
+
+             )"));
+
 
     //While statement:
     REQUIRE( codeGenStm(R"(
@@ -254,20 +269,39 @@ TEST_CASE( "Control Stuctures/Block Code Generation Tests", "[CodeGenerator]" )
 
              ==
 
-             "while ((1||0)){int df_var = (1+2);}"
+             strip(R"(
 
-             );
+                   while ((1||0))
+                   {
+                        int df_var = (1+2);
+                   }
+
+             )"));
+
+
 }
+
 
 TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
 {
-    // Single class with single member var.
+    /*
+     *   Tests for generating a full C program:
+     */
+
+    // Single class with single member var:
     REQUIRE( codeGenProg(R"(
+
             class Base
             {
                 int x;
             };
-        )") == strip(R"( 
+
+        )")
+
+        ==
+
+        strip(R"(
+
             struct df_Base
             {
                 struct vtable vtable;
@@ -279,10 +313,13 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                 struct df_Base* df_this = this;
                 return df_this;
             }
+
         )"));
     
-    // Single class with single method.
+
+    // Single class with single method:
     REQUIRE( codeGenProg(R"(
+
             class Base
             {
                 int f()
@@ -290,7 +327,13 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                     return 1;
                 }
             };
-        )") == strip(R"(
+
+        )")
+
+        ==
+
+        strip(R"(
+
             struct df_Base
             {
                 struct vtable vtable;
@@ -306,10 +349,13 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                 struct df_Base* df_this = this;
                 return 1;
             }
+
         )"));
     
-    // Simple inherited member var.
+
+    // Simple inherited member var:
     REQUIRE( codeGenProg(R"(
+
             class Base
             {
                 int x;
@@ -321,7 +367,13 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                     return x;
                 }
             };
-        )") == strip(R"(
+
+        )")
+
+        ==
+
+        strip(R"(
+
             struct df_Base
             {
                 struct vtable vtable;
@@ -348,10 +400,13 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                 struct df_Sub* df_this = this;
                 return df_this->parent.df_x;
             }
+
         )"));
     
-    // Double inherited member var.
+
+    // Double inherited member var:
     REQUIRE( codeGenProg(R"(
+
             class Base1
             {
                 int x;
@@ -366,7 +421,13 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                     return x;
                 }
             };
-        )") == strip(R"(
+
+        )")
+
+        ==
+
+        strip(R"(
+
             struct df_Base1
             {
                 struct vtable vtable;
@@ -403,10 +464,13 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                 struct df_Sub* df_this = this;
                 return df_this->parent.parent.df_x;
             }
+
         )"));
 
-    // Inherited method.
+
+    // Inherited method:
     REQUIRE( codeGenProg(R"(
+
             class Base
             {
                 int f()
@@ -421,7 +485,13 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                     return f();
                 }
             };
-        )") == strip(R"(
+
+        )")
+
+        ==
+
+        strip(R"(
+
             struct df_Base
             {
                 struct vtable vtable;
@@ -452,10 +522,13 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                 struct df_Sub* df_this = this;
                 return CALL(int, dfvm_f, df_this);
             }
+
         )"));
     
-    // Basic instantiation.
+
+    // Basic instantiation:
     REQUIRE( codeGenProg(R"(
+
             class Base
             {
                 Base f()
@@ -463,7 +536,13 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                     return new Base();
                 }
             };
-        )") == strip(R"(
+
+        )")
+
+        ==
+
+        strip(R"(
+
             struct df_Base
             {
                 struct vtable vtable;
@@ -479,10 +558,13 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                 struct df_Base* df_this = this;
                 return NEW0(df_Base, dfv_Base, dfc_Base);
             }
+
         )"));
 
-    // Construction.
+
+    // Construction:
     REQUIRE( codeGenProg(R"(
+
             class Base
             {
                 cons(int x, int y)
@@ -493,7 +575,13 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                     return new Base(1,2);
                 }
             };
-        )") == strip(R"(
+
+        )")
+
+        ==
+
+        strip(R"(
+
             struct df_Base
             {
                 struct vtable vtable;
@@ -514,10 +602,13 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                 struct df_Base* df_this = this;
                 return NEW(df_Base, dfv_Base, dfc_Base_int_int, 1, 2);
             }
+
         )"));
 
-    // Virtual construction and call.
+
+    // Virtual construction and call:
     REQUIRE( codeGenProg(R"(
+
             class Base
             {
                 int f()
@@ -542,7 +633,13 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                     sub.f();
                 }
             };
-        )") == strip(R"(
+
+        )")
+
+        ==
+
+        strip(R"(
+
             struct df_Base
             {
                 struct vtable vtable;
@@ -591,6 +688,7 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                 CALL(int, dfvm_f, df_base);
                 CALL(int, dfvm_f, df_sub);
             }
+
         )"));
 
 }
