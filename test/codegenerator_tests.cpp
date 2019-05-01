@@ -68,7 +68,7 @@ String codeGenExp(String const& input)
     //Takes a string, tokenizes it, passes it a parser instance,
     //calls parseExp() and generateCode(). (No typchecking)
     GenEnv env = testGenEnv();
-    auto result = Parser(tokenize(input)).parseExp();
+    auto result = Parser(tokenize(input),false).parseExp();
     
     if (!result)
     {
@@ -85,7 +85,7 @@ String codeGenStm(String const& input)
     //Takes a string, tokenizes it, passes it a parser instance,
     //calls parseStm() and generateCode(). (No typchecking)
     GenEnv env = testGenEnv();
-    auto result = Parser(tokenize(input)).parseStm();
+    auto result = Parser(tokenize(input),false).parseStm();
     
     if (!result)
     {
@@ -98,7 +98,7 @@ String codeGenStm(String const& input)
 
 String codeGenProg(String const& input)
 {
-    Vector<ASNPtr> program = parse(tokenize(input));
+    Vector<ASNPtr> program = Parser(tokenize(input),false).parseProgram();
     TypeEnv typeEnv = typeCheck(program);
     GenEnv genEnv(typeEnv);
 
@@ -108,6 +108,15 @@ String codeGenProg(String const& input)
     }
 
     return strip(genEnv.concat());
+}
+
+String codeGenFullProg(String const& input)
+{
+    Vector<ASNPtr> program = Parser(tokenize(input)).parseProgram();
+    TypeEnv typeEnv = typeCheck(program);
+    GenEnv genEnv(typeEnv);
+    String output = generateCode(program,typeEnv);
+    return strip(output);
 }
 
 
@@ -691,4 +700,138 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
 
         )"));
 
+
+    //Generate a FULL sample C program from dflat code:
+    REQUIRE( codeGenFullProg(R"(
+
+            class MyClass
+            {
+                int data;
+
+                cons(int data)
+                {
+                    this.data = data;
+                }
+
+                bool changeData(int newData)
+                {
+                    data = newData;
+                    return true;
+                }
+            };
+
+            class Main
+            {
+                void main()
+                {
+                    MyClass mc = new MyClass(5);
+                    mc.changeData(11);
+                }
+            };
+
+        )")
+
+        ==
+
+        strip(R"(
+
+              #include <stdlib.h>
+
+              #define NEW(T,V,C,...)   C(dfalloc(sizeof(struct T), (vtablefn)&V), __VA_ARGS__)
+              #define NEW0(T,V,C)      C(dfalloc(sizeof(struct T), (vtablefn)&V))
+              #define VTABLE(x)        (((struct vtable*)x)->vt)
+              #define FIRST_ARG(x,...) x
+              #define CALL(R,f,...)    ( ( (R(*)(void*)) ( (*VTABLE(FIRST_ARG(__VA_ARGS__))) (f) ) ) (__VA_ARGS__) )
+
+              enum Methods
+              {
+                      dfvm_changeData_int,
+                      dfvm_main,
+              };
+
+              typedef void* (*vtablefn)(enum Methods);
+
+              struct vtable
+              {
+                  vtablefn vt;
+              };
+
+              void* dfalloc(size_t size, vtablefn vt)
+              {
+                  void* p = calloc(1, size);
+                  VTABLE(p) = vt;
+                  return p;
+              }
+
+              void* dfv_Main(enum Methods);
+              void* dfv_MyClass(enum Methods);
+
+              struct df_MyClass
+              {
+                      struct vtable vtable;
+                      int df_data;
+              };
+              struct df_Main
+              {
+                      struct vtable vtable;
+              };
+
+              void* dfc_MyClass(void* this)
+              {
+                      struct df_MyClass* df_this = this;
+                      return df_this;
+              }
+
+              void* dfc_MyClass_int(void* this, int df_data)
+              {
+                      struct df_MyClass* df_this = this;
+                      df_this->df_data = df_data;
+                      return df_this;
+              }
+
+              int dfm_MyClass_changeData_int(void* this, int df_newData)
+              {
+                      struct df_MyClass* df_this = this;
+                      df_this->df_data = df_newData;
+                      return 1;
+              }
+
+              void* dfc_Main(void* this)
+              {
+                      struct df_Main* df_this = this;
+                      return df_this;
+              }
+
+              void dfm_Main_main(void* this)
+              {
+                      struct df_Main* df_this = this;
+                      struct df_MyClass* df_mc = NEW(df_MyClass, dfv_MyClass, dfc_MyClass_int, 5);
+                      CALL(int, dfvm_changeData_int, df_mc, 11);
+              }
+
+              void* dfv_Main(enum Methods m)
+              {
+                      switch (m)
+                      {
+                              case dfvm_main: return &dfm_Main_main;
+                              default: abort();
+                      }
+              }
+
+              void* dfv_MyClass(enum Methods m)
+              {
+                      switch (m)
+                      {
+                              case dfvm_changeData_int: return &dfm_MyClass_changeData_int;
+                              default: abort();
+                      }
+              }
+
+              int main()
+              {
+                      struct df_Main* df_main = NEW0(df_Main, dfv_Main, dfc_Main);
+                      dfm_Main_main(df_main);
+              }
+
+        )"));
 }

@@ -52,6 +52,8 @@ class Parser
     size_t _tokenPos;
     TokenPtr const _end;
     Tracer _tracer;
+    String currentClass;
+    bool hasMainMethod;
 
     Map<String, ClassDecl*> _classes;
 
@@ -110,7 +112,7 @@ public:
     ASNPtr parseClassStm();
     Vector<ASNPtr> parseProgram();
     ASNPtr parseRetStm();
-    Parser(Vector<TokenPtr> const&);
+    Parser(Vector<TokenPtr> const&, bool requireMain = true);
     ~Parser();
 };
 

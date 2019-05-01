@@ -32,6 +32,13 @@ Type stmType(String const& input)
     env.enterMethod(CanonName("test", MethodType(voidType, {})));
     return asn->typeCheck(env);
 }
+
+Vector<ASNPtr> parseTest(Vector<TokenPtr> const& tokens)
+{
+    //Calls parse with a flag that does not require a "Main" in dflat code
+    Parser p(tokens,false);
+    return p.parseProgram();
+}
     
 //TODO Base b = new Sub(); should typecheck.
 
@@ -97,7 +104,7 @@ TEST_CASE( "TypeChecker checks structured code without exceptions","[TypeChecker
      *   Tests for Typechecker successfully checking large blocks of code:
      */
 
-    #define REQUIRE_TYPECHECKS(str) REQUIRE_NOTHROW(typeCheck(parse(tokenize(str))))
+    #define REQUIRE_TYPECHECKS(str) REQUIRE_NOTHROW(typeCheck(parseTest(tokenize(str))))
     //Helper macro that makes things less ugly for typecheck tests.
     //Calls tokenize, parse, and typecheck on a string.
     //Requires that no exceptions are thrown for test to succeed.
@@ -261,7 +268,7 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
      *   Tests for Typechecker throwing exceptions:
      */
 
-    #define REQUIRE_DOESNT_TYPECHECK(str) REQUIRE_THROWS_AS(typeCheck(parse(tokenize(str))),TypeCheckerException)
+    #define REQUIRE_DOESNT_TYPECHECK(str) REQUIRE_THROWS_AS(typeCheck(parseTest(tokenize(str))),TypeCheckerException)
     //Helper macro that makes things less ugly for exception tests.
     //Calls tokenize, parse, and typecheck on a string.
     //Requires that a TypeCheckerException be thrown for the test to succeed.

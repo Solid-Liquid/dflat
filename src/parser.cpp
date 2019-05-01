@@ -768,6 +768,10 @@ ASNPtr Parser::parseMethodDecl()
 
     CANCEL_ROLLBACK;
     SUCCESS;
+
+    if((currentClass == "Main") && (functionName == "main"))
+        hasMainMethod = true;
+
     return make_unique<MethodDef>(typeName, functionName,
                                   move(exps), move(body));
 }
@@ -820,6 +824,7 @@ ASNPtr Parser::parseClassDecl()
 
     MATCH_(ClassToken);
     MUST_PARSE(className, parseName(), "Expected class name");
+    currentClass = className;
 
     if(match<ExtendsToken>())
     {
@@ -842,6 +847,7 @@ ASNPtr Parser::parseClassDecl()
 
     CANCEL_ROLLBACK;
     SUCCESS;
+
     auto result = make_unique<ClassDecl>(className, move(stm), parent);
     _classes.insert({className, result.get()});
     return result;
@@ -915,15 +921,23 @@ Vector<ASNPtr> Parser::parseProgram()
         throw ParserException(msg);
     }
 
+    if(!hasMainMethod)
+        throw ParserException("Missing: Must have a class called \"Main\" with"
+                              " a method called \"main\"");
+
     return prog;
 }
 
-Parser::Parser(Vector<TokenPtr> const& tokens)
+Parser::Parser(Vector<TokenPtr> const& tokens, bool requireMain)
     : _tokens(tokens)
     , _tokenPos(0)
     , _end(make_unique<EndToken>())
     , _tracer("Parser(" + to_string(tokens) + ")", config::traceIndent)
 {
+    if(requireMain)
+        hasMainMethod = false;
+    else
+        hasMainMethod = true;
 }
 
 Parser::~Parser()
