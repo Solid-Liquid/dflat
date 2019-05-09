@@ -6,6 +6,9 @@
 - Ian Hinze
 - Brian McClelland
 
+## Documentation
+https://docs.google.com/document/d/1wfgvMtN3cCAjJY_HuqsTks-IuwwELZK9XyW2E1kNmAs/edit?usp=sharing
+
 ## Dependencies
 - CMake
 - C++17 or later compiler
