@@ -703,6 +703,11 @@ ASNPtr Parser::parseStm()
         SUCCESS;
         return result;
     }
+    else if (result = parsePrintStm())
+    {
+        SUCCESS;
+        return result;
+    }
 //    else if (result = parseExp())     //only for testing
 //    {
 //        SUCCESS;
@@ -892,6 +897,22 @@ ASNPtr Parser::parseRetStm()
     CANCEL_ROLLBACK;
     SUCCESS;
     return make_unique<RetStm>(move(exp));
+}
+
+ASNPtr Parser::parsePrintStm()
+{
+    TRACE;
+    ENABLE_ROLLBACK;
+
+    MATCH_(PrintToken);
+    MUST_MATCH_(LeftParenToken);
+    MUST_PARSE(exp, parseExp(), "Expected expression for print statement");
+    MUST_MATCH_(RightParenToken);
+    MUST_MATCH_(SemiToken);
+
+    CANCEL_ROLLBACK;
+    SUCCESS;
+    return make_unique<PrintStm>(move(exp));
 }
 
 Vector<ASNPtr> Parser::parseProgram()

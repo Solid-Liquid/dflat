@@ -319,6 +319,14 @@ void RetStm::generateCode(GenEnv& env) const
         << CodeLiteral(";\n");
 }
 
+void PrintStm::generateCode(GenEnv& env) const
+{
+    env << CodeTabs()
+        << CodeLiteral("printf(\"%d\n\",")
+        << value
+        << CodeLiteral(");\n");
+}
+
 void ClassDecl::generateCode(GenEnv& env) const
 {
     ValueType const classType(name);

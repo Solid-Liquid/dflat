@@ -103,6 +103,7 @@ public:
     ASNPtr parseVarDecl();
     ASNPtr parseAssignStm();
     ASNPtr parseIfStm();
+    ASNPtr parsePrintStm();
     ASNPtr parseWhileStm();
     ASNPtr parseStm();
     BlockPtr parseBlock();

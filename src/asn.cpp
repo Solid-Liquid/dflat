@@ -342,6 +342,17 @@ String RetStm::toString() const
     return "return " + value->toString() + ";";
 }
 
+//PrintStm:
+PrintStm::PrintStm(ASNPtr&& _value)
+    : value(move(_value))
+{
+}
+
+String PrintStm::toString() const
+{
+    return "print(" + value->toString() + ");";
+}
+
 // Class Definition
 ClassDecl::ClassDecl(String _name, Vector<ASNPtr>&& _members, ClassDecl* _parent)
     : name(_name), members(move(_members)), parent(_parent)

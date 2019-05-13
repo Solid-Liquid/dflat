@@ -588,6 +588,28 @@ TEST_CASE( "Parser works correctly", "[parser]" )
             ~RetStm(~NumberExp(1))
              );
 
+    REQUIRE( PT(parsePrintStm,        //print(1);  ->  PrintStm
+                PrintToken(),
+                LeftParenToken(),
+                NumberToken(1),
+                RightParenToken(),
+                SemiToken()
+                )
+             ==
+            ~PrintStm(~NumberExp(1))
+             );
+
+    REQUIRE( PT(parsePrintStm,        //print(true);  ->  PrintStm
+                PrintToken(),
+                LeftParenToken(),
+                TrueToken(),
+                RightParenToken(),
+                SemiToken()
+                )
+             ==
+            ~PrintStm(~BoolExp(true))
+             );
+
     REQUIRE( PT(parseClassDecl, // class MyClass { };  -> ClassDeclaration
                 ClassToken(),
                 NameToken("MyClass"),

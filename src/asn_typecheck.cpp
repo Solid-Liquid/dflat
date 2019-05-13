@@ -130,6 +130,20 @@ Type WhileStm::typeCheckPrv(TypeEnv& env)
     return voidType;
 }
 
+Type PrintStm::typeCheckPrv(TypeEnv& env)
+{
+    // Print must be int or bool
+    // Final type is void.
+
+    Type printType = value->typeCheck(env);
+    if(printType!=boolType && printType!=intType)
+    {
+        throw TypeCheckerException("Argument to print method must be bool or int.");
+    }
+
+    return voidType;
+}
+
 Type MethodDef::typeCheckPrv(TypeEnv& env)
 {
     MethodType methodType(ValueType(retTypeName), {});

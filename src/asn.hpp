@@ -17,7 +17,7 @@ namespace dflat
 enum ASNType { expBinop, expNumber, expBool, expVariable, expUnop,
                 block, stmIf, defMethod, stmWhile, stmAssign,
                 stmMethod, expMethod, stmVarDecAssign, expNew, stmRet,
-                declMethod, declClass, expThis, stmVarDec };
+                declMethod, declClass, expThis, stmVarDec, stmPrint };
 
 enum OpType { opPlus, opMinus, opMult, opDiv, opNot, opAnd, opOr,
                 opLogEq, opLogNotEq };
@@ -435,6 +435,26 @@ class RetStm : public ASN
         // first: exp
         RetStm(ASNPtr&&);
         ASNType getType() const { return stmRet; }
+        String toString() const;
+        Type typeCheckPrv(TypeEnv&);
+        void generateCode(GenEnv &) const;
+
+        bool operator==(RetStm const& other) const
+        {
+            return value == other.value;
+        }
+
+        DECLARE_CMP(RetStm)
+};
+
+class PrintStm : public ASN
+{
+    public:
+        ASNPtr value;
+
+        // Example: print(1);
+        PrintStm(ASNPtr&&);
+        ASNType getType() const { return stmPrint; }
         String toString() const;
         Type typeCheckPrv(TypeEnv&);
         void generateCode(GenEnv &) const;
