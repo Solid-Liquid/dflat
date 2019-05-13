@@ -69,6 +69,8 @@ namespace dflat
             case tokThis:
             case tokClass:
             case tokExtends:
+            case tokCons:
+            case tokPrint:
                  return true;
      
             default: 
@@ -184,10 +186,6 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
         WhileToken()
         ));
 
-    REQUIRE ( tokenize("extends") == tokens(
-        ExtendsToken()
-        ));
-
     REQUIRE ( tokenize("!") == tokens(
         NotToken()
         ));
@@ -210,6 +208,30 @@ TEST_CASE( "Lexer produces correct output", "[lexer]" )
 
     REQUIRE ( tokenize(".") == tokens(
         MemberToken()
+        ));
+
+    REQUIRE ( tokenize("return") == tokens(
+        ReturnToken()
+        ));
+
+    REQUIRE ( tokenize("class") == tokens(
+        ClassToken()
+        ));
+
+    REQUIRE ( tokenize("extends") == tokens(
+        ExtendsToken()
+        ));
+
+    REQUIRE ( tokenize("this") == tokens(
+        ThisToken()
+        ));
+
+    REQUIRE ( tokenize("cons") == tokens(
+        ConsToken()
+        ));
+
+    REQUIRE ( tokenize("print") == tokens(
+        PrintToken()
         ));
     
     //Tests for multiple tokens and special cases being tokenized:

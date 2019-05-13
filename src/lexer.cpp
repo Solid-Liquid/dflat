@@ -96,6 +96,7 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
         { "class", tokClass },
         { "extends", tokExtends },
         { "cons", tokCons },
+        { "print", tokPrint },
     };
 
     auto it = KWS.find(name);
@@ -118,6 +119,7 @@ TokenPtr Lexer::lookupKeyword(String const& name) const
         case tokClass:      return make_unique<ClassToken>();
         case tokExtends:    return make_unique<ExtendsToken>();
         case tokCons:       return make_unique<ConsToken>();
+        case tokPrint:       return make_unique<PrintToken>();
         default:            return nullptr;
     }
 }
