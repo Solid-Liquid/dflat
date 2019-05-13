@@ -322,7 +322,7 @@ void RetStm::generateCode(GenEnv& env) const
 void PrintStm::generateCode(GenEnv& env) const
 {
     env << CodeTabs()
-        << CodeLiteral("printf(\"%d\n\",")
+        << CodeLiteral("printf(\"%d\\n\",")
         << value
         << CodeLiteral(");\n");
 }

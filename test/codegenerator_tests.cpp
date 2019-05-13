@@ -205,6 +205,13 @@ TEST_CASE( "Statement Code Generation Tests", "[CodeGenerator]" )
 
     REQUIRE( codeGenStm("return 1 + 2 + 3;") == "return (1+(2+3));");
 
+    //Print Statement:
+    REQUIRE( codeGenStm("print(60);") == "printf(\"%d\\n\",60);");
+
+    REQUIRE( codeGenStm("print(false);") == "printf(\"%d\\n\",0);");
+
+    REQUIRE( codeGenStm("print(var);") == "printf(\"%d\\n\",df_var);");
+
 }
 
 
