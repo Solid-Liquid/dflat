@@ -93,6 +93,12 @@ TEST_CASE( "TypeChecker correctly checks types", "[TypeChecker]" )
 
     REQUIRE( stmType("int x = 5;")
              == voidType);
+
+    REQUIRE( stmType("print(1);")
+             == voidType);
+
+    REQUIRE( stmType("print(true==false);")
+             == voidType);
 }
 
 
@@ -295,13 +301,21 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
 
         )");
 
-    // TODO: fix it.
-    //Class extends error ("JunkClass" is not defined):
-//    REQUIRE_DOESNT_TYPECHECK(R"(
-//
-//        class MyClass extends JunkClass{};
-//
-//        )");
+    //Print only accepts boolean or int:
+    REQUIRE_DOESNT_TYPECHECK(R"(
+
+        class MyClass{};
+
+        class Main
+        {
+            void main()
+            {
+                MyClass mc = new MyClass();
+                print(mc);
+            }
+        };
+
+        )");
 
 
     //Variable "var" is type bool. Expected RHS to be "bool" (instead it's int)
