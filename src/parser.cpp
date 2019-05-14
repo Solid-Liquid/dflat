@@ -182,6 +182,7 @@ Optional<OpType> Parser::parseLogicalOp()
     }
 }
 
+// TODO: chained . operator doesn't work. a.b.c.
 Optional<Variable> Parser::parseVariable()
 {
     TRACE;

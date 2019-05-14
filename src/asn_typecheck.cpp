@@ -349,6 +349,8 @@ Type RetStm::typeCheckPrv(TypeEnv& env)
     Type methodRetType = ValueType(methodType.ret());
     Type myRetType     = value->typeCheck(env);
 
+    //TODO this should allow when myRetType is a subtype of methodRetType
+    //TODO there may be other cases as well.
     if (methodRetType == myRetType)
     {
         return myRetType;
