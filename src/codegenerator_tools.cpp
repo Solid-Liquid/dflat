@@ -142,13 +142,13 @@ String GenEnv::epilog() const
     MethodType mainMethodType(voidType, {});
     CanonName mainMethodName("main", mainMethodType);
     MethodType mainConsType(mainClassType, {});
-    CanonName mainConsName(config::consName, mainConsType); 
+    CanonName mainConsName(config::consName, mainConsType);
 
     s = s
       + "int main()\n"
       + "{\n"
-      + "\t" 
-      + mangleTypeName(mainClassType) 
+      + "\t"
+      + mangleTypeName(mainClassType)
       + " "
       + mangleVarName(mainClassName)
       + " = NEW0("
@@ -195,30 +195,42 @@ String mangleMemberName(String const& x)
     return "df_" + x;
 }
 
-String mangleMethodName(ValueType const& objectType, 
-        CanonName const& methodName)
+static
+String argString(Vector<ValueType> const& args)
 {
-    String s = "dfm_" + objectType.toString() + "_" + methodName.baseName();
+    String s;
 
-    for (ValueType const& arg : methodName.type().args())
+    if (args.empty())
     {
-        s += "_" + arg.toString();
+        s += "_";
+    }
+    else
+    {
+        for (ValueType const& arg : args)
+        {
+            s += "_" + arg.toString();
+        }
     }
 
     return s;
 }
 
+String mangleMethodName(ValueType const& objectType,
+        CanonName const& methodName)
+{
+    return "dfm_"
+         + objectType.toString()
+         + "_"
+         + methodName.baseName()
+         + argString(methodName.type().args());
+}
+
 String mangleConsName(CanonName const& consName)
 {
     ValueType const objectType = consName.type().ret();
-    String s = "dfc_" + objectType.toString();
-
-    for (ValueType const& arg : consName.type().args())
-    {
-        s += "_" + arg.toString();
-    }
-
-    return s;
+    return "dfc_"
+         + objectType.toString()
+         + argString(consName.type().args());
 }
 
 String mangleVTableName(ValueType const& classType)
@@ -228,14 +240,9 @@ String mangleVTableName(ValueType const& classType)
 
 String mangleVTableMethodName(CanonName const& methodName)
 {
-    String s = "dfvm_" + methodName.baseName();
-
-    for (ValueType const& arg : methodName.type().args())
-    {
-        s += "_" + arg.toString();
-    }
-
-    return s;
+    return "dfvm_"
+         + methodName.baseName()
+         + argString(methodName.type().args());
 }
 
 
@@ -246,11 +253,11 @@ GenEnv::GenEnv(TypeEnv const& typeEnv)
 
 std::stringstream& GenEnv::write()
 {
-    if (!inMethod()) 
+    if (!inMethod())
     {
         return _structDef;
-    } 
-    else 
+    }
+    else
     {
         return _funcDef;
     }
@@ -588,7 +595,7 @@ void GenEnv::emitMemberVar(ValueType const& objectType, String const& memberName
 
     if (!member)
     {
-        throw std::logic_error("no member var '" + memberName 
+        throw std::logic_error("no member var '" + memberName
                 + "' in '" + objectType.name() + "'");
     }
     
