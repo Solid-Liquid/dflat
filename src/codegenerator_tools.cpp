@@ -44,12 +44,13 @@ String GenEnv::prolog() const
 */
     String s = R"(
 #include <stdlib.h>
+#include <stdio.h>
 
 #define NEW(T,V,C,...)   C(dfalloc(sizeof(struct T), (vtablefn)&V), __VA_ARGS__)
 #define NEW0(T,V,C)      C(dfalloc(sizeof(struct T), (vtablefn)&V))
 #define VTABLE(x)        (((struct vtable*)x)->vt)
 #define FIRST_ARG(x,...) x
-#define CALL(R,f,...)    ( ( (R(*)(void*)) ( (*VTABLE(FIRST_ARG(__VA_ARGS__))) (f) ) ) (__VA_ARGS__) )
+#define CALL(R,f,...)    ( ( (R(*)()) ( (*VTABLE(FIRST_ARG(__VA_ARGS__))) (f) ) ) (__VA_ARGS__) )
 
 enum Methods
 {

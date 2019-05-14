@@ -23,8 +23,8 @@ int main(int argc, char* argv[])
     }
     else
     {
-        cout << "Usage: dflat SOURCEFILE" << endl;
-        return 0;
+        cerr << "Usage: dflat SOURCEFILE" << endl;
+        return 1;
     }
 
     ifstream file(fileName);
@@ -38,8 +38,8 @@ int main(int argc, char* argv[])
     }
     else
     {
-        cout << "Error: File not found!\n";
-        return 0;
+        cerr << "Error: File not found!\n";
+        return 1;
     }
 
     try
@@ -64,10 +64,12 @@ int main(int argc, char* argv[])
         // Run CodeGenerator:
         String output = generateCode(program, typeEnv);
         std::cout << output << endl;
+        return 0;
     }
     catch(std::runtime_error& e)
     {
-        cout << e.what() << endl;
+        cerr << e.what() << endl;
+        return 1;
     }
 
     return 0;
