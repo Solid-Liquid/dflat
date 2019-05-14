@@ -237,7 +237,7 @@ void NewExp::generateCode(GenEnv& env) const
     // Need constructor's canonical name.
     auto [thisType, consName] = env.getMethodMeta(this);
     (void)thisType; // unused.
-    if (resultType != thisType) //TODO ?
+    if (resultType != thisType) //TODO subtyping?
     {
         throw std::logic_error(resultType.toString() + " != " + thisType.toString());
     }
@@ -279,6 +279,8 @@ void AssignStm::generateCode(GenEnv& env) const
 
 void VarDecStm::generateCode(GenEnv& env) const
 {
+    //TODO we should assign a default value.
+    //TODO we should check for null pointer before deref.
     ValueType const varType(typeName);
 
     env << CodeTabs()
@@ -313,6 +315,8 @@ void VarDecAssignStm::generateCode(GenEnv& env) const
 
 void RetStm::generateCode(GenEnv& env) const
 {
+    //TODO care if the function has no return statement?
+    //TODO not sure if this works: Base f() { return new Sub(); }
     env << CodeTabs()
         << CodeLiteral("return ")
         << value
@@ -355,6 +359,7 @@ void ClassDecl::generateCode(GenEnv& env) const
     }
     
     // Emit default constructor.
+    // TODO - if you define your own default constructor, this implicit one should not be emitted.
     emitConstructor(env, MethodType(classType, {}), {}, {});
 
     // Emit members.

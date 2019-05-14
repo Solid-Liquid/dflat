@@ -13,6 +13,7 @@ namespace dflat
 
 Vector<ASNPtr> parse(Vector<TokenPtr> const&);  //Main runner function for parser
 
+// TODO line/column in parse errors (and the rest if possible)
 class ParserException : public std::runtime_error
 {
 public:
