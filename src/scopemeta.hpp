@@ -28,7 +28,7 @@ class ScopeMetaMan
         void push();
         void pop();
         void declLocal(String const&, Type const&);
-        void print() const;
+//        void print() const;
         Decl const* lookup(String const&) const;
 
     private:

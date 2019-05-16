@@ -7,7 +7,7 @@
 namespace dflat
 {
 TypeEnv typeCheck(Vector<ASNPtr> const&);
-Type typeCheck(ASNPtr const&);
+//Type typeCheck(ASNPtr const&);
 
 } //namespace dflat
 

@@ -25,19 +25,19 @@ void ScopeMetaMan::declLocal(String const& name, Type const& type)
     declAny(name, decl);
 }
 
-void ScopeMetaMan::print() const
-{
-    std::cout << "scope_print\n";
-    unsigned tab = 1;
-    for (auto&& s : _scopes)
-    {
-        for (auto&& [k,v] : s)
-        {
-            std::cout << String(tab*2, ' ') << k << "\n";
-        }
-        ++tab;
-    }
-}
+//void ScopeMetaMan::print() const
+//{
+//    std::cout << "scope_print\n";
+//    unsigned tab = 1;
+//    for (auto&& s : _scopes)
+//    {
+//        for (auto&& [k,v] : s)
+//        {
+//            std::cout << String(tab*2, ' ') << k << "\n";
+//        }
+//        ++tab;
+//    }
+//}
 
 Decl const* ScopeMetaMan::lookup(String const& name) const
 {

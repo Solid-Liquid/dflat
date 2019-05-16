@@ -17,11 +17,11 @@ TypeEnv typeCheck(Vector<ASNPtr> const& program)
     return env;
 }
 
-// Typecheck a single syntax node, returning its type.
-Type typeCheck(ASNPtr const& asn)
-{
-    TypeEnv env;
-    return asn->typeCheck(env);
-}
+//// Typecheck a single syntax node, returning its type.
+//Type typeCheck(ASNPtr const& asn)
+//{
+//    TypeEnv env;
+//    return asn->typeCheck(env);
+//}
 
 } //namespace dflat
