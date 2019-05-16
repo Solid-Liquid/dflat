@@ -51,7 +51,8 @@ C
 An object oriented language based in C. An exploration of implementing the power objects on top of the light nature of a fairly low level language. All types are objects. Free functions are allowed. Strict naming conventions will be enforced such as best practices for variable and function names (There is one right way of naming): variables_are_snake_case, functionsAreCamelCase, and ClassesAreStudlyCase.
  
 <h5>Planned Restrictions:</h5>
-There will be no way to reclaim allocated memory.  
+There will be no way to reclaim allocated memory.
+You cannot chain the dot operator (a.b.c). 
  
 <h5>Abstract Syntax:</h5>
 
@@ -141,7 +142,7 @@ GenericArgList ::= ‘<’ TypeName [ ‘,’ TypeName ]* ‘>’
 Objects + methods with class-based inheritance.
 
 <h5>Non-Trivial Feature #2:</h5>
-Generic Programming
+Subtyping
 
 <h5>Non-Trivial Feature #3:</h5>
 Function Overloading
