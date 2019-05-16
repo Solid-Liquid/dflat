@@ -27,15 +27,8 @@ make
 ## Generage Coverage Report
 Run ```gen-coverage``` from the project root. Requires gcov+lcov. Produces a report at coverage/report/index.html.
 
-## Currently missing features (as of Control Structures - Initial):
-Code generation for methods has not been completed yet. This is because our language does not support free functions,
-and we have not fully implemented codegen for classes yet. Classes will be part of abstraction of computation. 
-
-Inheritance for classes is missing. This feature may or may not make it into abstraction of computation. We have not
-yet fully solved how to handle classes in C code. 
-
-Generics have not been implemented at the code generation level yet. We honestly need to do more research before
-we are ready to complete this feature. 
+## Currently missing features:
+None (we believe).
 
 
 <h1>Language Design Proposal:</h1>
