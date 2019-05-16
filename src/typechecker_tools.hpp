@@ -50,13 +50,20 @@ class TypeEnv
         ValueType lookupVarTypeByClass(ValueType const& classType,
                 String const& varName) const;
 
-        // Throws on failure.
+        CanonName resolveMethod(ValueType const& classType,
+                String const& baseName, MethodType const&) const;
+        
+        bool compatibleArgs(Vector<ValueType> const& formal,
+                Vector<ValueType> const& actual) const;
+
+        // type must be declared.
         void assertValidType(ValueType const& type) const;
 
-        // t1 must equal t2. Throws on failure.
+        // t1 must equal t2.
         void assertTypeIs(Type const& t1, Type const& t2) const;
 
-        // t1 must equal t2 or be a base of t2. Throws on failure.
+        // t1 must equal t2 or be a base of t2.
+        bool typeIsOrBase(Type const& t1, Type const& t2) const;
         void assertTypeIsOrBase(Type const& t1, Type const& t2) const;
 
     private:

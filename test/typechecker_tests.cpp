@@ -263,10 +263,67 @@ TEST_CASE( "TypeChecker checks structured code without exceptions","[TypeChecker
         };
 
         )");
+
+    // Return covariance
+    REQUIRE_TYPECHECKS(R"(
+        class Base
+        {};
+
+        class Sub extends Base
+        {
+            Base make()
+            {
+                return new Sub();
+            }
+        };
+        )");
+    
+    // Declaration+assignment covariance
+    REQUIRE_TYPECHECKS(R"(
+        class Base
+        {};
+
+        class Sub extends Base
+        {
+            void f()
+            {
+                Base b = new Sub(); 
+            }
+        };
+        )");
+    
+    // Assignment covariance
+    REQUIRE_TYPECHECKS(R"(
+        class Base
+        {};
+
+        class Sub extends Base
+        {
+            void f()
+            {
+                Base b; 
+                b = new Sub();
+            }
+        };
+        )");
+    
+    // Parameter covariance
+    REQUIRE_TYPECHECKS(R"(
+        class Base
+        {};
+
+        class Sub extends Base
+        {
+            void f(Base b)
+            {}
+
+            void g()
+            {
+                f(new Sub());
+            }
+        };
+        )");
 }
-
-
-
 
 TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
 {
@@ -365,6 +422,66 @@ TEST_CASE( "TypeChecker properly throws exceptions", "[TypeChecker]" )
             }
         };
 
+        )");
+    
+    // Opposite of return covariance
+    REQUIRE_DOESNT_TYPECHECK(R"(
+        class Base
+        {};
+
+        class Sub extends Base
+        {
+            Sub make()
+            {
+                return new Base();
+            }
+        };
+        )");
+    
+    // Opposite of declaration+assignment covariance
+    REQUIRE_DOESNT_TYPECHECK(R"(
+        class Base
+        {};
+
+        class Sub extends Base
+        {
+            void f()
+            {
+                Sub s = new Base(); 
+            }
+        };
+        )");
+    
+    // Opposite of assignment covariance
+    REQUIRE_DOESNT_TYPECHECK(R"(
+        class Base
+        {};
+
+        class Sub extends Base
+        {
+            void f()
+            {
+                Sub s; 
+                s = new Base();
+            }
+        };
+        )");
+    
+    // Opposite of parameter covariance
+    REQUIRE_DOESNT_TYPECHECK(R"(
+        class Base
+        {};
+
+        class Sub extends Base
+        {
+            void f(Sub s)
+            {}
+
+            void g()
+            {
+                f(new Base());
+            }
+        };
         )");
 
     //Unkown type error ("junkType" is an invalid type):

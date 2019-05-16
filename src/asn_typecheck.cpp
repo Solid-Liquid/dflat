@@ -228,7 +228,7 @@ Type MethodExp::typeCheckPrv(TypeEnv& env)
     }
 
     MethodType const methodType(undefinedType, argTypes);
-    CanonName const methodName(method.variable, methodType);
+    CanonName const methodName = env.resolveMethod(objectType, method.variable, methodType);
     
     // Get return type for whatever has this canonical name.
     Type resultType = env.lookupMethodTypeByClass(objectType, methodName).ret();
@@ -349,20 +349,9 @@ Type RetStm::typeCheckPrv(TypeEnv& env)
     Type methodRetType = ValueType(methodType.ret());
     Type myRetType     = value->typeCheck(env);
 
-    //TODO this should allow when myRetType is a subtype of methodRetType
-    //TODO there may be other cases as well.
-    if (methodRetType == myRetType)
-    {
-        return myRetType;
-    }
-    else
-    {
-        throw TypeCheckerException(
-                    "Attempting to return type '" + myRetType.toString() + 
-                    "' in method '" + env.curMethod().methodName.canonName()
-                    + "' which has return type '" + methodRetType.toString() +
-                    "' in class '" + env.curClass().type.toString() + "'");
-    }
+    // Returned type must be same as or subtype of method's return type.
+    env.assertTypeIsOrBase(methodRetType, myRetType);
+    return methodRetType;
 }
 
 Type ClassDecl::typeCheckPrv(TypeEnv& env)

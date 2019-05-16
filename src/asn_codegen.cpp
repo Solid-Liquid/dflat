@@ -237,7 +237,9 @@ void NewExp::generateCode(GenEnv& env) const
     // Need constructor's canonical name.
     auto [thisType, consName] = env.getMethodMeta(this);
     (void)thisType; // unused.
-    if (resultType != thisType) //TODO subtyping?
+
+    // Sanity check.
+    if (resultType != thisType)
     {
         throw std::logic_error(resultType.toString() + " != " + thisType.toString());
     }
@@ -316,7 +318,6 @@ void VarDecAssignStm::generateCode(GenEnv& env) const
 void RetStm::generateCode(GenEnv& env) const
 {
     //TODO care if the function has no return statement?
-    //TODO not sure if this works: Base f() { return new Sub(); }
     env << CodeTabs()
         << CodeLiteral("return ")
         << value

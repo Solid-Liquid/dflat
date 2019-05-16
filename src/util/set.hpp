@@ -24,4 +24,20 @@ K const* lookup(Set<K> const& set, K const& key)
     }
 }
 
+template <typename K, typename P>
+void erase_if(Set<K>& set, P const& pred)
+{
+    for (auto i = set.begin(), last = set.end(); i != last; ) 
+    {
+        if (pred(*i)) 
+        {
+            i = set.erase(i);
+        } 
+        else 
+        {
+            ++i;
+        }
+    }
+}
+
 } //dflat

@@ -227,6 +227,126 @@ ValueType TypeEnv::lookupVarTypeByClass(ValueType const& classType,
     return member->type.value();
 }
 
+bool TypeEnv::typeIsOrBase(Type const& t1, Type const& t2) const
+{
+    if (t1 == t2)
+    {
+        return true;
+    }
+
+    if (t1.isValue() && t2.isValue())
+    {
+        // Testing base/derived only makes sense with ValueTypes.
+        ValueType const t1v = t1.value();
+        ValueType const t2v = t2.value();
+        ClassMeta const* meta1 = _classes.lookup(t1v);
+        ClassMeta const* meta2 = _classes.lookup(t2v);
+
+        if (meta1)
+        {
+            while (meta2)
+            {
+                if (!meta2->parent)
+                {
+                    break;
+                }
+
+                if (*meta2->parent == t1v)
+                {
+                    return true;
+                }
+
+                meta2 = _classes.lookup(*meta2->parent);
+            }
+        }
+    }
+
+    return false;
+}
+
+       
+bool TypeEnv::compatibleArgs(Vector<ValueType> const& formal,
+        Vector<ValueType> const& actual) const
+{
+    if (formal.size() != actual.size())
+    {
+        return false;
+    }
+
+    for (unsigned i = 0; i < formal.size(); ++i)
+    {
+        if (!typeIsOrBase(formal[i], actual[i]))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+CanonName TypeEnv::resolveMethod(ValueType const& classType,
+        String const& baseName, MethodType const& methodType) const
+{
+    ClassMeta const* cm = _classes.lookup(classType);
+
+    if (!cm)
+    {
+        throw std::logic_error("resolveMethod: no class '"
+                + classType.toString() + "'");
+    }
+
+    // Get all methods in class with this name.
+    Set<CanonName> overloadSet = cm->methods;
+    erase_if(overloadSet, [&](CanonName const& n)
+    {
+        return n.baseName() != baseName;
+    });
+
+    // Find an exact match on args.
+    for (CanonName const& method : overloadSet)
+    {
+        if (method.type().args() == methodType.args())
+        {
+            return method;
+        }
+    }
+
+    // Find ONE inexact match.
+    Optional<CanonName> inexact;
+
+    for (CanonName const& method : overloadSet)
+    {
+        if (compatibleArgs(method.type().args(), methodType.args()))
+        {
+            if (inexact)
+            {
+                throw TypeCheckerException("Ambiguous overloaded call of '"
+                        + baseName + "'");
+            }
+
+            inexact = method;
+        }
+    }
+
+    if (!inexact)
+    {
+        if (cm->parent)
+        {
+            return resolveMethod(*cm->parent, baseName, methodType);
+        }
+        else
+        {
+            CanonName const methodName(baseName, methodType);
+
+            throw TypeCheckerException("Undeclared method '" 
+                    + methodName.canonName() + "' in class '" 
+                    + classType.toString() + "'");
+        }
+    }
+
+    return *inexact;
+}
+
 void TypeEnv::assertValidType(ValueType const& type) const
 {
     // NOTE: You actuall can do this.
@@ -262,36 +382,9 @@ void TypeEnv::assertTypeIs(Type const &test, Type const &against) const
 
 void TypeEnv::assertTypeIsOrBase(Type const& t1, Type const& t2) const
 {
-    if (t1 == t2)
+    if (typeIsOrBase(t1, t2))
     {
         return;
-    }
-
-    if (t1.isValue() && t2.isValue())
-    {
-        // Testing base/derived only makes sense with ValueTypes.
-        ValueType const t1v = t1.value();
-        ValueType const t2v = t2.value();
-        ClassMeta const* meta1 = _classes.lookup(t1v);
-        ClassMeta const* meta2 = _classes.lookup(t2v);
-
-        if (meta1)
-        {
-            while (meta2)
-            {
-                if (!meta2->parent)
-                {
-                    break;
-                }
-
-                if (*meta2->parent == t1v)
-                {
-                    return;
-                }
-
-                meta2 = _classes.lookup(*meta2->parent);
-            }
-        }
     }
 
     throw TypeCheckerException(

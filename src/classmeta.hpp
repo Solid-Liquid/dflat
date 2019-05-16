@@ -23,7 +23,6 @@ struct ClassMeta
     // Map of all members from "canonical name" to type.
     // It's not an actual canonical name, just a String.
     // This is so it can handle vars too. 
-    // TODO? CanonName handles vars
     Map<String, Type> members;
 
     // Holds all non-constructor method canonical names.
