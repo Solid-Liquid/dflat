@@ -324,7 +324,7 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                 int df_x;
             };
             
-            void* dfc_Base(void* this)
+            void* dfc_Base_(void* this)
             {
                 struct df_Base* df_this = this;
                 return df_this;
@@ -355,12 +355,12 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                 struct vtable vtable;
             };
             
-            void* dfc_Base(void* this)
+            void* dfc_Base_(void* this)
             {
                 struct df_Base* df_this = this;
                 return df_this;
             }
-            int dfm_Base_f(void* this)
+            int dfm_Base_f_(void* this)
             {
                 struct df_Base* df_this = this;
                 return 1;
@@ -400,18 +400,18 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                 struct df_Base parent;
             };
             
-            void* dfc_Base(void* this)
+            void* dfc_Base_(void* this)
             {
                 struct df_Base* df_this = this;
                 return df_this;
             }
            
-            void* dfc_Sub(void* this)
+            void* dfc_Sub_(void* this)
             {
                 struct df_Sub* df_this = this;
                 return df_this;
             }
-            int dfm_Sub_f(void* this)
+            int dfm_Sub_f_(void* this)
             {
                 struct df_Sub* df_this = this;
                 return df_this->parent.df_x;
@@ -458,24 +458,24 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                 struct df_Base2 parent;
             };
             
-            void* dfc_Base1(void* this)
+            void* dfc_Base1_(void* this)
             {
                 struct df_Base1* df_this = this;
                 return df_this;
             }
            
-            void* dfc_Base2(void* this)
+            void* dfc_Base2_(void* this)
             {
                 struct df_Base2* df_this = this;
                 return df_this;
             }
            
-            void* dfc_Sub(void* this)
+            void* dfc_Sub_(void* this)
             {
                 struct df_Sub* df_this = this;
                 return df_this;
             }
-            int dfm_Sub_f(void* this)
+            int dfm_Sub_f_(void* this)
             {
                 struct df_Sub* df_this = this;
                 return df_this->parent.parent.df_x;
@@ -517,26 +517,26 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                 struct df_Base parent;
             };
             
-            void* dfc_Base(void* this)
+            void* dfc_Base_(void* this)
             {
                 struct df_Base* df_this = this;
                 return df_this;
             }
-            int dfm_Base_f(void* this)
+            int dfm_Base_f_(void* this)
             {
                 struct df_Base* df_this = this;
                 return 1;
             }
            
-            void* dfc_Sub(void* this)
+            void* dfc_Sub_(void* this)
             {
                 struct df_Sub* df_this = this;
                 return df_this;
             }
-            int dfm_Sub_g(void* this)
+            int dfm_Sub_g_(void* this)
             {
                 struct df_Sub* df_this = this;
-                return CALL(int, dfvm_f, df_this);
+                return CALL(int, dfvm_f_, df_this);
             }
 
         )"));
@@ -564,15 +564,15 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                 struct vtable vtable;
             };
             
-            void* dfc_Base(void* this)
+            void* dfc_Base_(void* this)
             {
                 struct df_Base* df_this = this;
                 return df_this;
             }
-            struct df_Base* dfm_Base_f(void* this)
+            struct df_Base* dfm_Base_f_(void* this)
             {
                 struct df_Base* df_this = this;
-                return NEW0(df_Base, dfv_Base, dfc_Base);
+                return NEW0(df_Base, dfv_Base, dfc_Base_);
             }
 
         )"));
@@ -603,7 +603,7 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                 struct vtable vtable;
             };
             
-            void* dfc_Base(void* this)
+            void* dfc_Base_(void* this)
             {
                 struct df_Base* df_this = this;
                 return df_this;
@@ -613,7 +613,7 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                 struct df_Base* df_this = this;
                 return df_this;
             }
-            struct df_Base* dfm_Base_f(void* this)
+            struct df_Base* dfm_Base_f_(void* this)
             {
                 struct df_Base* df_this = this;
                 return NEW(df_Base, dfv_Base, dfc_Base_int_int, 1, 2);
@@ -669,40 +669,40 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                 struct vtable vtable;
             };
             
-            void* dfc_Base(void* this)
+            void* dfc_Base_(void* this)
             {
                 struct df_Base* df_this = this;
                 return df_this;
             }
-            int dfm_Base_f(void* this)
+            int dfm_Base_f_(void* this)
             {
                 struct df_Base* df_this = this;
                 return 1;
             }
             
-            void* dfc_Sub(void* this)
+            void* dfc_Sub_(void* this)
             {
                 struct df_Sub* df_this = this;
                 return df_this;
             }
-            int dfm_Sub_f(void* this)
+            int dfm_Sub_f_(void* this)
             {
                 struct df_Sub* df_this = this;
                 return 2;
             }
            
-            void* dfc_Main(void* this)
+            void* dfc_Main_(void* this)
             {
                 struct df_Main* df_this = this;
                 return df_this;
             }
-            void dfm_Main_main(void* this)
+            void dfm_Main_main_(void* this)
             {
                 struct df_Main* df_this = this;
-                struct df_Base* df_base = NEW0(df_Base, dfv_Base, dfc_Base);
-                struct df_Base* df_sub = NEW0(df_Sub, dfv_Sub, dfc_Sub);
-                CALL(int, dfvm_f, df_base);
-                CALL(int, dfvm_f, df_sub);
+                struct df_Base* df_base = NEW0(df_Base, dfv_Base, dfc_Base_);
+                struct df_Base* df_sub = NEW0(df_Sub, dfv_Sub, dfc_Sub_);
+                CALL(int, dfvm_f_, df_base);
+                CALL(int, dfvm_f_, df_sub);
             }
 
         )"));
@@ -743,17 +743,18 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
         strip(R"(
 
               #include <stdlib.h>
+              #include <stdio.h>
 
               #define NEW(T,V,C,...)   C(dfalloc(sizeof(struct T), (vtablefn)&V), __VA_ARGS__)
               #define NEW0(T,V,C)      C(dfalloc(sizeof(struct T), (vtablefn)&V))
               #define VTABLE(x)        (((struct vtable*)x)->vt)
               #define FIRST_ARG(x,...) x
-              #define CALL(R,f,...)    ( ( (R(*)(void*)) ( (*VTABLE(FIRST_ARG(__VA_ARGS__))) (f) ) ) (__VA_ARGS__) )
+              #define CALL(R,f,...)    ( ( (R(*)()) ( (*VTABLE(FIRST_ARG(__VA_ARGS__))) (f) ) ) (__VA_ARGS__) )
 
               enum Methods
               {
                       dfvm_changeData_int,
-                      dfvm_main,
+                      dfvm_main_,
               };
 
               typedef void* (*vtablefn)(enum Methods);
@@ -783,7 +784,7 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                       struct vtable vtable;
               };
 
-              void* dfc_MyClass(void* this)
+              void* dfc_MyClass_(void* this)
               {
                       struct df_MyClass* df_this = this;
                       return df_this;
@@ -803,13 +804,13 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
                       return 1;
               }
 
-              void* dfc_Main(void* this)
+              void* dfc_Main_(void* this)
               {
                       struct df_Main* df_this = this;
                       return df_this;
               }
 
-              void dfm_Main_main(void* this)
+              void dfm_Main_main_(void* this)
               {
                       struct df_Main* df_this = this;
                       struct df_MyClass* df_mc = NEW(df_MyClass, dfv_MyClass, dfc_MyClass_int, 5);
@@ -820,7 +821,7 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
               {
                       switch (m)
                       {
-                              case dfvm_main: return &dfm_Main_main;
+                              case dfvm_main_: return &dfm_Main_main_;
                               default: abort();
                       }
               }
@@ -836,8 +837,8 @@ TEST_CASE( "Program-level Tests", "[CodeGenerator]" )
 
               int main()
               {
-                      struct df_Main* df_main = NEW0(df_Main, dfv_Main, dfc_Main);
-                      dfm_Main_main(df_main);
+                      struct df_Main* df_main = NEW0(df_Main, dfv_Main, dfc_Main_);
+                      dfm_Main_main_(df_main);
               }
 
         )"));
