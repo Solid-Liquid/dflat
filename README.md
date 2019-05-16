@@ -94,7 +94,7 @@ AssignStm 	::= (VarName | Exp . VarName) = Exp
 
 If 		::= if ( Exp ) Block else Block
 
-	While 		::= while ( Exp ) Block
+While 		::= while ( Exp ) Block
 
 Method 	::= MethodName ActualArgs
 
@@ -132,6 +132,9 @@ Unary		::= ( ! | - ) Primary
 New		::= ClassName ActualArgs
 
 Call		::= MethodName ActualArgs
+
+
+
 
 <h5>Computation Abstraction Non-Trivial Feature:</h5>
 Objects + methods with class-based inheritance.
