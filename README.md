@@ -52,6 +52,7 @@ An object oriented language based in C. An exploration of implementing the power
  
 <h5>Planned Restrictions:</h5>
 There will be no way to reclaim allocated memory.
+
 You cannot chain the dot operator (a.b.c). 
  
 <h5>Abstract Syntax:</h5>
